@@ -1,12 +1,13 @@
-"""Lokaler Dienst der Desktop-App: Weboberfläche, Ersteinrichtung, Kartenabruf und Sammler in einem Prozess.
+"""Lokaler Dienst der Desktop-App: Weboberfläche, Kartenabruf und Sammler in einem Prozess.
 
 Zweck:     Die Tauri-Hülle startet diesen Dienst als Begleitprozess (Sidecar). Er liefert web/ auf 127.0.0.1 aus (mit Teilabrufen
-           für PMTiles), fragt beim ersten Start nach dem Mittelpunkt, lädt dann Karte (120 km) und läuft als Sammelzyklus weiter.
+           für PMTiles), lädt beim ersten Start die Karte für das ganze Gebiet (region.yaml: Rheinland-Pfalz plus 80 km) und läuft
+           als Sammelzyklus weiter. Es gibt keine Auswahl eines Mittelpunkts: das Gebiet steht fest.
 Aufruf:    python -m app.desktop --data-dir ~/.local/share/osint [--port 0] [--pmtiles /pfad/pmtiles]
 Beispiel:  python -m app.desktop --data-dir /tmp/osint-demo --port 8765   → http://127.0.0.1:8765/
-Ablauf:    Start → Zeile "OSINT_READY port=N" auf stdout → Seite einrichtung.html, solange settings.json fehlt.
+Ablauf:    Start → Zeile "OSINT_READY port=N" auf stdout → Seite einrichtung.html (nur Fortschritt), solange Karte und Daten fehlen.
 Sicherheit: nur 127.0.0.1, Host-Prüfung gegen DNS-Rebinding, schreibende Aufrufe nur mit Header X-OSINT und gleicher Herkunft.
-           Nach außen geht: Ortsname an Nominatim (nur auf Knopfdruck, nur der Suchtext), Kartenabruf bei Protomaps, die Quellen laut sources.yaml.
+           Nach außen geht: Kartenabruf bei Protomaps, die Quellen laut sources.yaml.
 """
 from __future__ import annotations
 
@@ -20,7 +21,6 @@ import sys
 import threading
 import time
 import urllib.parse
-import urllib.request
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -72,7 +72,6 @@ class App:
     def __init__(self, data_dir: Path, web_dir: Path, pmtiles: Path, repo_dir: Path, sources_path: Path | None = None) -> None:
         self.data_dir, self.web_dir, self.pmtiles, self.repo_dir = data_dir, web_dir.resolve(), pmtiles, repo_dir
         self.job = Job()
-        self.settings_path = data_dir / "settings.json"
         self.progress_path = data_dir / ".collect-progress.json"      # Fortschritt des Sammellaufs (app/collect.py), nur Quellennamen
         self.later_progress_path = data_dir / ".collect-later.json"   # Nachlauf der langsamen Quellen im Hintergrund
         self.worker: threading.Thread | None = None
@@ -89,29 +88,21 @@ class App:
         (data_dir / "data").mkdir(exist_ok=True)
         (data_dir / "tiles").mkdir(exist_ok=True)
 
-    def settings(self) -> dict | None:
-        try:
-            s = json.loads(self.settings_path.read_text(encoding="utf-8"))
-            return s if {"lat", "lon"} <= s.keys() else None
-        except (OSError, ValueError):
-            return None
-
-    def env(self, s: dict, progress: Path | None = None) -> dict:
+    def env(self, progress: Path | None = None) -> dict:
         e = dict(os.environ)
-        e.update(OSINT_CENTER_LAT=str(s["lat"]), OSINT_CENTER_LON=str(s["lon"]), OSINT_DB_PATH=str(self.data_dir / "osint.sqlite"),
-                 OSINT_WEB_DIR=str(self.web_dir), OSINT_NO_DOTENV="1")
+        e.update(OSINT_DB_PATH=str(self.data_dir / "osint.sqlite"), OSINT_WEB_DIR=str(self.web_dir), OSINT_NO_DOTENV="1")
         e.update(self.zugang.env())   # Zugangsdaten aus der Quellenübersicht, nur freigegebene Namen
         if progress:
             e["OSINT_PROGRESS_FILE"] = str(progress)
         return e
 
-    def _run(self, args: list[str], s: dict, progress: Path | None = None, timeout: int = 1800) -> int:
+    def _run(self, args: list[str], progress: Path | None = None, timeout: int = 1800) -> int:
         """Sammler und Export als Kindprozess. Im gebündelten Programm (PyInstaller) ruft es sich selbst mit --run auf."""
         cmd = [sys.executable, "--run", *args] if getattr(sys, "frozen", False) else [sys.executable, "-m", *args]
-        return subprocess.run(cmd, cwd=self.repo_dir, env=self.env(s, progress), timeout=timeout).returncode
+        return subprocess.run(cmd, cwd=self.repo_dir, env=self.env(progress), timeout=timeout).returncode
 
     def job_snapshot(self) -> dict:
-        """Zustand der Einrichtung. Im Sammellauf kommt "n von m, läuft noch: <Namen>" aus der Fortschrittsdatei des Sammlers."""
+        """Zustand des Aufbaus. Im Sammellauf kommt "n von m, läuft noch: <Namen>" aus der Fortschrittsdatei des Sammlers."""
         j = self.job.snapshot()
         if j["phase"] == "collect":
             try:
@@ -124,41 +115,55 @@ class App:
                 pass   # Datei fehlt noch oder wird gerade ersetzt: die letzte Meldung bleibt stehen
         return j
 
-    def start(self, s: dict) -> bool:
+    def start(self) -> bool:
         if self.worker and self.worker.is_alive():
             return False
-        self.worker = threading.Thread(target=self.work, args=(s,), daemon=True, name="osint-worker")
+        self.worker = threading.Thread(target=self.work, daemon=True, name="osint-worker")
         self.worker.start()
         return True
 
-    def work(self, s: dict) -> None:
-        """Karte holen (einmalig), danach Sammeln und Exportieren im Takt. Fehler stoppen die Einrichtung sichtbar, nie still."""
-        from app import tilebuild
+    def tiles_fehlen(self) -> bool:
+        return not all((self.data_dir / "tiles" / n).exists() for n in ("region.pmtiles", "core.pmtiles", "ring.pmtiles"))
+
+    def holen_tiles(self) -> None:
+        """Karte für das ganze Gebiet (tools/build_region_tiles.py): in Stücken, jeder Lauf macht dort weiter, wo der vorige aufhörte.
+        Fortschritt: fertige Stücke in tiles-work/chunks (Gesamtzahl bei der Fläche rund 150, die Anzeige wächst darauf zu)."""
+        work = self.data_dir / "tiles-work"
+        args = ["tools.build_region_tiles", "--pmtiles", str(self.pmtiles), "--work", str(work), "--out", str(self.data_dir / "tiles"),
+                "--region", str(self.repo_dir / "region.yaml"), "--budget-s", "600"]
+        for versuch in range(60):
+            n = len(list((work / "chunks").glob("*/*.pmtiles"))) if (work / "chunks").exists() else 0
+            self.job.set("tiles", f"Karte wird geholt ({n} Stücke fertig, einmalig rund 1,5 GB)", 5 + min(60, int(60 * n / 150)))
+            rc = self._run(args, timeout=1500)
+            if rc == 0:
+                return
+            if rc != 2:
+                raise RuntimeError(f"Kartenabruf fehlgeschlagen (Code {rc})")
+        raise RuntimeError("Karte nach 60 Läufen noch nicht vollständig")
+
+    def work(self) -> None:
+        """Karte holen (einmalig), danach Sammeln und Exportieren im Takt. Fehler stoppen den Aufbau sichtbar, nie still."""
         try:
-            if not all((self.data_dir / "tiles" / n).exists() for n in ("region.pmtiles", "core.pmtiles", "ring.pmtiles")):
-                self.job.set("tiles", "Kartenversion wird gesucht", 2)
-                with urllib.request.urlopen(urllib.request.Request("https://build-metadata.protomaps.dev/builds.json", headers={"User-Agent": ua()}), timeout=30) as r:
-                    bid = tilebuild.latest_build(lambda _u: r.read())
-                tilebuild.build(s["lat"], s["lon"], self.data_dir / "tiles", self.pmtiles, bid,
-                                progress=lambda i, n, m, frac=0.0: self.job.set("tiles", m, 5 + int(60 * frac)))
+            if self.tiles_fehlen():
+                self.holen_tiles()
             first = True
             while True:
                 self.job.set("collect", "Daten werden abgerufen", 70)
                 # Erster Lauf: alle Quellen außer den langsamen (erstlauf: spaeter), danach nur, was fällig ist
-                if self._run(["app.collect", "--once" if first else "--due", "--skip-later"], s, self.progress_path) != 0:
+                if self._run(["app.collect", "--once" if first else "--due", "--skip-later"], self.progress_path) != 0:
                     log.warning("Sammelzyklus mit Fehlern beendet")
                 self.job.set("export", "Daten werden aufbereitet", 90)
-                if self._run(["app.export", "--out", str(self.data_dir / "data")], s) != 0:
+                if self._run(["app.export", "--out", str(self.data_dir / "data")]) != 0:
                     raise RuntimeError("Export fehlgeschlagen")
                 self.job.set("ready", "Bereit", 100)
-                self.start_later(s)
+                self.start_later()
                 first = False
                 time.sleep(CYCLE_S)
         except Exception as err:   # sichtbar machen, nicht verschlucken
-            log.exception("Einrichtung abgebrochen")
+            log.exception("Aufbau abgebrochen")
             self.job.set("error", "Abbruch", error=str(err)[:300])
 
-    def start_later(self, s: dict) -> None:
+    def start_later(self) -> None:
         """Langsame Quellen (erstlauf: spaeter, z. B. OSM-Abfragen) im Hintergrund; ihre Daten kommen mit dem nächsten Export dazu.
         --due holt sie beim ersten Mal (nie versucht = fällig) und danach nur im Intervall, auch nach einem Neustart der App."""
         if self.later and self.later.is_alive():
@@ -166,7 +171,7 @@ class App:
 
         def run() -> None:
             try:
-                self._run(["app.collect", "--due", "--only-later"], s, self.later_progress_path, timeout=3 * 3600)
+                self._run(["app.collect", "--due", "--only-later"], self.later_progress_path, timeout=3 * 3600)
             except (subprocess.SubprocessError, OSError) as err:
                 log.warning("Nachlauf der langsamen Quellen abgebrochen: %s", err)
 
@@ -180,21 +185,6 @@ PROJECT_URL = "https://github.com/thorin-eifel/maps"
 def ua() -> str:
     """User-Agent mit Kontakt. Ohne OSINT_CONTACT der Projektlink: Nominatim weist Platzhalteradressen (example.invalid) mit 403 ab."""
     return f"Landblick/1.0 (+{os.environ.get('OSINT_CONTACT') or PROJECT_URL})"
-
-
-def geocode(q: str) -> list[dict]:
-    """Ortssuche über Nominatim (OSM). Es geht nur der Suchtext hinaus; Adressen (Hausnummern) werden nicht angeboten."""
-    q = q.strip()[:80]
-    if len(q) < 2:
-        return []
-    url = "https://nominatim.openstreetmap.org/search?" + urllib.parse.urlencode({"q": q, "format": "jsonv2", "limit": 8, "addressdetails": 0, "accept-language": "de"})
-    with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": ua()}), timeout=15) as r:
-        rows = json.load(r)
-    out = []
-    for x in rows:
-        if x.get("category") in ("place", "boundary") or x.get("addresstype") in ("city", "town", "village", "hamlet", "suburb", "municipality", "county"):
-            out.append({"name": str(x.get("display_name", ""))[:120], "lat": round(float(x["lat"]), 4), "lon": round(float(x["lon"]), 4)})
-    return out[:6]
 
 
 def make_handler(app: App, port_box: list[int]):
@@ -237,15 +227,7 @@ def make_handler(app: App, port_box: list[int]):
                 return self.json({"error": "host"}, 403)
             u = urllib.parse.urlsplit(self.path)
             if u.path == "/api/state":
-                s = app.settings()
-                return self.json({"configured": s is not None, "center": s, "job": app.job_snapshot()})
-            if u.path == "/api/geocode":
-                try:
-                    q = urllib.parse.parse_qs(u.query).get("q", [""])[0]
-                    return self.json({"results": geocode(q)})
-                except (OSError, ValueError) as err:
-                    log.warning("Ortssuche: %s", err)
-                    return self.json({"results": [], "error": "Ortssuche nicht erreichbar"}, 502)
+                return self.json({"configured": True, "job": app.job_snapshot()})
             if u.path == "/api/zugang":
                 return self.json({"quellen": app.zugang.status()})   # nur gesetzt/nicht gesetzt, nie Werte
             if u.path.startswith("/api/"):
@@ -260,25 +242,7 @@ def make_handler(app: App, port_box: list[int]):
                 return self.json({"error": "herkunft"}, 403)
             if self.path == "/api/zugang":
                 return self.post_zugang()
-            if self.path != "/api/setup":
-                return self.json({"error": "unbekannt"}, 404)
-            try:
-                n = int(self.headers.get("Content-Length") or 0)
-                body = json.loads(self.rfile.read(min(n, 4096)) or b"{}")
-                lat, lon = float(body["lat"]), float(body["lon"])
-                from app.tilebuild import validate_center
-                validate_center(lat, lon)
-            except (ValueError, KeyError, TypeError):
-                return self.json({"error": "Mittelpunkt ungültig"}, 400)
-            old = app.settings()
-            if old and (abs(old["lat"] - lat) > 1e-4 or abs(old["lon"] - lon) > 1e-4):
-                return self.json({"error": "Mittelpunkt ist gesetzt. Zum Ändern den Datenordner zurücksetzen."}, 409)
-            s = {"lat": round(lat, 5), "lon": round(lon, 5), "name": str(body.get("name", ""))[:80]}
-            tmp = app.settings_path.with_suffix(".tmp")
-            tmp.write_text(json.dumps(s, ensure_ascii=False), encoding="utf-8")
-            tmp.replace(app.settings_path)
-            app.start(s)
-            self.json({"ok": True})
+            return self.json({"error": "unbekannt"}, 404)
 
         def post_zugang(self) -> None:
             """{"env": "NAME", "wert": "…"} setzt, {"env": "NAME", "loeschen": true} entfernt. Antworten enthalten nie den Wert."""
@@ -361,9 +325,7 @@ def main(argv: list[str] | None = None) -> int:
     box = [0]
     srv = ThreadingHTTPServer(("127.0.0.1", a.port), make_handler(app, box))
     box[0] = srv.server_address[1]
-    s = app.settings()
-    if s:
-        app.start(s)
+    app.start()
     print(f"OSINT_READY port={box[0]}", flush=True)
     try:
         srv.serve_forever()

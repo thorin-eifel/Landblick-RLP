@@ -9,7 +9,7 @@ Aufruf:     python tools/build_region_tiles.py --pmtiles ./bin/pmtiles --stage r
             python tools/build_region_tiles.py --dry-run                   # zeigt Zellen und Zahlen, ohne Netz
             Exit 0: Stufe vollständig und vereint. Exit 2: noch nicht fertig, Befehl wiederholen.
 Parameter:  --stage region|ring|cores|all   --jobs 3 (parallele Abrufe)   --budget-s (keine neuen Abrufe nach dieser Zeit)
-            --build JJJJMMTT (Standard: neuester)   --work build/tiles   --out web/tiles   --region region-rlp.yaml
+            --build JJJJMMTT (Standard: neuester)   --work build/tiles   --out web/tiles   --region region.yaml
 Hinweis:    Der Server bricht bei vielen parallelen Strömen gern ab; darum wenige Threads je Abruf und Wiederholung mit
             Wartezeit. Das Ergebnis liegt zuerst in --work und wird erst nach der Prüfung nach --out gelegt.
 Abhängig:   pip install -r requirements-tools.txt (shapely, pmtiles); pmtiles-CLI für die Plattform (go-pmtiles).
@@ -226,7 +226,7 @@ FINAL = {"region": "region.pmtiles", "ring": "ring.pmtiles", "cores": "core.pmti
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--stage", default="all", choices=["region", "ring", "cores", "all"])
-    ap.add_argument("--region", type=Path, default=ROOT / "region-rlp.yaml")
+    ap.add_argument("--region", type=Path, default=ROOT / "region.yaml")
     ap.add_argument("--cores", type=Path, default=ROOT / "tools" / "tile_cores.yaml")
     ap.add_argument("--pmtiles", default=os.environ.get("PMTILES") or shutil.which("pmtiles") or str(ROOT / "tools" / "bin" / "pmtiles"))
     ap.add_argument("--build", help="Build-Datum JJJJMMTT, Standard: neuester")

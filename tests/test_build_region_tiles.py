@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 @pytest.fixture(scope="module")
 def region():
-    return b.load_polygon(ROOT / "region-rlp.yaml")
+    return b.load_polygon(ROOT / "region.yaml")
 
 
 @pytest.fixture(scope="module")

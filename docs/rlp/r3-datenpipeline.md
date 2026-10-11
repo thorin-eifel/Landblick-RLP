@@ -1,6 +1,6 @@
 # R3 Datenpipeline: Messwerte und Entscheidungen
 
-Stand: 10. Oktober 2026. Region: Rheinland-Pfalz plus 80 km (`OSINT_REGION=region-rlp.yaml`). Alle Läufe kamen aus dem Sandkasten gegen die echten Dienste, in eine leere Wegwerf-Datenbank. Ausnahme: Overpass (OSM) ist von dort nicht erreichbar.
+Stand: 10. Oktober 2026. Region: Rheinland-Pfalz plus 80 km (`OSINT_REGION=region.yaml`). Alle Läufe kamen aus dem Sandkasten gegen die echten Dienste, in eine leere Wegwerf-Datenbank. Ausnahme: Overpass (OSM) ist von dort nicht erreichbar.
 
 ## Lauf aller aktiven Quellen (je einmal, leere Datenbank)
 
@@ -59,7 +59,7 @@ Zweiter Lauf direkt nach dem ersten: Autobahn, NINA, Hochwasser, Hub'Eau, Wallon
 ## Nächster Schritt auf dem Mac
 
 ```bash
-export OSINT_REGION=region-rlp.yaml
+export OSINT_REGION=region.yaml
 echo 'TANKERKOENIG_API_KEY=...' >> .env          # Schlüssel nie in den Chat
 python -m app.collect --once --only osm_natur osm_infra osm_routen osm_anbau   # misst Dauer, Mengen, Fehler von Overpass
 python -m app.collect --once --only tankerkoenig                               # ein Punkt je Lauf

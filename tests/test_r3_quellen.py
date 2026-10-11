@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 def test_tank_grid_points_inside_margin_and_count():
     g = json.loads((ROOT / "app/data/region/tank_grid.json").read_text())
     from app import region
-    big = region.load(ROOT / "region-rlp.yaml")
+    big = region.load(ROOT / "region.yaml")
     assert 40 <= len(g["points"]) <= 90
     assert all(p["rad"] <= 25 for p in g["points"])
     assert all(big.contains(p["lat"], p["lon"], margin_km=30) for p in g["points"])
@@ -28,7 +28,7 @@ def test_tank_grid_covers_german_part_of_region():
     shapely = pytest.importorskip("shapely")
     import random
     from app import region
-    big = region.load(ROOT / "region-rlp.yaml")
+    big = region.load(ROOT / "region.yaml")
     gl = region.Gliederung()
     pts = json.loads((ROOT / "app/data/region/tank_grid.json").read_text())["points"]
     from app.geo import haversine_km

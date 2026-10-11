@@ -78,15 +78,27 @@ def test_work_first_run_skips_later_sources_then_runs_them_in_background(app, mo
     for n in ("region", "core", "ring"):
         (app.data_dir / "tiles" / f"{n}.pmtiles").write_bytes(b"x")
     calls = []
-    monkeypatch.setattr(app, "_run", lambda args, s, progress=None, timeout=1800: calls.append((tuple(args), progress is not None)) or 0)
+    monkeypatch.setattr(app, "_run", lambda args, progress=None, timeout=1800: calls.append((tuple(args), progress is not None)) or 0)
 
     class Stop(BaseException):   # work() fängt Exception ab, der Test will aber aus der Endlosschleife heraus
         pass
     monkeypatch.setattr(desktop.time, "sleep", lambda _s: (_ for _ in ()).throw(Stop()))
     with pytest.raises(Stop):
-        app.work({"lat": 49.85, "lon": 6.45})
+        app.work()
     app.later.join(timeout=5)
     assert calls[0] == (("app.collect", "--once", "--skip-later"), True)
     assert calls[1][0][0] == "app.export"
     assert (("app.collect", "--due", "--only-later"), True) in calls
     assert app.job.snapshot()["phase"] == "ready"                    # bereit, bevor der Nachlauf fertig sein muss
+
+
+def test_tiles_are_fetched_for_the_whole_region_and_resumed_until_done(app, monkeypatch):
+    """Ohne Karte ruft work() den Gebietsbau auf (Code 2 = noch nicht fertig, Wiederholung), nicht mehr den Kreis um einen Mittelpunkt."""
+    codes = iter([2, 2, 0])
+    calls = []
+    monkeypatch.setattr(app, "_run", lambda args, progress=None, timeout=1800: calls.append(tuple(args)) or next(codes))
+    app.holen_tiles()
+    assert len(calls) == 3 and calls[0][0] == "tools.build_region_tiles" and str(app.repo_dir / "region.yaml") in calls[0]
+    monkeypatch.setattr(app, "_run", lambda *a, **k: 1)
+    with pytest.raises(RuntimeError, match="Code 1"):
+        app.holen_tiles()

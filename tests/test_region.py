@@ -12,12 +12,12 @@ from app import region
 from app.region import Gliederung, PolygonIndex
 
 BASE = Path(__file__).resolve().parent.parent
-RLP = region.load(BASE / "region-rlp.yaml")
+RLP = region.load(BASE / "region.yaml")
 
 
 # ---------------------------------------------------------------- Kreis: gleiche Fläche wie vor R1
 def test_radius_region_matches_old_constants():
-    r = region.load(BASE / "region.yaml")
+    r = region.load(BASE / "tests" / "fixtures" / "region-irrel-120.yaml")
     assert r.mode == "radius" and r.radius_km == 120.0
     assert r.bbox == (48.76, 4.78, 50.93, 8.13)          # alter Wert von config.BBOX
     assert (r.ref_lat, r.ref_lon) == (49.84615562322509, 6.456057281843173)
@@ -27,7 +27,7 @@ def test_radius_region_matches_old_constants():
 
 
 def test_radius_edge_points():
-    r = region.load(BASE / "region.yaml")
+    r = region.load(BASE / "tests" / "fixtures" / "region-irrel-120.yaml")
     d_lat = 120 / 111.195
     assert r.contains(r.ref_lat + d_lat * 0.995, r.ref_lon) and not r.contains(r.ref_lat + d_lat * 1.005, r.ref_lon)
 
@@ -35,7 +35,7 @@ def test_radius_edge_points():
 def test_center_override_by_env(monkeypatch):
     monkeypatch.setenv("OSINT_CENTER_LAT", "50.0")
     monkeypatch.setenv("OSINT_CENTER_LON", "8.0")
-    r = region.load(BASE / "region.yaml")
+    r = region.load(BASE / "tests" / "fixtures" / "region-irrel-120.yaml")
     assert (r.ref_lat, r.ref_lon) == (50.0, 8.0) and r.contains(50.0, 8.0) and not r.contains(49.0, 5.5)
 
 
@@ -136,7 +136,7 @@ def test_contains_speed_after_prefilter():
 
 # ---------------------------------------------------------------- Regression: Kreis entscheidet wie die alte Formel
 def test_radius_region_equals_old_formula_on_random_points():
-    r = region.load(BASE / "region.yaml")
+    r = region.load(BASE / "tests" / "fixtures" / "region-irrel-120.yaml")
     lat0, lon0, lat1, lon1 = 48.76, 4.78, 50.93, 8.13               # alte BBOX
     rnd = random.Random(42)
     diff = 0
@@ -148,7 +148,7 @@ def test_radius_region_equals_old_formula_on_random_points():
 
 
 def test_margin_extends_radius_and_polygon():
-    r = region.load(BASE / "region.yaml")
+    r = region.load(BASE / "tests" / "fixtures" / "region-irrel-120.yaml")
     d = 120 / 111.195
     assert not r.contains(r.ref_lat + d * 1.02, r.ref_lon) and r.contains(r.ref_lat + d * 1.02, r.ref_lon, margin_km=5)
     data = json.loads((BASE / "app/data/region/rlp_plus80.json").read_text(encoding="utf-8"))

@@ -88,7 +88,7 @@ def test_geometry_in_region_polygon_mode(monkeypatch):
     from pathlib import Path
 
     from app import region
-    rlp = region.load(Path(__file__).resolve().parent.parent / "region-rlp.yaml")
+    rlp = region.load(Path(__file__).resolve().parent.parent / "region.yaml")
     monkeypatch.setattr(region, "REGION", rlp)
     line = {"type": "LineString", "coordinates": [[2.0, 48.0], [14.0, 52.5]]}               # quert die Region ohne Stützpunkt darin
     assert geo.geometry_in_region(line)

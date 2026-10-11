@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Höhenmodell-Kacheln für das Relief holen (Terrarium-Kodierung) und lokal ablegen.
 
-Zweck:      Lädt die Terrarium-Höhenkacheln (Mapzen Terrain Tiles auf AWS Open Data) für die Region (region.yaml, bei OSINT_REGION=region-rlp.yaml Rheinland-Pfalz plus 80 km)
+Zweck:      Lädt die Terrarium-Höhenkacheln (Mapzen Terrain Tiles auf AWS Open Data) für die Region (region.yaml, bei OSINT_REGION=region.yaml Rheinland-Pfalz plus 80 km)
             einmalig nach web/tiles/dem/{z}/{x}/{y}.png. Die Karte zeigt daraus Schummerung, Höhenfärbung
             und Höhenlinien; beim Betrachten wird kein Drittserver angefragt.
 Quelle:     https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png

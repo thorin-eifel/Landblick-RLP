@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Einrichtung – Landblick - RLP</title>
+<title>Aufbau – Landblick - RLP</title>
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; child-src blob:; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <link rel="stylesheet" href="css/tokens.css">
@@ -13,32 +13,13 @@
 <body class="einrichtung">
 <div id="hintergrund" aria-hidden="true"></div>
 <main id="inhalt">
-  <h1>Wo soll das Lagebild liegen?</h1>
-  <p>Das Lagebild zeigt alles im Umkreis von 120 km um einen Mittelpunkt. Wähle einen Ort, zum Beispiel deinen Wohnort. Es werden nur Orte gesucht, keine Adressen.</p>
-  <section class="card card-b" id="schritt1">
-    <form id="suche" autocomplete="off">
-      <label for="q">Ortsname</label>
-      <input id="q" type="search" minlength="2" maxlength="80" required>
-      <p class="muted">Beim Suchen geht der eingetippte Ortsname an Nominatim (OpenStreetMap). Sonst nichts.</p>
-      <button class="btn" type="submit">Suchen</button>
-    </form>
-    <ul id="treffer" aria-live="polite"></ul>
-    <details>
-      <summary>Oder Koordinaten selbst eingeben</summary>
-      <label for="lat">Breite (z. B. 49.846)</label> <input id="lat" inputmode="decimal" size="10">
-      <label for="lon">Länge (z. B. 6.456)</label> <input id="lon" inputmode="decimal" size="10">
-      <button class="btn" id="manuell" type="button">Übernehmen</button>
-    </details>
+  <h1>Karte und Daten werden vorbereitet</h1>
+  <p>Beim ersten Start holt die App die Karte für ganz Rheinland-Pfalz und 80 km darum herum (etwa 1,5 GB, einmalig) und danach die Daten der Quellen. Das dauert je nach Leitung einige Minuten bis eine Stunde. Danach läuft alles lokal.</p>
+  <section class="card card-b">
+    <div role="progressbar" id="bar" aria-label="Fortschritt" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><div id="barfill"></div></div>
+    <p id="status" role="status">Wird gestartet …</p>
   </section>
-  <section class="card card-b" id="schritt2" hidden>
-    <h2>Das passiert jetzt</h2>
-    <p id="wahl"></p>
-    <p>Die App lädt die Karte für 120 km um diesen Punkt (etwa 550 MB, einmalig) und holt danach die Daten der Quellen. Das dauert je nach Leitung einige Minuten bis eine Stunde. Danach läuft alles lokal.</p>
-    <p class="muted">Quellen für Pegel, Warnungen und Verkehr gibt es nicht überall gleich dicht. Außerhalb von Rheinland-Pfalz, Luxemburg und der Nachbarschaft bleiben manche Kacheln leer.</p>
-    <button class="btn" id="los" type="button">Einrichten</button>
-    <div role="progressbar" id="bar" aria-label="Fortschritt der Einrichtung" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><div id="barfill"></div></div>
-    <p id="status" role="status"></p>
-  </section>
+  <p class="muted">Quellen für Pegel, Warnungen und Verkehr gibt es nicht überall gleich dicht. Außerhalb von Rheinland-Pfalz, Luxemburg und der Nachbarschaft bleiben manche Kacheln leer.</p>
   <p id="fehler" role="alert" class="muted"></p>
   <p class="muted klein">Hintergrundkarte: © OpenStreetMap-Mitwirkende (ODbL), Protomaps</p>
 </main>
