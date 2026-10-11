@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Callable
@@ -11,6 +12,8 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+# Die meisten Tests rechnen auf der früheren Standardfläche (Kreis 120 km um Irrel); die Landesfläche prüfen test_region, test_geo und test_r3_quellen ausdrücklich.
+os.environ["OSINT_REGION"] = str(ROOT / "tests" / "fixtures" / "region-irrel-120.yaml")
 
 from app.config import Settings  # noqa: E402
 from app.db import Storage  # noqa: E402

@@ -1,59 +1,15 @@
-// Ersteinrichtung der Desktop-App: Mittelpunkt wählen, Fortschritt zeigen, danach zur Karte. Spricht nur mit dem lokalen Dienst (api/…).
+// Aufbau der Desktop-App beim ersten Start: Fortschritt von Karte und Daten zeigen, danach zur Karte. Das Gebiet steht fest (region.yaml), es gibt nichts zu wählen.
+// Spricht nur mit dem lokalen Dienst (api/state).
 const $ = (id) => document.getElementById(id);
-let wahl = null;
 let hintergrund = null;
 
-async function api(path, body) {
-  const r = await fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-OSINT': '1' }, body: JSON.stringify(body) } : undefined);
+async function api(path) {
+  const r = await fetch(path);
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error || `Fehler ${r.status}`);
   return j;
 }
 const fehler = (t) => { $('fehler').textContent = t || ''; };
-
-function pick(name, lat, lon) {
-  wahl = { name, lat, lon };
-  $('wahl').textContent = `Mittelpunkt: ${name || 'eigener Punkt'} (${lat.toFixed(4)} N, ${lon.toFixed(4)} E)`;
-  $('schritt2').hidden = false; $('los').focus();
-  zeigeWahl(lat, lon);
-}
-
-// Gewählter Ort auf dem Hintergrund: Punkt, Kamera rechts neben die Karten gerückt, damit er nicht dahinter liegt. Ohne Hintergrundkarte passiert nichts.
-function zeigeWahl(lat, lon) {
-  const m = hintergrund;
-  if (!m) return;
-  const punkt = { type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [lon, lat] } }] };
-  const setze = () => {
-    if (m.getSource('wahl')) m.getSource('wahl').setData(punkt);
-    else {
-      m.addSource('wahl', { type: 'geojson', data: punkt });
-      m.addLayer({ id: 'wahl', type: 'circle', source: 'wahl', paint: { 'circle-radius': 7, 'circle-color': '#b3261e', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 } });
-    }
-    m.flyTo({ center: [lon, lat], zoom: 5.4, duration: 2000, offset: [window.innerWidth > 900 ? Math.min(window.innerWidth * 0.3, 420) : 0, 0] });   // bei reduzierter Bewegung ohne Flug
-  };
-  if (m.loaded()) setze(); else m.once('load', setze);
-}
-
-$('suche').addEventListener('submit', async (e) => {
-  e.preventDefault(); fehler('');
-  const ul = $('treffer'); ul.replaceChildren();
-  try {
-    const { results } = await api(`api/geocode?q=${encodeURIComponent($('q').value)}`);
-    if (!results.length) fehler('Kein Ort gefunden.');
-    for (const r of results) {
-      const li = document.createElement('li'), b = document.createElement('button');
-      b.type = 'button'; b.className = 'btn'; b.textContent = r.name;
-      b.addEventListener('click', () => pick(r.name.split(',')[0], r.lat, r.lon));
-      li.append(b); ul.append(li);
-    }
-  } catch (err) { fehler(`Ortssuche nicht erreichbar. Koordinaten kannst du unten selbst eingeben. (${err.message})`); }
-});
-
-$('manuell').addEventListener('click', () => {
-  const lat = Number($('lat').value.replace(',', '.')), lon = Number($('lon').value.replace(',', '.'));
-  if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 80 || Math.abs(lon) > 180) return fehler('Koordinaten ungültig.');
-  fehler(''); pick('', lat, lon);
-});
 
 async function poll() {
   try {
@@ -67,13 +23,7 @@ async function poll() {
   setTimeout(poll, 2000);
 }
 
-$('los').addEventListener('click', async () => {
-  $('los').disabled = true; fehler('');
-  try { await api('api/setup', wahl); poll(); } catch (err) { fehler(err.message); $('los').disabled = false; }
-});
-
-// Schon eingerichtet? Dann weiter zur Karte, sonst bei laufendem Aufbau Fortschritt zeigen.
-api('api/state').then((s) => { if (s.configured) { $('schritt1').hidden = true; $('schritt2').hidden = false; $('los').hidden = true; $('wahl').textContent = `Mittelpunkt: ${s.center.name || 'eigener Punkt'}`; poll(); } }).catch(() => fehler('Dieser Dienst läuft nur in der Desktop-App.'));
+poll();
 
 // Mitgeliefert ist nur die Schrift "Noto Sans Regular" und kein Symbolsatz: Beschriftungen auf Regular zwingen, Symbole weglassen.
 function nurRegular(l) {
@@ -95,10 +45,9 @@ function nurRegular(l) {
     protocol.add(archive);
     addProtocol('pmtiles', protocol.tile);
     hintergrund = new MlMap({
-      container: 'hintergrund', interactive: false, attributionControl: false, center: [10, 49.5], zoom: 3.4,
+      container: 'hintergrund', interactive: false, attributionControl: false, center: [7.3, 50.0], zoom: 5.4,
       style: { version: 8, glyphs: `${new URL('fonts/', location.href).href}{fontstack}/{range}.pbf`, sources: { basemap: { type: 'vector', url: `pmtiles://${url}` } },
         layers: layers('basemap', namedFlavor('grayscale'), { lang: 'de' }).filter((l) => !/^(pois$|roads_shields)/.test(l.id)).map(nurRegular) },
     });
-    if (wahl) zeigeWahl(wahl.lat, wahl.lon);
   } catch (err) { console.warn('Hintergrundkarte nicht verfügbar:', err?.message ?? err); }
 })();

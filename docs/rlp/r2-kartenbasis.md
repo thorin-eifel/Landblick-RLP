@@ -1,11 +1,11 @@
 # R2 Kartenbasis: Bau und Messwerte
 
-Stand: 9. Oktober 2026. Region: Rheinland-Pfalz plus 80 km (`region-rlp.yaml`). Der Bau läuft auf dem Mac (Linux-VM, 4 Kerne, 3,9 GB RAM), weil der Sandkasten die Kachelquelle nicht erreicht.
+Stand: 9. Oktober 2026. Region: Rheinland-Pfalz plus 80 km (`region.yaml`). Der Bau läuft auf dem Mac (Linux-VM, 4 Kerne, 3,9 GB RAM), weil der Sandkasten die Kachelquelle nicht erreicht.
 
 ## Ablauf (wiederholbar, Reihenfolge einhalten)
 
 ```bash
-export OSINT_REGION=region-rlp.yaml
+export OSINT_REGION=region.yaml
 pip install -r requirements-tools.txt            # pmtiles, shapely, pyyaml, mapbox-vector-tile
 # 1. Karten: Stücke holen, vereinen, prüfen. Exit 2 = Zeitbudget erreicht, Befehl wiederholen.
 python tools/build_region_tiles.py --pmtiles ./pmtiles --stage all --work build/tiles --out build/tiles/final --budget-s 150

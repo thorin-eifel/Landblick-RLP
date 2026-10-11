@@ -21,7 +21,7 @@ python -m http.server 8000 -d web          # http://localhost:8000
 
 Die Karte braucht eigene Kacheln (`web/tiles/*.pmtiles`, nicht im Repository). Bau und Größen: `docs/betrieb.md`, Abschnitt Karte.
 
-Andere Region ausprobieren: `OSINT_REGION=region-rlp.yaml python -m app.region` zeigt die Landesfläche. Die Fläche steht in `region.yaml` (Kreis oder Polygon), das Polygon baut `tools/build_region.py` aus BKG VG250.
+Das Gebiet steht fest in `region.yaml` (Rheinland-Pfalz plus 80 km, Polygon; ein Kreis ginge auch). `python -m app.region` zeigt es, anderes Gebiet über `OSINT_REGION=<Datei>`. Das Polygon baut `tools/build_region.py` aus BKG VG250.
 
 ## So hängt es zusammen
 
@@ -50,8 +50,7 @@ Die ursprüngliche Projektanweisung steht in `docs/projektanweisung.md` (CTW-Bez
 
 ### Region
 
-- Aktiv (`region.yaml`): Südeifel und Umgebung (120 km um Irrel): Kreis, 120 km um Irrel
-- Ziel (`region-rlp.yaml`, noch nicht aktiv): Rheinland-Pfalz plus 80 km: Polygon aus `app/data/region/rlp_plus80.json`, Bezugspunkt Irrel
+- Aktiv (`region.yaml`): Rheinland-Pfalz plus 80 km: Polygon aus `app/data/region/rlp_plus80.json`, Bezugspunkt Irrel
 
 ### Phasen
 
@@ -72,7 +71,7 @@ Plan und Begründung: `docs/rlp/plan.md`. Entscheidung: `docs/adr/0001-region-rl
 
 - Quellen im Register: 44, davon aktiv: 40
 - Sammler (Module in `app/collectors/`): 43
-- Tests: 419 Python, 77 JavaScript
+- Tests: 413 Python, 77 JavaScript
 
 ### Quellen und Lizenzen
 

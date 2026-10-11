@@ -324,15 +324,15 @@ Dieselbe Oberfläche als App für Windows 10+, Linux und macOS. Gezeichnet wird 
 ```
 Tauri-Hülle (Rust) ──startet──▶ osint-core (Python, Sidecar) ──▶ 127.0.0.1:<Port>
                                   ├─ liefert web/ (mit Teilabrufen für PMTiles)
-                                  ├─ Ersteinrichtung: Mittelpunkt wählen → Karte 120 km laden (pmtiles-CLI)
+                                  ├─ erster Start: Karte für das ganze Gebiet laden (tools/build_region_tiles.py, pmtiles-CLI)
                                   └─ Sammelzyklus alle 5 Min: app.collect → app.export → <Datenordner>/data
 ```
 
-Beim ersten Start fragt `einrichtung.html` nach dem Mittelpunkt (Ortsname über Nominatim, nur der Suchtext geht hinaus, oder Koordinaten von Hand). Danach lädt die App die Karte für 120 km (ca. 550 MB, einmalig, wiederaufnehmbar) und beginnt zu sammeln. Der Mittelpunkt ist danach festgelegt; ändern heißt Datenordner zurücksetzen.
+Es gibt keine Auswahl eines Mittelpunkts: Das Gebiet steht fest in `region.yaml` (Rheinland-Pfalz plus 80 km). Beim ersten Start zeigt `einrichtung.html` nur den Fortschritt, die App lädt die Karte für die ganze Fläche (rund 1,5 GB mit Höhenmodell, einmalig, wiederaufnehmbar: Stücke in `tiles-work/chunks`, jeder Lauf macht dort weiter) und beginnt zu sammeln. Der Sidecar braucht dafür `shapely` und `pmtiles` (Python) sowie die pmtiles-CLI; ob das gebündelte Programm sie enthält, ist nicht geprüft.
 
 Zugangsdaten in der App: Quellen, die einen Schlüssel oder ein Login brauchen, tragen im Register ein Feld `zugang` (Name der Umgebungsvariable, Art: `schluessel`, `benutzername` oder `passwort`, Bezeichnung). Die Seite „Quellen und Lizenzen“ zeigt in der Desktop-App je Quelle Eingabefelder; auf dem statischen Webspace erscheinen sie nicht. Die Werte liegen in `zugang.json` im Datenordner (Rechte 600, Klartext, nicht im Schlüsselbund) und gehen nur als Umgebungsvariable an die Sammler-Kindprozesse. Angenommen werden nur Variablen, die im Register stehen. Die Oberfläche erfährt nie einen Wert, nur „gesetzt“. Neue Quelle mit Schlüssel: `zugang` im Register eintragen, der Collector liest die Variable wie bisher. Gilt ab dem nächsten Abruf der Quelle.
 
-Ablauf in der App: Als Hintergrund der Einrichtungsseite dient die mitgelieferte Weltkarte `web/basis/welt.pmtiles` (Zoom 0 bis 5, rund 15 MB, Herkunft in `web/basis/README.txt`). Der Balken zeigt beim Kartenabruf die geladenen MB, beim Sammeln „n von m abgerufen, läuft noch: <Name>" (`.collect-progress.json` im Datenordner, nur Quellennamen). Der erste Lauf überspringt die Quellen mit `erstlauf: spaeter`; sobald der erste Export steht, zeigt die App „Bereit", die langsamen Quellen laufen im Hintergrund (`--due`) und erscheinen mit dem nächsten Export (alle 5 Minuten). Spätere Zyklen holen nur noch fällige Quellen (`--due`), nicht mehr jede Quelle bei jedem Zyklus.
+Ablauf in der App: Als Hintergrund der Einrichtungsseite dient die mitgelieferte Weltkarte `web/basis/welt.pmtiles` (Zoom 0 bis 5, rund 15 MB, Herkunft in `web/basis/README.txt`). Der Balken zeigt beim Kartenabruf die fertigen Stücke, beim Sammeln „n von m abgerufen, läuft noch: <Name>" (`.collect-progress.json` im Datenordner, nur Quellennamen). Der erste Lauf überspringt die Quellen mit `erstlauf: spaeter`; sobald der erste Export steht, zeigt die App „Bereit", die langsamen Quellen laufen im Hintergrund (`--due`) und erscheinen mit dem nächsten Export (alle 5 Minuten). Spätere Zyklen holen nur noch fällige Quellen (`--due`), nicht mehr jede Quelle bei jedem Zyklus.
 
 ```bash
 # Dienst allein ausprobieren (ohne Hülle)
@@ -342,7 +342,7 @@ python -m app.desktop --data-dir /tmp/osint-demo --pmtiles tools/bin/pmtiles    
 desktop/build-sidecar.sh && cd desktop && npm install --include=dev && npx tauri build
 ```
 
-Grenzen der ersten Fassung: Suchindex, Gewässernetz, Höhenkacheln und Routen (`web/geo`, `web/tiles/dem`, `tools/build_*.py`) sind noch auf Irrel gebaut und werden nicht für einen anderen Mittelpunkt erzeugt. Quellen für Luxemburg, Rheinland-Pfalz und Ostbelgien liefern nur dort Daten; bundesweite (DWD, NINA, Autobahn, Bright Sky) funktionieren überall in Deutschland. Das Bündeln mit PyInstaller und die Installer sind hier nicht gebaut worden (Sandbox ohne WebKit, nur Linux): erster Build auf Mac, Windows und Linux steht aus.
+Grenzen der ersten Fassung: Suchindex, Gewässernetz, Höhenkacheln und Routen (`web/geo`, `web/tiles/dem`, `tools/build_*.py`) werden über die Werkzeuge in `tools/` für die Landesfläche gebaut, nicht von der App. Quellen für Luxemburg, Rheinland-Pfalz und Ostbelgien liefern nur dort Daten; bundesweite (DWD, NINA, Autobahn, Bright Sky) funktionieren überall in Deutschland. Das Bündeln mit PyInstaller und die Installer sind hier nicht gebaut worden (Sandbox ohne WebKit, nur Linux): erster Build auf Mac, Windows und Linux steht aus.
 
 ## Frontend: Zellenbetrieb (ab R5)
 

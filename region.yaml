@@ -1,7 +1,7 @@
-# Aktive Region des Lagebilds (siehe app/region.py).
-# Standard bleibt der Kreis um Irrel, bis Karte, Quellen und Frontend für die Landesfläche bereit sind (R2 bis R5).
-# Die Landesfläche liegt in region-rlp.yaml; aktivieren mit OSINT_REGION=region-rlp.yaml.
-name: Südeifel und Umgebung (120 km um Irrel)
-mode: radius
+# Aktive Region: Rheinland-Pfalz plus 80 km (ADR 0001). Das Polygon baut tools/build_region.py aus BKG VG250.
+# Der Bezugspunkt (Irrel) ist nur der Ort, zu dem Entfernungen angezeigt werden; er legt kein Gebiet fest.
+name: Rheinland-Pfalz plus 80 km
+mode: polygon
 reference: { name: Irrel, lat: 49.84615562322509, lon: 6.456057281843173 }
-radius_km: 120
+polygon_file: app/data/region/rlp_plus80.json
+attribution: "Verwaltungsgrenzen: © BKG (2026) dl-de/by-2-0, Datenquellen: https://sgx.geodatenzentrum.de/web_public/gdz/datenquellen/datenquellen_vg_nuts.pdf"

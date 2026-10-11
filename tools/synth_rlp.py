@@ -7,7 +7,7 @@ Zweck:     Das Frontend (Zellenlader, Verdichtung, Bildrate) braucht einen Daten
 Wichtig:   Alles hier ist Spielmaterial. Die Datenbank trägt die Meta-Zeile `synthetic=1`; nichts davon gehört auf den Webspace.
            Der Aufruf bricht ab, wenn die Zieldatenbank schon Daten enthält (kein Überschreiben echter Daten).
 Aufruf:    python tools/synth_rlp.py --db /tmp/r5/synth.sqlite [--seed 7] [--scale 1.0]
-           OSINT_DB_PATH=/tmp/r5/synth.sqlite OSINT_REGION=region-rlp.yaml python -m app.export --out /tmp/r5/data
+           OSINT_DB_PATH=/tmp/r5/synth.sqlite OSINT_REGION=region.yaml python -m app.export --out /tmp/r5/data
 Parameter: --scale   Faktor auf alle Mengen (1.0 entspricht ungefähr R3: 4.200 Ereignisse, 1.500 Stationen, 110.000 Messwerte)
 Datenschutz: keine Personen, keine Adressen; Namen sind Platzhalter wie "Pegel 17".
 """
@@ -22,7 +22,7 @@ import sys
 from datetime import timedelta
 from pathlib import Path
 
-os.environ.setdefault("OSINT_REGION", "region-rlp.yaml")
+os.environ.setdefault("OSINT_REGION", "region.yaml")
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.db import Storage  # noqa: E402

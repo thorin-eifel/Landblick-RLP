@@ -2,7 +2,7 @@
 """Hält den Stand-Block der README aktuell.
 
 Zweck:      Die README ist von Hand geschrieben bis auf den Block zwischen <!-- stand:start --> und <!-- stand:end -->.
-            Den Block erzeugt dieses Skript aus den Dateien, die die Wahrheit enthalten: region.yaml, region-rlp.yaml,
+            Den Block erzeugt dieses Skript aus den Dateien, die die Wahrheit enthalten: region.yaml, region.yaml,
             sources.yaml, docs/rlp/status.yaml, den Testläufen (Anzahl) und dem Ordner docs/. Der Block enthält kein
             Datum, damit er sich nur ändert, wenn sich etwas geändert hat.
 Aufruf:     python tools/update_readme.py            # schreibt README.md
@@ -65,8 +65,7 @@ def build_block() -> str:
     collectors = len([p for p in (ROOT / "app" / "collectors").glob("*.py") if p.stem not in ("__init__", "base", "rsslib", "severity")])
     lines = [START, "", "<!-- Dieser Block wird von tools/update_readme.py erzeugt. Nicht von Hand ändern. -->", ""]
     lines += ["### Region", "",
-              f"- Aktiv (`region.yaml`): {region_line(ROOT / 'region.yaml')}",
-              f"- Ziel (`region-rlp.yaml`, noch nicht aktiv): {region_line(ROOT / 'region-rlp.yaml')}", ""]
+              f"- Aktiv (`region.yaml`): {region_line(ROOT / 'region.yaml')}", ""]
     lines += ["### Phasen", "", "| Phase | Inhalt | Stand | Pull Request |", "|---|---|---|---|"]
     for p in phases:
         pr = f"[#{p['pr']}](https://github.com/thorin-eifel/maps/pull/{p['pr']})" if p.get("pr") else ""

@@ -16,7 +16,7 @@ def srv(tmp_path, monkeypatch):
     d = tmp_path / "d"
     app = desktop.App(d, web, tmp_path / "pmtiles", tmp_path)
     started = []
-    monkeypatch.setattr(app, "start", lambda s: started.append(s) or True)
+    monkeypatch.setattr(app, "start", lambda: started.append(1) or True)
     box = [0]
     s = ThreadingHTTPServer(("127.0.0.1", 0), desktop.make_handler(app, box)); box[0] = s.server_address[1]
     threading.Thread(target=s.serve_forever, daemon=True).start()
@@ -35,10 +35,11 @@ def call(port, path, method="GET", body=None, headers=None, host=None):
         return e.code, e.read(), dict(e.headers)
 
 
-def test_state_unconfigured(srv):
+def test_state_has_no_center_choice(srv):
     _, port, _ = srv
     st, body, _ = call(port, "/api/state")
-    assert st == 200 and json.loads(body)["configured"] is False
+    j = json.loads(body)
+    assert st == 200 and j["configured"] is True and "center" not in j and j["job"]["phase"] == "idle"
 
 
 def test_foreign_host_rejected(srv):
@@ -46,13 +47,19 @@ def test_foreign_host_rejected(srv):
     assert call(port, "/api/state", host="evil.example")[0] == 403
 
 
-def test_post_needs_header_and_valid_center(srv):
-    app, port, started = srv
-    assert call(port, "/api/setup", "POST", {"lat": 49.8, "lon": 6.4})[0] == 403
-    assert call(port, "/api/setup", "POST", {"lat": 99, "lon": 6.4}, {"X-OSINT": "1"})[0] == 400
-    assert call(port, "/api/setup", "POST", {"lat": 49.8, "lon": 6.4, "name": "Irrel"}, {"X-OSINT": "1"})[0] == 200
-    assert started and app.settings()["lat"] == 49.8
-    assert call(port, "/api/setup", "POST", {"lat": 52.5, "lon": 13.4}, {"X-OSINT": "1"})[0] == 409   # kein stilles Umsetzen
+def test_setup_and_geocode_are_gone(srv):
+    _, port, _ = srv
+    assert call(port, "/api/setup", "POST", {"lat": 49.8, "lon": 6.4}, {"X-OSINT": "1"})[0] == 404
+    assert call(port, "/api/geocode?q=Irrel")[0] == 404
+    assert not hasattr(desktop, "geocode")
+
+
+def test_tiles_missing_until_all_three_files_exist(srv):
+    app, _, _ = srv
+    assert app.tiles_fehlen()
+    for n in ("region", "core", "ring"):
+        (app.data_dir / "tiles" / f"{n}.pmtiles").write_bytes(b"x")
+    assert not app.tiles_fehlen()
 
 
 def test_data_comes_only_from_data_dir_and_range_works(srv):
