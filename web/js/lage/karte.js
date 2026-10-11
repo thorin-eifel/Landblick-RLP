@@ -29,6 +29,36 @@ import { applyWind, fillTempLegend, showFlowWind, trackLegendBottom } from './we
 import { CORE_URL, RING_URL, START_VIEW, SYMBOL_LAYERS, TILES_URL, TOWNS, light, map, reduceMotion, reliefOk, ripples, setBasemapOk, setCoreOk, setFlow, setLight, setMap, setMapReady, setPopup, setReliefOk, setRingOk, setRipples, setSweep, setWind, setWindLow, state, sweep, wind, windLow } from './zustand.js';
 
 // ------------------------------------------------------------------ Karte
+// Rahmen der Karte: Umriss von Rheinland-Pfalz (web/geo/rlp.geojson: 6,11–8,51 E, 48,97–50,94 N) mit gleichem Rand ringsum, damit der Mittelpunkt
+// des Rahmens der Mittelpunkt des Landes ist. MapLibre rückt beim Herauszoomen auf diese Mitte und kürzt den Zoom, bis der Rahmen den Bildschirm füllt.
+const RLP_BBOX = [[6.112, 48.967], [8.508, 50.942]];
+const RAND_LON = 1.2, RAND_LAT = 0.75;   // Grad Luft um den kleinsten Ausschnitt
+const RLP_RAHMEN = [[RLP_BBOX[0][0] - RAND_LON, RLP_BBOX[0][1] - RAND_LAT], [RLP_BBOX[1][0] + RAND_LON, RLP_BBOX[1][1] + RAND_LAT]];   // erster Rahmen bis zur ersten Messung
+
+/** Kleinster Zoom: ganz Rheinland-Pfalz gerade im Bild. Dort liegt das Land genau in der Mitte (ein Schwenk springt zurück), egal woher man kam. */
+function zentriereLand(m) {
+  const stelle = () => {
+    const cam = m.cameraForBounds(RLP_BBOX, { padding: 24 });
+    if (!cam) return null;
+    // Rahmen = Ausschnitt bei kleinstem Zoom um die Landesmitte plus Rand; sonst hebt ein zu enger Rahmen den Zoom an und das Land sitzt nicht mittig
+    const { clientWidth: w, clientHeight: h } = m.getCanvas(), welt = 512 * 2 ** cam.zoom, rad = Math.PI / 180;
+    const y = (lat) => (0.5 - Math.log(Math.tan(Math.PI / 4 + lat * rad / 2)) / (2 * Math.PI)) * welt;
+    const lat = (py) => (2 * Math.atan(Math.exp((0.5 - py / welt) * 2 * Math.PI)) - Math.PI / 2) / rad;
+    const dLon = (w / welt) * 180 + RAND_LON, yc = y(cam.center.lat);
+    m.setMaxBounds([[cam.center.lng - dLon, lat(yc + h / 2) - RAND_LAT], [cam.center.lng + dLon, lat(yc - h / 2) + RAND_LAT]]);
+    m.setMinZoom(cam.zoom);
+    return cam;
+    return null;
+  };
+  let cam = stelle();
+  m.on('resize', () => { cam = stelle(); });
+  m.on('moveend', () => {
+    if (!cam || m.getZoom() > m.getMinZoom() + 0.02) return;
+    const c = m.getCenter();
+    if (Math.abs(c.lng - cam.center.lng) > 1e-4 || Math.abs(c.lat - cam.center.lat) > 1e-4) m.easeTo({ center: cam.center, duration: reduceMotion ? 0 : 300 });
+  });
+}
+
 export async function initMap() {
   const c = palette();
   const m = state.meta;
@@ -37,9 +67,10 @@ export async function initMap() {
     style: { version: 8, sources: {}, glyphs: glyphsUrl(), layers: [{ id: 'bg', type: 'background', paint: { 'background-color': c.bg } }] },
     center: [m.center?.lon ?? START_VIEW.lon, m.center?.lat ?? START_VIEW.lat], zoom: 8.0, attributionControl: false, dragRotate: false, pitchWithRotate: false,
     locale: { 'FullscreenControl.Enter': 'Vollbild', 'FullscreenControl.Exit': 'Vollbild beenden', 'NavigationControl.ZoomIn': 'Vergrößern', 'NavigationControl.ZoomOut': 'Verkleinern' },
-    maxBounds: [[m.bbox.lon_min - 0.45, m.bbox.lat_min - 0.28], [m.bbox.lon_max + 0.45, m.bbox.lat_max + 0.28]],
+    maxBounds: RLP_RAHMEN,   // um Rheinland-Pfalz zentriert: ganz herausgezoomt sitzt das Land mittig, egal wo der Start liegt
   }));
   map.touchZoomRotate.disableRotation();
+  zentriereLand(map);
   map.addControl(new NavigationControl({ showCompass: false }), 'top-right');
   if (document.fullscreenEnabled || document.webkitFullscreenEnabled) map.addControl(new FullscreenControl({ container: document.querySelector('.map-wrap') }), 'top-right');      // Karte samt Cartouche, Windrose und Legende
   map.addControl(new ScaleControl({ unit: 'metric' }), 'bottom-right');

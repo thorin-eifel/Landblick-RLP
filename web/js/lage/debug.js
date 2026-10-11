@@ -9,7 +9,7 @@ export function debugHook(m) {
     const cmd = JSON.parse(document.documentElement.dataset.debugIn || '{}');
     if (cmd.jump) { m.jumpTo({ center: [cmd.jump[0], cmd.jump[1]], zoom: cmd.jump[2] }); await new Promise((r) => { m.once('idle', r); setTimeout(r, 6000); }); }
     if (cmd.zellen && state.zellen) await zellenWarten();
-    const out = { zoom: m.getZoom() };
+    const out = { zoom: m.getZoom(), minZoom: m.getMinZoom(), center: m.getCenter().toArray().map((v) => +v.toFixed(3)) };
     if (cmd.zellen) { // Zellenbetrieb: gehaltene Zellen, Fehler, Anzahl gezeichneter Ereignisse und Dichtepunkte
       out.zellen = state.zellen ? { ...state.zellen.status(), version: state.zellen.version, bytes: [...state.zellen.held.keys()].reduce((a, rel) => a + (state.zellen.files[rel]?.bytes ?? 0), 0), events: state.events.length, base: state.base.length, band: state.base.some((f) => f.properties.stub) ? 'stubs' : 'zellen' } : 'aus';
     }
