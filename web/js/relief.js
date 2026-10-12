@@ -1,15 +1,17 @@
 // Geländerelief: Schummerung, Höhenfärbung, Höhenlinien mit Beschriftung, Höhenanzeige unter dem Zeiger.
-// Datenbasis: Terrarium-Höhenkacheln (Mapzen Terrain Tiles auf AWS Open Data, u. a. SRTM/EU-DEM), einmalig per
-// tools/build_dem.py nach web/tiles/dem/ geladen und vom eigenen Server ausgeliefert. Kein Abruf bei Dritten.
+// Datenbasis: Terrarium-Höhenkacheln bis Zoom 14. In Rheinland-Pfalz aus dem DGM1 des Landes (LVermGeoRP, dl-de/by-2-0),
+// sonst Mapzen Terrain Tiles (SRTM/EU-DEM); gebaut mit tools/build_dem_rlp.py nach web/tiles/dem/ und vom eigenen Server
+// ausgeliefert. Den Vermerk liefert tiles/dem/meta.json. Kein Abruf bei Dritten.
 // Höhenlinien rechnet das gebündelte maplibre-contour (BSD-3) im Browser in einem Web Worker.
 // Fehlt die Kachelablage oder das Plugin, bleibt die Karte ohne Relief benutzbar (setupRelief liefert false).
 import { addProtocol } from '../vendor/maplibre-gl/maplibre-gl.js';
 
-const DEM_MAXZOOM = 12;
+const DEM_MAXZOOM = 14;
 const ELEV_SRC = 'dem';
 const CONTOUR_SRC = 'contours';
 export const RELIEF_LAYERS = ['relief-color', 'relief-hill', 'relief-contour', 'relief-contour-label'];
-export const RELIEF_ATTRIBUTION = 'Höhen: EU-DEM (Copernicus, EU) und SRTM (NASA) über Mapzen Terrain Tiles';
+// Vermerk; setupRelief ersetzt ihn durch den Text aus tiles/dem/meta.json (Jahre der Befliegung).
+export let RELIEF_ATTRIBUTION = 'Höhen: © GeoBasis-DE / LVermGeoRP, dl-de/by-2-0 [Daten bearbeitet]; außerhalb Rheinland-Pfalz EU-DEM (Copernicus, EU) und SRTM (NASA) über Mapzen Terrain Tiles';
 
 // Höhenstufen in Metern über NN; Werte unter 100 m und über 700 m laufen in die Randfarbe aus.
 export const RAMP = {
@@ -38,15 +40,17 @@ export async function setupRelief(map) {
   try {
     const probe = await fetch(abs('tiles/dem/README.txt'), { method: 'HEAD' }).catch(() => null);
     if (!probe?.ok) throw new Error('Höhenkacheln fehlen (tools/build_dem.py ausführen)');
+    const meta = await fetch(abs('tiles/dem/meta.json')).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    if (typeof meta?.attribution === 'string' && meta.attribution.length < 400) RELIEF_ATTRIBUTION = meta.attribution;
     const tiles = abs('tiles/dem/') + '{z}/{x}/{y}.png';
     dem = new lib.DemSource({ url: tiles, encoding: 'terrarium', maxzoom: DEM_MAXZOOM, worker: true, cacheSize: 120, timeoutMs: 15000 });
     addProtocol(dem.sharedDemProtocolId, dem.sharedDemProtocolV4);
     addProtocol(dem.contourProtocolId, dem.contourProtocolV4);
     map.addSource(ELEV_SRC, { type: 'raster-dem', tiles: [tiles], tileSize: 256, encoding: 'terrarium', maxzoom: DEM_MAXZOOM });
     map.addSource(CONTOUR_SRC, {
-      type: 'vector', maxzoom: 14,
+      type: 'vector', maxzoom: 16,
       tiles: [dem.contourProtocolUrl({
-        thresholds: { 8: [200, 1000], 10: [100, 500], 11: [50, 200], 12: [20, 100], 13: [10, 50] },
+        thresholds: { 7: [200, 1000], 10: [100, 500], 11: [50, 200], 12: [20, 100], 13: [10, 50], 14: [5, 25], 15: [5, 25], 16: [2.5, 10] },
         contourLayer: 'contours', elevationKey: 'ele', levelKey: 'level',
       })],
     });
@@ -76,9 +80,9 @@ export function buildRelief(map, dark, visible, med = false) {
     paint: { 'hillshade-exaggeration': s.hill, 'hillshade-shadow-color': s.shadow, 'hillshade-highlight-color': s.high,
       'hillshade-accent-color': s.accent, 'hillshade-illumination-direction': 315 } }, under);
   const level = ['coalesce', ['get', 'level'], 0];
-  map.addLayer({ id: 'relief-contour', type: 'line', source: CONTOUR_SRC, 'source-layer': 'contours', minzoom: 8, layout: { visibility: vis, 'line-join': 'round' },
+  map.addLayer({ id: 'relief-contour', type: 'line', source: CONTOUR_SRC, 'source-layer': 'contours', minzoom: 7, layout: { visibility: vis, 'line-join': 'round' },
     paint: { 'line-color': ['case', ['>=', level, 1], s.contourMajor, s.contour],
-      'line-width': ['interpolate', ['linear'], ['zoom'], 8, ['case', ['>=', level, 1], 0.6, 0.3], 13, ['case', ['>=', level, 1], 1.3, 0.7]] } }, over);
+      'line-width': ['interpolate', ['linear'], ['zoom'], 7, ['case', ['>=', level, 1], 0.5, 0.25], 13, ['case', ['>=', level, 1], 1.3, 0.7]] } }, over);
   map.addLayer({ id: 'relief-contour-label', type: 'symbol', source: CONTOUR_SRC, 'source-layer': 'contours', minzoom: 10,
     filter: ['>=', level, 1],
     layout: { visibility: vis, 'symbol-placement': 'line', 'text-field': ['concat', ['to-string', ['get', 'ele']], ' m'], 'text-font': [med ? 'Grenze Gotisch Regular' : 'Noto Sans Regular'],
@@ -93,7 +97,7 @@ export function setReliefVisible(map, on) {
 /** Rohe Höhenkachel (Meter, zeilenweise) für das Lichtmodell; wirft, wenn es die Kachel nicht gibt. */
 export const demTile = (z, x, y) => (dem ? dem.getDemTile(z, x, y) : Promise.reject(new Error('kein Relief')));
 
-/** Höhe in Metern an einer Koordinate aus der Zoom-12-Kachel, bilinear gemittelt; null, wenn nicht ermittelbar. */
+/** Höhe in Metern an einer Koordinate aus der Zoom-14-Kachel, bilinear gemittelt; null, wenn nicht ermittelbar. */
 export async function elevationAt(lng, lat) {
   if (!dem) return null;
   const z = DEM_MAXZOOM, n = 2 ** z;
