@@ -195,7 +195,7 @@ export function cliffLayers(k, dark, ticks, dgm) {
   return [
     ...out,
     { id: 'land-cliff-wand-dgm', type: 'fill', ...wall('wand'), minzoom: 13,
-      paint: { 'fill-color': dark ? '#625c52' : '#c7bca4', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.6], 'fill-antialias': true } },
+      paint: { 'fill-color': dark ? '#625c52' : '#c7bca4', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.33], 'fill-antialias': true } },
     { id: 'land-cliff-schraffur-dgm', type: 'line', ...wall('schraffur'), minzoom: 14, layout: round,
       paint: { 'line-color': CLIFF[k], 'line-opacity': 0.9, 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 0.5, 17, 0.9, 19, 1.4] } },
     { id: 'land-cliff-dgm', type: 'line', ...wall('kante'), minzoom: 13, layout: round, filter: ['>=', ['get', 'drop'], 5],
