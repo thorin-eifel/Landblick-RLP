@@ -204,6 +204,7 @@ Die Landesdaten kommen von `geobasis-rlp.de/data/dgm1/` (Dateiliste `meta4/dgm1_
 Die Kacheln liegen nicht im Repository (`.gitignore`) und müssen mit auf den Webspace (`web/tiles/dem/`, inkl. `README.txt` als Prüfdatei und `meta.json`). `dem-base/` und `_scratch/` bleiben lokal.
 Höhenlinien rechnet `web/vendor/maplibre-contour` (BSD-3) im Browser in einem Worker (ab Zoom 7, bis 2,5 m Abstand bei Zoom 16); Ziffern kommen aus `web/fonts/` (Noto Sans, OFL).
 Fehlt `tiles/dem/README.txt`, bleibt die Karte ohne Relief und läuft normal. Code: `web/js/relief.js`.
+Im Ebenenmenü (Kartengrundlage) gibt es zwei Schalter: „Schummerung und Höhenfärbung“ (`relief`) und „Höhenlinien“ (`contours`, mit Beschriftung). Beide laufen über dieselben Höhenkacheln und sind einzeln schaltbar; die Lichtquelle am Zeiger hängt an der Schummerung, die Höhe unter dem Zeiger und die Legende an einem von beiden.
 Namensnennung steht auf `quellen.html`. Höhenwerte sind Raster (in RLP ca. 6 m, sonst ca. 30 m), keine Vermessung.
 
 Zoom 15 und 16 aus dem 1-m-Raster (optional, setzt den Rohordner der Felswände voraus):
