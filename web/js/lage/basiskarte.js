@@ -1,6 +1,6 @@
 import { layers as basemapLayers, namedFlavor } from '../../vendor/protomaps-basemaps/basemaps.js';
 import { registerIcons, registerMedieval, setIconStyle } from '../icons.js';
-import { buildRelief, elevationAt, fillLegend } from '../relief.js';
+import { buildRelief, elevationAt, fillLegend, hillStrength } from '../relief.js';
 import { $ } from '../util.js';
 import { fillWindLegend } from '../wind.js';
 import { palette, sevColor } from './farben.js';
@@ -89,7 +89,7 @@ export function applyLight(dark = document.documentElement.dataset.ansicht === '
   const beforeWater = last >= 0 && ids[last + 1] ? ids[last + 1] : 'radius-fill';
   light.setEnabled(on);
   light.build(before, beforeWater, { dark, med, waterColor: med ? MED.water : dark ? '#1f4f7a' : '#8fc0e8' });
-  if (map.getLayer('relief-hill')) map.setPaintProperty('relief-hill', 'hillshade-exaggeration', on ? 0.12 : (med ? 0.5 : dark ? 0.32 : 0.42));
+  if (map.getLayer('relief-hill')) map.setPaintProperty('relief-hill', 'hillshade-exaggeration', on ? 0.12 : hillStrength(dark, med));
   const box = $('#licht-opt'); if (box) box.hidden = !on;
 }
 

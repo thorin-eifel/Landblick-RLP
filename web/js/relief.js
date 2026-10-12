@@ -21,11 +21,14 @@ export const RAMP = {
 };
 // Karte „um 1450“: Ocker statt Höhenstufen, braune Schummerung, Höhenlinien in Tinte (über den Relief-Schalter weiter nutzbar)
 const MED_RAMP = [[100, '#e6d6a4'], [300, '#dcc790'], [500, '#cfb27c'], [700, '#bf9a68']];
-const MED_STYLE = { opacity: 0.45, shadow: '#5a3d1e', high: '#f3e4b8', accent: '#7a5a30', hill: 0.5, contour: 'rgba(110,70,34,0.5)', contourMajor: 'rgba(84,52,24,0.8)', label: '#4a2f16', halo: 'rgba(238,224,182,0.9)' };
+const MED_STYLE = { opacity: 0.45, shadow: '#3f2a12', high: '#f3e4b8', accent: '#5e4220', hill: 0.72, contour: 'rgba(110,70,34,0.5)', contourMajor: 'rgba(84,52,24,0.8)', label: '#4a2f16', halo: 'rgba(238,224,182,0.9)' };
 const STYLE = {
-  light: { opacity: 0.62, shadow: '#3b4252', high: '#ffffff', accent: '#4c566a', hill: 0.42, contour: 'rgba(122,84,48,0.55)', contourMajor: 'rgba(104,68,36,0.8)', label: '#5b3d21', halo: 'rgba(255,255,255,0.85)' },
-  dark: { opacity: 0.5, shadow: '#000000', high: '#6b7484', accent: '#000000', hill: 0.32, contour: 'rgba(226,196,150,0.5)', contourMajor: 'rgba(240,212,168,0.85)', label: '#f0dcbc', halo: 'rgba(18,18,18,0.9)' },
+  light: { opacity: 0.62, shadow: '#1f2533', high: '#ffffff', accent: '#2f3646', hill: 0.7, contour: 'rgba(122,84,48,0.55)', contourMajor: 'rgba(104,68,36,0.8)', label: '#5b3d21', halo: 'rgba(255,255,255,0.85)' },
+  dark: { opacity: 0.5, shadow: '#000000', high: '#7a8496', accent: '#000000', hill: 0.5, contour: 'rgba(226,196,150,0.5)', contourMajor: 'rgba(240,212,168,0.85)', label: '#f0dcbc', halo: 'rgba(18,18,18,0.9)' },
 };
+
+/** Stärke der Schummerung je Kartenstil (eine Quelle für Aufbau und Umschalten). */
+export const hillStrength = (dark, med) => (med ? MED_STYLE : dark ? STYLE.dark : STYLE.light).hill;
 
 let dem = null; // DemSource des Plugins
 
