@@ -1,8 +1,7 @@
-"""Tests für tools/build_klippen_dgm.py: Wand im Höhenfeld finden, Laufrichtung (tiefe Seite rechts), Kacheln schreiben."""
+"""Tests für tools/build_klippen_dgm.py: Wandfläche im 1-m-Höhenfeld, Oberkante, Striche in Fallrichtung, Kacheln mit Löchern."""
 from __future__ import annotations
 
 import importlib.util
-import json
 from pathlib import Path
 
 import numpy as np
@@ -10,101 +9,105 @@ import pytest
 
 pytest.importorskip("skimage")
 pytest.importorskip("mapbox_vector_tile")
+pytest.importorskip("shapely")
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("build_klippen_dgm", ROOT / "tools" / "build_klippen_dgm.py")
 K = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(K)
 
-KW = dict(slope=55.0, min_cells=8, min_len_m=24.0, min_drop=6.0, sigma=0.6, simplify_m=3.0)
 
-
-def feld(n=300):
-    """Hochfläche im Norden (400 m), Tiefland im Süden (380 m), dazwischen eine 20 m hohe Wand auf Zeile 150 (West-Ost)."""
+def feld(n=240):
+    """Hochfläche im Norden (400 m), Tiefland im Süden (370 m), dazwischen eine Wand (Zeilen 118..127, 30 m auf 10 m)."""
     h = np.full((n, n), 400.0, np.float32)
-    h[150:, :] = 380.0
-    h[148:152, :] = np.linspace(400.0, 380.0, 4)[:, None]      # 20 m auf 4 Zellen = 16 m: sehr steil
+    h[128:, :] = 370.0
+    h[118:128, :] = np.linspace(400.0, 370.0, 10)[:, None]
     return h
 
 
-def test_wand_wird_gefunden_und_zeigt_nach_osten():
-    lines = K.block_lines(feld(), **KW)
-    assert lines, "keine Linie gefunden"
-    pts, drop = max(lines, key=lambda x: len(x[0]))
-    assert 12 < drop < 24
-    # Norden oben (Zeile 0), Hochfläche oben: Laufrichtung Ost, tiefe Seite (Süden) rechts
-    assert pts[-1, 1] > pts[0, 1]
-    assert 146 < pts[:, 0].mean() < 154
+def test_wand_wird_als_flaeche_gefunden():
+    found = K.derive(feld())
+    assert len(found) == 1
+    w = found[0]
+    assert 25 < w["drop"] < 35
+    minx, miny, maxx, maxy = w["poly"].bounds
+    assert maxx - minx > 200 and 5 < maxy - miny < 25
+    assert 100 < (miny + maxy) / 2 < 130                    # y Nord: Zeile 123 von 240 → y ≈ 116
 
 
-def test_sanfter_hang_gibt_keine_linie():
-    h = np.tile(np.linspace(400, 300, 300, dtype=np.float32)[:, None], (1, 300))   # 100 m auf 1200 m = 5 Grad
-    assert K.block_lines(h, **KW) == []
+def test_sanfter_hang_gibt_nichts():
+    h = np.tile(np.linspace(400, 300, 240, dtype=np.float32)[:, None], (1, 240))
+    assert K.derive(h) == []
+
+
+def test_niedrige_stufe_faellt_unter_mindesthoehe():
+    h = feld()
+    h = 395 + (h - 370) / 30 * 5                              # gleiche Form, nur 5 m statt 30 m → knapp unter min_drop 6
+    assert K.derive(h.astype(np.float32), min_drop=6.0) == []
+
+
+def test_oberkante_liegt_oben_und_wand_rechts():
+    w = K.derive(feld())[0]
+    assert w["kante"], "keine Oberkante"
+    line = max(w["kante"], key=len)
+    _, miny, _, maxy = w["poly"].bounds
+    assert line[:, 1].mean() > (miny + maxy) / 2              # Norden = Oberkante
+    assert line[-1, 0] > line[0, 0]                           # Laufrichtung Ost, Süden (Wand) rechts
+
+
+def test_striche_laufen_bergab_nicht_quer():
+    w = K.derive(feld())[0]
+    s = w["schraffur"]
+    assert len(s) > 50
+    d = np.array([x[-1] - x[0] for x in s])
+    assert (d[:, 1] < 0).mean() > 0.95                        # nach Süden
+    assert np.abs(d[:, 1]).mean() > 3 * np.abs(d[:, 0]).mean()
+    for x in s[:20]:
+        assert w["poly"].buffer(0.01).contains(__import__("shapely").geometry.LineString(x))
+
+
+def test_loch_bleibt_loch():
+    h = feld()
+    h[119:127, 60:120] = 385.0                                # ebene Stufe mitten in der Wand: Loch in der Steilzone
+    found = K.derive(h)
+    assert any(len(list(w["poly"].interiors)) >= 1 for w in found)
 
 
 def test_nodata_rand_ist_keine_wand():
     h = feld()
-    h[:, 200:] = np.nan
-    lines = K.block_lines(h, **KW)
-    for pts, _ in lines:
-        assert pts[:, 1].max() < 199
+    h[:, 150:] = np.nan
+    for w in K.derive(h):
+        assert w["poly"].bounds[2] < 150
 
 
-def test_kacheln_behalten_laufrichtung(tmp_path):
+def test_kacheln_mit_loechern_und_richtung(tmp_path):
     import mapbox_vector_tile as mvt
-    lon0, lat = 6.40, 49.85
-    coords = [[lon0 + i * 0.0003, lat] for i in range(40)]
-    e = np.array([0.0, 40.0, 80.0, 120.0]) + 340000.0
-    n_ = np.full(4, 5530000.0)
-    wg = K.wall_geometry(e, n_, 15.0)
-    lonlat = lambda r: [[lon0 + (x - 340000.0) / 71000.0, lat + (y - 5530000.0) / 111000.0] for x, y in r]
-    item = {"crest": coords, "drop": 15.0, "wand": [lonlat(r) for r in wg["wand"]],
-            "schraffur": [lonlat(r) for r in wg["schraffur"]], "schicht": [lonlat(r) for r in wg["schicht"]]}
+    lon0, lat0 = 7.73, 50.12
+    ext = np.array([[lon0, lat0], [lon0 + 0.002, lat0], [lon0 + 0.002, lat0 + 0.001], [lon0, lat0 + 0.001], [lon0, lat0]])
+    hole = np.array([[lon0 + 0.0005, lat0 + 0.0003], [lon0 + 0.0005, lat0 + 0.0007], [lon0 + 0.0015, lat0 + 0.0007],
+                     [lon0 + 0.0015, lat0 + 0.0003], [lon0 + 0.0005, lat0 + 0.0003]])
+    item = {"drop": 15.0, "wand": [(ext, [hole])],
+            "kante": [np.array([[lon0, lat0 + 0.001], [lon0 + 0.002, lat0 + 0.001]])],
+            "schraffur": [np.array([[lon0 + 0.0002, lat0 + 0.0009], [lon0 + 0.0002, lat0 + 0.00086]])]}
     n = K.write_tiles([item], tmp_path)
     assert n >= 1
-    f = next(tmp_path.glob("12/*/*.pbf"))
-    tile = mvt.decode(f.read_bytes())
-    assert {"klippen", "wand", "schraffur"} <= set(tile)
-    layer = tile["klippen"]
-    g = layer["features"][0]["geometry"]["coordinates"]
-    assert g[-1][0] > g[0][0]                      # Richtung Ost bleibt erhalten
-    assert layer["features"][0]["properties"]["drop"] == 15.0
+    tiles = [mvt.decode(f.read_bytes()) for f in tmp_path.glob("13/*/*.pbf")]      # die Wand darf über eine Kachelgrenze reichen
+    assert tiles and all(len(t) >= 1 for t in tiles)
+    feats = {k: [f for t in tiles for f in t.get(k, {}).get("features", [])] for k in ("wand", "kante", "schraffur")}
+    assert all(feats.values())
+    # Außenring + Loch bleiben in der Kachel erhalten, in der das Loch liegt
+    assert any(len(f["geometry"]["coordinates"]) == 2 for f in feats["wand"])
+    k = feats["kante"][0]
+    assert k["geometry"]["coordinates"][-1][0] > k["geometry"]["coordinates"][0][0]     # Richtung Ost bleibt erhalten
+    assert k["properties"]["drop"] == 15.0
 
 
-def test_trace_loest_staffelecken():
-    sk = np.zeros((10, 10), bool)
-    for i in range(6):
-        sk[5, i] = True
-    sk[4, 5] = True                                    # Treppenecke
-    ch = K.trace(sk)
-    assert len(ch) == 1 and len(ch[0]) == 7
-
-
-def test_wand_quer_zu_den_hoehenlinien_wird_verworfen():
-    """Eine Linie, die dem Gefälle folgt (statt der Höhenlinie), widerspricht dem Gelände."""
-    h = np.tile(np.linspace(400, 300, 300, dtype=np.float32)[:, None], (1, 300))     # Gefälle nach Süden
-    laengs = np.array([[r, 150.0] for r in range(40, 260, 2)])                       # Nord-Süd, mit dem Gefälle
-    quer = np.array([[150.0, c] for c in range(40, 260, 2)])                         # West-Ost, entlang der Höhenlinie
-    assert not K.along_contour(K.gradient_field(h), laengs, 35.0).any()
-    assert K.along_contour(K.gradient_field(h), quer, 35.0).all()
-
-
-def test_wandgeometrie_liegt_auf_der_tiefen_seite():
-    """Linie nach Osten: die tiefere Seite liegt rechts, also im Süden. Fläche, Striche und Schichtlinien liegen dort."""
-    e = np.linspace(0.0, 120.0, 61)
-    n = np.zeros_like(e)
-    wg = K.wall_geometry(e, n, 20.0)
-    assert wg["wand"] and wg["schraffur"] and wg["schicht"]
-    for r in wg["wand"]:
-        assert r[:, 1].min() < -2.0 and r[:, 1].max() <= 0.01
-    for r in wg["schraffur"]:
-        assert r[-1, 1] < r[0, 1]                       # Strich läuft von der Oberkante nach Süden
-    assert K.wall_geometry(e, n, 20.0)["schraffur"][0].tolist() == wg["schraffur"][0].tolist()   # deterministisch
-
-
-def test_wandbreite_waechst_mit_der_hoehe():
-    e = np.linspace(0.0, 120.0, 61)
-    n = np.zeros_like(e)
-    klein = K.wall_geometry(e, n, 6.0)["wand"][0][:, 1].min()
-    gross = K.wall_geometry(e, n, 30.0)["wand"][0][:, 1].min()
-    assert gross < klein < 0
+def test_tif_wird_auf_1000_gekappt_und_nodata_erkannt():
+    tifffile = pytest.importorskip("tifffile")
+    import io
+    a = np.full((1001, 1001), 250.0, np.float32)
+    a[:10, :10] = -9999
+    b = io.BytesIO()
+    tifffile.imwrite(b, a)
+    q = K.tif_to_u16(b.getvalue())
+    assert q.shape == (1000, 1000) and q[0, 0] == 0 and abs(q[500, 500] / K.SCALE - K.OFFSET - 250.0) < 0.02
