@@ -171,30 +171,39 @@ export function cliffLayers(k, dark, ticks, dgm) {
   const osmFilter = dgm ? ['all', ['==', ['get', 'kind'], 'cliff'], ['!', ['within', RLP_UMRISS]]] : ['==', 'kind', 'cliff'];
   // Wandhöhe 5 m bis 30 m: Linie und Band wachsen mit der Höhe
   const byDrop = (lo, hi) => ['interpolate', ['linear'], ['get', 'drop'], 5, lo, 30, hi];
-  const sets = [{ src: { source: 'basemap', 'source-layer': 'earth' }, filter: osmFilter, id: '' }];
-  if (dgm) sets.push({ src: { source: 'klippen', 'source-layer': 'klippen' }, filter: ['>=', ['get', 'drop'], 5], id: '-dgm' });
-  return sets.flatMap(({ src, filter, id }) => {
-    const dg = id === '-dgm';
-    return [
-      { id: `land-cliff-band${id}`, type: 'line', ...src, minzoom: 12, filter,
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': CLIFF_SCREE[k], 'line-opacity': 0.55, 'line-blur': 2.5, 'line-offset': ['interpolate', ['linear'], ['zoom'], 12, 2, 17, 6],
-          'line-width': dg ? ['interpolate', ['linear'], ['zoom'], 12, byDrop(3, 6), 17, byDrop(9, 18)] : ['interpolate', ['linear'], ['zoom'], 12, 4, 17, 12] } },
-      { id: `land-cliff-case${id}`, type: 'line', ...src, minzoom: 12, filter,
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': dark ? '#161616' : '#fbf8f0', 'line-opacity': dg ? 0.92 : 0.5,
-          'line-width': dg ? ['interpolate', ['linear'], ['zoom'], 12, byDrop(4, 6), 16, byDrop(8, 14)] : ['interpolate', ['linear'], ['zoom'], 12, 2.4, 16, 4] } },
-      { id: `land-cliff${id}`, type: 'line', ...src, minzoom: 12, filter,
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': CLIFF[k], 'line-opacity': 1,
-          'line-width': dg ? ['interpolate', ['linear'], ['zoom'], 12, byDrop(1.6, 2.6), 16, byDrop(3.2, 5.5)] : ['interpolate', ['linear'], ['zoom'], 12, 1.1, 16, 2.2] } },
-      ...(ticks ? [{ id: `land-cliff-teeth${id}`, type: 'symbol', ...src, minzoom: 13, filter,
-        layout: { 'symbol-placement': 'line', 'symbol-spacing': dg ? 7 : 8, 'icon-image': 'cliff-tick', 'icon-anchor': 'top', 'icon-offset': [0, 0.5],
-          'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true,
-          'icon-size': dg ? ['interpolate', ['linear'], ['zoom'], 13, 1.4, 17, 2.2] : ['interpolate', ['linear'], ['zoom'], 13, 0.85, 17, 1.25] },
-        paint: { 'icon-color': CLIFF[k], 'icon-opacity': 1 } }] : []),
-    ];
-  });
+  const round = { 'line-cap': 'round', 'line-join': 'round' };
+  const osm = { source: 'basemap', 'source-layer': 'earth' };
+  const out = [
+    { id: 'land-cliff-band', type: 'line', ...osm, minzoom: 12, filter: osmFilter, layout: round,
+      paint: { 'line-color': CLIFF_SCREE[k], 'line-opacity': 0.55, 'line-blur': 2.5, 'line-offset': ['interpolate', ['linear'], ['zoom'], 12, 2, 17, 6],
+        'line-width': ['interpolate', ['linear'], ['zoom'], 12, 4, 17, 12] } },
+    { id: 'land-cliff-case', type: 'line', ...osm, minzoom: 12, filter: osmFilter, layout: round,
+      paint: { 'line-color': dark ? '#161616' : '#ffffff', 'line-opacity': 0.5, 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 2.4, 16, 4] } },
+    { id: 'land-cliff', type: 'line', ...osm, minzoom: 12, filter: osmFilter, layout: round,
+      paint: { 'line-color': CLIFF[k], 'line-opacity': 1, 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1.1, 16, 2.2] } },
+    ...(ticks ? [{ id: 'land-cliff-teeth', type: 'symbol', ...osm, minzoom: 13, filter: osmFilter,
+      layout: { 'symbol-placement': 'line', 'symbol-spacing': 8, 'icon-image': 'cliff-tick', 'icon-anchor': 'top', 'icon-offset': [0, 0.5],
+        'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true,
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 13, 0.85, 17, 1.25] },
+      paint: { 'icon-color': CLIFF[k], 'icon-opacity': 1 } }] : []),
+  ];
+  if (!dgm) return out;
+  // Aus dem DGM1 gezeichnete Felsflanke (Maßgabe: gezeichnete Wand statt Strichlinie): helle Wandfläche unter der Oberkante,
+  // geneigte Striche (Schraffur), gebrochene Schichtlinien, obenauf die Oberkante. Maße kommen als Meter aus den Kacheln und
+  // wachsen mit dem Zoom; die Wandhöhe (`drop`) bestimmt Breite von Fläche und Oberkante.
+  const wall = (layer) => ({ source: 'klippen', 'source-layer': layer });
+  return [
+    ...out,
+    { id: 'land-cliff-wand-dgm', type: 'fill', ...wall('wand'), minzoom: 13,
+      paint: { 'fill-color': dark ? '#4c4842' : '#e6dfcf', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.92], 'fill-antialias': true } },
+    { id: 'land-cliff-schicht-dgm', type: 'line', ...wall('schicht'), minzoom: 14, layout: round,
+      paint: { 'line-color': dark ? '#a39b8d' : '#8a8173', 'line-opacity': 0.7, 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 0.6, 18, 1.2] } },
+    { id: 'land-cliff-schraffur-dgm', type: 'line', ...wall('schraffur'), minzoom: 14, layout: round,
+      paint: { 'line-color': CLIFF[k], 'line-opacity': 0.8, 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 0.7, 18, 1.5] } },
+    { id: 'land-cliff-dgm', type: 'line', ...wall('klippen'), minzoom: 12, layout: round, filter: ['>=', ['get', 'drop'], 5],
+      paint: { 'line-color': CLIFF[k], 'line-opacity': 1,
+        'line-width': ['interpolate', ['linear'], ['zoom'], 12, byDrop(1.2, 2), 16, byDrop(1.8, 3), 18, byDrop(2.4, 4)] } },
+  ];
 }
 
 // Flächen nach Klasse (Wald, Wiese, Buschland, Acker, Feuchtgebiet, Fels), Klippenlinien und Steinbrüche aus der Basiskarte.

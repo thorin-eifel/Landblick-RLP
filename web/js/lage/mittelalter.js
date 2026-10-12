@@ -23,7 +23,7 @@ export const MED_ICON_STYLE = { light: '#efe0b0', dark: '#3a2614' };
 export const MED_LAND = { forest: ['#8fa672', 0.55], meadow: ['#d6c88c', 0.15], scrub: ['#a9a66e', 0.35], farmland: ['#e3cf94', 0.2], wetland: ['#a9bdb0', 0.55], rock: ['#a89678', 0.55] };
 // neue Klassen der Naturfarben auf die Pigmente der alten Karte abbilden (Schutzgebiete und moderne Signaturen entfallen)
 export const MED_CLASS = { grass: 'meadow', heath: 'scrub', orchard: 'farmland', vineyard: 'farmland', allotment: 'farmland', sand: 'farmland', cemetery: 'meadow' };
-export const MED_DROP = /^(land-([a-z]+-pat|protected-|military-|bound-|cliff-(band|case))|roads_oneway|roads_rail|roads_runway|roads_taxiway|roads_pier|roads_labels_|roads_tunnels_|roads_.*casing|landuse_(park|runway|aerodrome|industrial|school|hospital|zoo|pedestrian|pier|urban_green|beach)|boundaries|address_label)/;
+export const MED_DROP = /^(land-([a-z]+-pat|protected-|military-|bound-|cliff-(band|case|wand|schicht|schraffur))|roads_oneway|roads_rail|roads_runway|roads_taxiway|roads_pier|roads_labels_|roads_tunnels_|roads_.*casing|landuse_(park|runway|aerodrome|industrial|school|hospital|zoo|pedestrian|pier|urban_green|beach)|boundaries|address_label)/;
 export const medFlavor = () => ({ ...namedFlavor('grayscale'), background: MED.bg, earth: MED.paper, water: MED.water, city_label: MED.ink, subplace_label: MED.ink, city_label_halo: MED.halo, subplace_label_halo: MED.halo });
 export function medievalize(styled) {
   const rank = ['max', 1, ['min', 9, ['to-number', ['get', 'population_rank'], 1]]];

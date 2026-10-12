@@ -54,10 +54,18 @@ def test_kacheln_behalten_laufrichtung(tmp_path):
     import mapbox_vector_tile as mvt
     lon0, lat = 6.40, 49.85
     coords = [[lon0 + i * 0.0003, lat] for i in range(40)]
-    n = K.write_tiles([(coords, 15.0)], tmp_path)
+    e = np.array([0.0, 40.0, 80.0, 120.0]) + 340000.0
+    n_ = np.full(4, 5530000.0)
+    wg = K.wall_geometry(e, n_, 15.0)
+    lonlat = lambda r: [[lon0 + (x - 340000.0) / 71000.0, lat + (y - 5530000.0) / 111000.0] for x, y in r]
+    item = {"crest": coords, "drop": 15.0, "wand": [lonlat(r) for r in wg["wand"]],
+            "schraffur": [lonlat(r) for r in wg["schraffur"]], "schicht": [lonlat(r) for r in wg["schicht"]]}
+    n = K.write_tiles([item], tmp_path)
     assert n >= 1
     f = next(tmp_path.glob("12/*/*.pbf"))
-    layer = mvt.decode(f.read_bytes())["klippen"]
+    tile = mvt.decode(f.read_bytes())
+    assert {"klippen", "wand", "schraffur"} <= set(tile)
+    layer = tile["klippen"]
     g = layer["features"][0]["geometry"]["coordinates"]
     assert g[-1][0] > g[0][0]                      # Richtung Ost bleibt erhalten
     assert layer["features"][0]["properties"]["drop"] == 15.0
@@ -79,3 +87,24 @@ def test_wand_quer_zu_den_hoehenlinien_wird_verworfen():
     quer = np.array([[150.0, c] for c in range(40, 260, 2)])                         # West-Ost, entlang der Höhenlinie
     assert not K.along_contour(K.gradient_field(h), laengs, 35.0).any()
     assert K.along_contour(K.gradient_field(h), quer, 35.0).all()
+
+
+def test_wandgeometrie_liegt_auf_der_tiefen_seite():
+    """Linie nach Osten: die tiefere Seite liegt rechts, also im Süden. Fläche, Striche und Schichtlinien liegen dort."""
+    e = np.linspace(0.0, 120.0, 61)
+    n = np.zeros_like(e)
+    wg = K.wall_geometry(e, n, 20.0)
+    assert wg["wand"] and wg["schraffur"] and wg["schicht"]
+    for r in wg["wand"]:
+        assert r[:, 1].min() < -2.0 and r[:, 1].max() <= 0.01
+    for r in wg["schraffur"]:
+        assert r[-1, 1] < r[0, 1]                       # Strich läuft von der Oberkante nach Süden
+    assert K.wall_geometry(e, n, 20.0)["schraffur"][0].tolist() == wg["schraffur"][0].tolist()   # deterministisch
+
+
+def test_wandbreite_waechst_mit_der_hoehe():
+    e = np.linspace(0.0, 120.0, 61)
+    n = np.zeros_like(e)
+    klein = K.wall_geometry(e, n, 6.0)["wand"][0][:, 1].min()
+    gross = K.wall_geometry(e, n, 30.0)["wand"][0][:, 1].min()
+    assert gross < klein < 0

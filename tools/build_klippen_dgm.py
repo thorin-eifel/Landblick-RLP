@@ -252,8 +252,65 @@ def block_lines(h: np.ndarray, slope: float, min_cells: int, min_len_m: float, m
     return out
 
 
+# ------------------------------------------------------------------ Wandgeometrie
+def wall_geometry(e: np.ndarray, n: np.ndarray, drop: float) -> dict[str, list]:
+    """Wand als gezeichnete Felsflanke (Meter, UTM): Fläche unterhalb der Oberkante, geneigte unregelmäßige Striche
+    (Schraffur) und gebrochene Schichtlinien. Die Oberkante ist die Linie selbst, die tiefere Seite liegt rechts der Laufrichtung.
+    Zufall ist deterministisch (aus der Lage der Linie), damit ein Neubau dieselben Kacheln ergibt."""
+    from shapely.geometry import LineString, Polygon
+    crest = LineString(np.stack([e, n], 1))
+    length = crest.length
+    if length < 6:
+        return {"wand": [], "schraffur": [], "schicht": []}
+    rng = np.random.default_rng(int(abs(e[0] * 131 + n[0] * 17)) % (2 ** 32))
+    step = 2.0
+    k = max(int(length / step), 3)
+    ss = np.linspace(0.0, length, k + 1)
+    pts = np.array([crest.interpolate(x).coords[0] for x in ss])
+    t = np.gradient(pts, axis=0)
+    t /= np.where(np.hypot(t[:, 0], t[:, 1]) == 0, 1, np.hypot(t[:, 0], t[:, 1]))[:, None]
+    right = np.stack([t[:, 1], -t[:, 0]], 1)
+    width0 = float(np.clip(0.4 * drop, 3.0, 11.0))
+    ph = rng.uniform(0, 2 * math.pi, 2)
+    w = width0 * (0.8 + 0.12 * np.sin(ss / 17.0 + ph[0]) + 0.08 * np.sin(ss / 5.3 + ph[1]))
+    w = np.minimum(w, width0 * 1.0)
+    low = pts + right * w[:, None]
+    ring = np.vstack([pts, low[::-1]])
+    poly = Polygon(ring)
+    if not poly.is_valid:
+        poly = poly.buffer(0)
+    face = []
+    if not poly.is_empty:
+        for g in (list(poly.geoms) if poly.geom_type == "MultiPolygon" else [poly]):
+            if g.geom_type == "Polygon" and g.area > 4:
+                face.append(np.array(g.exterior.coords))
+    strokes = []
+    pos = rng.uniform(0.5, 2.5)
+    while pos < length - 0.5:
+        i = min(int(pos / step), k)
+        lean = math.radians(rng.uniform(-14, 14))
+        c, sn = math.cos(lean), math.sin(lean)
+        d = np.array([right[i, 0] * c - right[i, 1] * sn, right[i, 0] * sn + right[i, 1] * c])
+        ln = w[i] * rng.uniform(0.5, 1.0)
+        a = pts[i] + right[i] * 0.3
+        mid = a + d * ln * 0.5 + t[i] * rng.uniform(-0.4, 0.4)
+        strokes.append(np.array([a, mid, a + d * ln]))
+        pos += rng.uniform(3.0, 6.0)
+    layers = []
+    if width0 >= 5:
+        for f in (0.38, 0.68):
+            s0 = rng.uniform(0, 6)
+            while s0 < length - 4:
+                run = rng.uniform(6, 18)
+                a, b = int(s0 / step), min(int((s0 + run) / step), k)
+                if b - a >= 2:
+                    layers.append(pts[a:b + 1] + right[a:b + 1] * (w[a:b + 1] * f)[:, None])
+                s0 += run + rng.uniform(3, 8)
+    return {"wand": face, "schraffur": strokes, "schicht": layers}
+
+
 # ------------------------------------------------------------------ Blöcke und Kacheln
-def process_block(args: tuple) -> list[tuple[list[list[float]], float]]:
+def process_block(args: tuple) -> list[dict]:
     red, e0, n0, e1, n1, halo, kw = args
     from pyproj import Transformer
     h = load_block(Path(red), e0 - halo, n0 - halo, e1 + halo, n1 + halo)
@@ -266,6 +323,11 @@ def process_block(args: tuple) -> list[tuple[list[list[float]], float]]:
     left = (e0 - halo) * 1000.0
     core = (e0 * 1000.0, (n0) * 1000.0, (e1 + 1) * 1000.0, (n1 + 1) * 1000.0)
     tr = Transformer.from_crs(CRS_UTM, "EPSG:4326", always_xy=True)
+
+    def ll(arr: np.ndarray) -> list[list[float]]:
+        lon, lat = tr.transform(arr[:, 0], arr[:, 1])
+        return np.round(np.stack([lon, lat], 1), 6).tolist()
+
     res = []
     for pts, drop in lines:
         e = left + (pts[:, 1] + 0.5) * RES
@@ -273,8 +335,10 @@ def process_block(args: tuple) -> list[tuple[list[list[float]], float]]:
         m = len(pts) // 2
         if not (core[0] <= e[m] < core[2] and core[1] <= n[m] < core[3]):
             continue                                  # gehört zum Nachbarblock (Rand), dort wird sie gezählt
-        lon, lat = tr.transform(e, n)
-        res.append((np.round(np.stack([lon, lat], 1), 6).tolist(), round(drop, 1)))
+        wg = wall_geometry(e, n, drop)
+        res.append({"crest": ll(np.stack([e, n], 1)), "drop": round(drop, 1),
+                    "wand": [ll(r) for r in wg["wand"]], "schraffur": [ll(r) for r in wg["schraffur"]],
+                    "schicht": [ll(r) for r in wg["schicht"]]})
     return res
 
 
@@ -285,36 +349,58 @@ def merc(lon: np.ndarray, lat: np.ndarray, z: int = TILE_Z) -> tuple[np.ndarray,
     return x, y
 
 
-def write_tiles(lines: list[tuple[list[list[float]], float]], out: Path) -> int:
-    from shapely.geometry import LineString, box
+def write_tiles(items: list[dict], out: Path) -> int:
+    from shapely.geometry import LineString, MultiLineString, Polygon, box
     import mapbox_vector_tile as mvt
-    buckets: dict[tuple[int, int], list[tuple[LineString, float]]] = defaultdict(list)
-    for coords, drop in lines:
-        a = np.array(coords)
-        x, y = merc(a[:, 0], a[:, 1])
-        ls = LineString(np.stack([x, y], 1))
-        x0, y0, x1, y1 = ls.bounds
+
+    def proj(coords):
+        c = np.array(coords)
+        x, y = merc(c[:, 0], c[:, 1])
+        return np.stack([x, y], 1)
+
+    buckets: dict[tuple[int, int], dict[str, list]] = defaultdict(lambda: defaultdict(list))
+
+    def put(layer: str, geom, props: dict) -> None:
+        x0, y0, x1, y1 = geom.bounds
         for tx in range(int(math.floor(x0)), int(math.floor(x1)) + 1):
             for ty in range(int(math.floor(y0)), int(math.floor(y1)) + 1):
-                buckets[(tx, ty)].append((ls, drop))
+                buckets[(tx, ty)][layer].append((geom, props))
+
+    for it in items:
+        props = {"drop": it["drop"]}
+        put("klippen", LineString(proj(it["crest"])), props)
+        for r in it["wand"]:
+            put("wand", Polygon(proj(r)), props)
+        if it["schraffur"]:
+            put("schraffur", MultiLineString([proj(r) for r in it["schraffur"]]), props)
+        if it["schicht"]:
+            put("schicht", MultiLineString([proj(r) for r in it["schicht"]]), props)
     pad = 64 / EXTENT
     n = 0
-    for (tx, ty), items in buckets.items():
-        feats = []
+    for (tx, ty), layers in buckets.items():
         win = box(tx - pad, ty - pad, tx + 1 + pad, ty + 1 + pad)
-        for ls, drop in items:
-            g = ls.intersection(win)
-            if g.is_empty:
-                continue
-            parts = list(g.geoms) if g.geom_type == "MultiLineString" else [g]
-            for p in parts:
-                if p.geom_type != "LineString" or len(p.coords) < 2:
+        out_layers = []
+        for name, entries in layers.items():
+            feats = []
+            for geom, props in entries:
+                g = geom.intersection(win)
+                if g.is_empty:
                     continue
-                px = [((cx - tx) * EXTENT, (cy - ty) * EXTENT) for cx, cy in p.coords]
-                feats.append({"geometry": LineString(px), "properties": {"drop": drop}})
-        if not feats:
+                for p in (list(g.geoms) if hasattr(g, "geoms") else [g]):
+                    if p.geom_type not in ("LineString", "Polygon") or p.is_empty:
+                        continue
+                    if p.geom_type == "LineString" and len(p.coords) < 2:
+                        continue
+                    if p.geom_type == "LineString":
+                        px = LineString([((cx - tx) * EXTENT, (cy - ty) * EXTENT) for cx, cy in p.coords])
+                    else:
+                        px = Polygon([((cx - tx) * EXTENT, (cy - ty) * EXTENT) for cx, cy in p.exterior.coords])
+                    feats.append({"geometry": px, "properties": props})
+            if feats:
+                out_layers.append({"name": name, "features": feats})
+        if not out_layers:
             continue
-        data = mvt.encode([{"name": "klippen", "features": feats}], default_options={"extents": EXTENT, "y_coord_down": True})
+        data = mvt.encode(out_layers, default_options={"extents": EXTENT, "y_coord_down": True})
         d = out / str(TILE_Z) / str(tx)
         d.mkdir(parents=True, exist_ok=True)
         (d / f"{ty}.pbf").write_bytes(data)
@@ -361,7 +447,7 @@ def main() -> int:
             if any(e0 <= e <= e1 and n0 <= n <= n1 for e, n in have):
                 jobs.append((str(red), e0, n0, e1, n1, 1, kw))
     log.info("%d Kilometerkacheln, %d Blöcke, %d Prozesse", len(have), len(jobs), a.jobs)
-    lines: list[tuple[list[list[float]], float]] = []
+    lines: list[dict] = []
     with ProcessPoolExecutor(a.jobs) as ex:
         for i, res in enumerate(ex.map(process_block, jobs), 1):
             lines.extend(res)
