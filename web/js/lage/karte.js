@@ -192,8 +192,7 @@ export async function initMap() {
     showPopup(hit.properties, hit.layer.id === 'routes-hit' ? 'route' : hit.layer.id.startsWith('inf-') ? 'infra' : hit.layer.id.startsWith('tank-') ? 'tank' : hit.layer.id.startsWith('st-') ? 'station' : hit.layer.id.startsWith('env-') ? 'env' : 'event', e.lngLat);
   });
 
-  const b = circle(m.center.lat, m.center.lon, m.radius_km).geometry.coordinates[0];
-  map.fitBounds([[Math.min(...b.map((p) => p[0])), Math.min(...b.map((p) => p[1]))], [Math.max(...b.map((p) => p[0])), Math.max(...b.map((p) => p[1]))]], { padding: 24, animate: false });
+  map.fitBounds(RLP_BBOX, { padding: 24, animate: false });   // Start: ganz Rheinland-Pfalz, mittig (das Gebiet steht fest, es gibt keinen gewählten Mittelpunkt)
   await setupBasemap();
   setReliefOk(await setupRelief(map));
   if (reliefOk) setLight(createLight(map, { demTile, onError: (e) => console.warn('Licht:', e), reduce: reduceMotion, wind: () => { const c = map.getCenter(); const w = wind?.sample?.(c.lng, c.lat); return w ? { speed: w.speed, from: w.from } : null; } }));
