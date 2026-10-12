@@ -57,3 +57,10 @@ test('Klippen: mit Geländemodell zweiter Satz aus der Quelle klippen, OSM-Klipp
   assert.equal(osm.filter[2][0], '!');                // innerhalb des Umrisses nicht doppelt zeichnen
   assert.equal(osm.filter[2][1][0], 'within');
 });
+
+test('Ansicht aus der Adresse: gültige Werte, sonst null', async () => {
+  const { ansichtAusAdresse } = await import('../../web/js/ansicht.js');
+  assert.deepEqual(ansichtAusAdresse('#15/49.861/6.448'), { zoom: 15, lat: 49.861, lon: 6.448 });
+  assert.deepEqual(ansichtAusAdresse('#14.5/49/6'), { zoom: 14.5, lat: 49, lon: 6 });
+  for (const bad of ['#debug', '', undefined, '#99/49/6', '#12/95/6', '#12/49/200', '#12/49', '#12/a/b', '#12/49/6/1']) assert.equal(ansichtAusAdresse(bad), null, String(bad));
+});

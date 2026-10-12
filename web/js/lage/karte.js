@@ -12,6 +12,7 @@ import { createRipples } from '../ripples.js';
 import { SWEEP_GREEN, createSweep } from '../sweep.js';
 import { KIND_MIN_ZOOM } from '../zellen.js';
 import { loadTerrain } from '../terrain.js';
+import { ansichtAusAdresse } from '../ansicht.js';
 import { $, getJSON, h, link } from '../util.js';
 import { createWind, fillWindLegend } from '../wind.js';
 import { applyBasemap, wireElevation } from './basiskarte.js';
@@ -186,6 +187,8 @@ export async function initMap() {
   });
 
   map.fitBounds(RLP_BBOX, { padding: 24, animate: false });   // Start: ganz Rheinland-Pfalz, mittig (das Gebiet steht fest, es gibt keinen gewählten Mittelpunkt)
+  const ansicht = ansichtAusAdresse(location.hash);   // Link auf eine Ansicht: #zoom/breite/länge
+  if (ansicht) map.jumpTo({ center: [ansicht.lon, ansicht.lat], zoom: ansicht.zoom });
   await setupBasemap();
   setReliefOk(await setupRelief(map));
   if (reliefOk) setLight(createLight(map, { demTile, onError: (e) => console.warn('Licht:', e), reduce: reduceMotion, wind: () => { const c = map.getCenter(); const w = wind?.sample?.(c.lng, c.lat); return w ? { speed: w.speed, from: w.from } : null; } }));
