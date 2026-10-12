@@ -165,16 +165,24 @@ def orient(pts_rc: np.ndarray, h: np.ndarray, off_m: float = 8.0) -> tuple[np.nd
     return pts_rc, float(d)
 
 
-def along_contour(h: np.ndarray, pts_rc: np.ndarray, tol_deg: float, sigma: float = 2.0) -> np.ndarray:
-    """Je Stützpunkt: läuft die Linie entlang der Höhenlinie (Tangente quer zum Gefälle)? Wände, die quer über Höhenlinien
-    laufen, widersprechen dem Gelände und fliegen raus."""
+def gradient_field(h: np.ndarray, sigma: float = 2.0) -> tuple[np.ndarray, np.ndarray]:
+    """Gefälle (Zeile, Spalte) einer stärker geglätteten Fläche; einmal je Block rechnen."""
     from scipy import ndimage as ndi
     bad = ~np.isfinite(h)
     idx = ndi.distance_transform_edt(bad, return_distances=False, return_indices=True)
     g = ndi.gaussian_filter(h[tuple(idx)], sigma, mode="nearest")
     gy, gx = np.gradient(g, RES)
+    return gy, gx
+
+
+def along_contour(grad: tuple[np.ndarray, np.ndarray], pts_rc: np.ndarray, tol_deg: float) -> np.ndarray:
+    """Je Stützpunkt: läuft die Linie entlang der Höhenlinie (Tangente quer zum Gefälle)? Wände, die quer über Höhenlinien
+    laufen, widersprechen dem Gelände und fliegen raus."""
+    from scipy import ndimage as ndi
+    gy, gx = grad
     t = np.gradient(pts_rc, axis=0)
-    t /= np.where(np.hypot(t[:, 0], t[:, 1]) == 0, 1, np.hypot(t[:, 0], t[:, 1]))[:, None]
+    nt = np.hypot(t[:, 0], t[:, 1])
+    t /= np.where(nt == 0, 1, nt)[:, None]
     ay = ndi.map_coordinates(gy, [pts_rc[:, 0], pts_rc[:, 1]], order=1, mode="nearest")
     ax = ndi.map_coordinates(gx, [pts_rc[:, 0], pts_rc[:, 1]], order=1, mode="nearest")
     gn = np.hypot(ay, ax)
@@ -219,6 +227,7 @@ def block_lines(h: np.ndarray, slope: float, min_cells: int, min_len_m: float, m
     steep = keep[lab]
     steep = ndi.binary_closing(steep, structure=np.ones((3, 3)))
     skel = skeletonize(steep)
+    grad = gradient_field(h)
     out = []
     for ch in trace(skel):
         pts = np.array(ch, float)
@@ -231,7 +240,7 @@ def block_lines(h: np.ndarray, slope: float, min_cells: int, min_len_m: float, m
         ls = LineString(chaikin(np.array(ls.coords)[:, ::-1], 3)[:, ::-1])
         k = max(int(ls.length / 2.0), 2)
         pts = np.array([ls.interpolate(i / k, normalized=True).coords[0] for i in range(k + 1)])[:, ::-1]
-        ok = along_contour(h, pts, tol)
+        ok = along_contour(grad, pts, tol)
         for a, b in runs(ok):
             part = pts[a:b]
             if len(part) < 3 or LineString(part[:, ::-1]).length * RES < min_len_m:
