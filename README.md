@@ -69,9 +69,9 @@ Plan und Begründung: `docs/rlp/plan.md`. Entscheidung: `docs/adr/0001-region-rl
 
 ### Zahlen
 
-- Quellen im Register: 44, davon aktiv: 40
-- Sammler (Module in `app/collectors/`): 43
-- Tests: 413 Python, 77 JavaScript
+- Quellen im Register: 47, davon aktiv: 43
+- Sammler (Module in `app/collectors/`): 46
+- Tests: 423 Python, 77 JavaScript
 
 ### Quellen und Lizenzen
 
@@ -119,6 +119,9 @@ Plan und Begründung: `docs/rlp/plan.md`. Entscheidung: `docs/adr/0001-region-rl
 | `dwd_stationen` | DWD-Stationen | DWD GeoNutzV; Bright Sky Software MIT | 30 min | ja |
 | `irceline` | IRCEL-CELINE | CC BY 4.0 (nach Kenntnisstand) | 30 min | ja |
 | `kmi_stationen` | KMI-Stationen | CC BY 4.0 (nach Kenntnisstand) | 30 min | ja |
+| `lhp_hochwasser` | LHP Hochwasser | Creative Commons Namensnennung 4.0 (CC BY 4.0) | 10 min | ja |
+| `mobidata_bw_baustellen` | Baustellen BW | Datenlizenz Deutschland – Namensnennung – Version 2.0 (dl-de/by-2.0) | 10 min | ja |
+| `mobidata_bw_meldungen` | Verkehrsmeldungen BW | Datenlizenz Deutschland – Namensnennung – Version 2.0 (dl-de/by-2.0) | 5 min | ja |
 | `lgb_wms` | LGB Daten | Datenlizenz Deutschland – Namensnennung – Version 2.0 (dl-de/by-2-0) | 1 h | ja |
 | `landesdaten_wms` | Landesdaten | je Dienst, überwiegend Datenlizenz Deutschland – Namensnennung – Version 2.0 (dl-de/by-2-0); daneben dl-de/zero-2-0, CC BY 3.0/4.0, ODbL 1.0 | 1 h | ja |
 

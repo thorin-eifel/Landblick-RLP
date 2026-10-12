@@ -968,6 +968,70 @@ sources:
     zuletzt_geprüft: "2026-10-07"
     collector: kmi_stationen
 
+  - id: lhp_hochwasser
+    name: Pegel und Hochwasserwarnungen der Länder (Länderübergreifendes Hochwasserportal, LHP)
+    kurzname: LHP Hochwasser
+    betreiber: Länderübergreifendes Hochwasserportal der Hochwasserzentralen der Länder (Geschäftsstelle LfU Bayern, LUBW)
+    url: https://api.hochwasserzentralen.de/public/v1/data
+    lizenz: Creative Commons Namensnennung 4.0 (CC BY 4.0)
+    lizenz_geprueft: false
+    lizenz_hinweis: >-
+      Lizenz und Auflagen stehen auf der Entwicklerseite (hochwasserzentralen.de/developers), am 12.10.2026 gelesen: CC BY 4.0, Pflicht zur Angabe
+      "Datenquelle: www.hochwasserzentralen.de" und des Datenstands, minütliche Aktualisierung, bei Weitergabe mindestens alle 10 Minuten holen.
+      API ist "1.0 beta". Geliefert wird nur die Hochwasserklasse am Pegel, keine Wasserstände. Die Warnungen sind nach dem dokumentierten Beispiel gebaut:
+      zum Bauzeitpunkt war keine Warnung aktiv, das echte Format ist ungesehen. Rechtliche Endabnahme steht aus.
+    namensnennung: "Datenquelle: www.hochwasserzentralen.de (Länderübergreifendes Hochwasserportal), Stand je Abruf, CC BY 4.0"
+    intervall: 600
+    ratenlimit: nicht veröffentlicht; zwei Abrufe je 10 Minuten (Pegel rund 0,3 MB, Warnungen klein)
+    auth: keine
+    geo_bezug: Länderfilter der API (NW, HE, BW, BY, SL), Feinfilter auf die Region am Rand; Pegel als Punkt, Warnungen als Fläche
+    datenschutz_risiko: niedrig
+    aktiv: true
+    zuletzt_geprüft: "2026-10-12"
+    collector: lhp_hochwasser
+    params:
+      states: [NW, HE, BW, BY, SL]
+
+  - id: mobidata_bw_baustellen
+    name: Baustellen und Sperrungen Baden-Württemberg (MobiData BW)
+    kurzname: Baustellen BW
+    betreiber: Land Baden-Württemberg (Baustellen- und Ereignismanagementsystem BEMaS), bereitgestellt über MobiData BW (NVBW)
+    url: https://api.mobidata-bw.de/datasets/traffic/roadworks/roadworks_geojson.json
+    lizenz: Datenlizenz Deutschland – Namensnennung – Version 2.0 (dl-de/by-2.0)
+    lizenz_geprueft: false
+    lizenz_hinweis: >-
+      Lizenz laut Datensatzseite auf mobidata-bw.de (CKAN-Metadaten, 12.10.2026). Endpunkt live getestet, ohne Schlüssel. Bundes-, Landes- und
+      Kreisstraßen; Autobahnen werden verworfen (Autobahn-Collector). Rechtliche Endabnahme und Wortlaut der Namensnennung beim Datensatzhalter prüfen.
+    namensnennung: "Quelle: MobiData BW, Land Baden-Württemberg (dl-de/by-2.0)"
+    intervall: 600
+    ratenlimit: nicht veröffentlicht; ein Abruf (rund 1 MB) je 10 Minuten
+    auth: keine
+    geo_bezug: ganz BW als Datei, Feinfilter auf die Region am Rand; Verlauf als Linie
+    datenschutz_risiko: niedrig
+    aktiv: true
+    zuletzt_geprüft: "2026-10-12"
+    collector: mobidata_bw_baustellen
+
+  - id: mobidata_bw_meldungen
+    name: Verkehrsmeldungen Baden-Württemberg (Landesmeldestelle über MobiData BW)
+    kurzname: Verkehrsmeldungen BW
+    betreiber: Landesmeldestelle Baden-Württemberg (Ministerium des Inneren, für Digitalisierung und Kommunen), bereitgestellt über MobiData BW (NVBW)
+    url: https://api.mobidata-bw.de/datasets/traffic/incidents/incidents_lmsbw.datex2.xml
+    lizenz: Datenlizenz Deutschland – Namensnennung – Version 2.0 (dl-de/by-2.0)
+    lizenz_geprueft: false
+    lizenz_hinweis: >-
+      Lizenz laut Datensatzseite auf mobidata-bw.de (CKAN-Metadaten, 12.10.2026). Endpunkt live getestet, ohne Schlüssel, DATEX II 2.0. Baustellen
+      werden verworfen (kommen aus mobidata_bw_baustellen), Meldungen mit Autobahnnummer ebenso (Autobahn-Collector). Rechtliche Endabnahme steht aus.
+    namensnennung: "Quelle: Landesmeldestelle Baden-Württemberg über MobiData BW (dl-de/by-2.0)"
+    intervall: 300
+    ratenlimit: nicht veröffentlicht; ein Abruf (rund 1,7 MB) alle 5 Minuten
+    auth: keine
+    geo_bezug: ganz BW als Datei, Feinfilter auf die Region am Rand; Linie von/bis, sonst Punkt
+    datenschutz_risiko: niedrig
+    aktiv: true
+    zuletzt_geprüft: "2026-10-12"
+    collector: mobidata_bw_meldungen
+
   - id: lgb_wms
     name: "LGB Daten: Online-Karten des Landesamts für Geologie und Bergbau Rheinland-Pfalz (WMS)"
     kurzname: LGB Daten

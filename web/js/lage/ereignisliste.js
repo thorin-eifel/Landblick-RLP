@@ -84,7 +84,7 @@ export function renderEvents(statuses) {
   const countText = rows.length === layered.length ? `${rows.length} Ereignisse` : `${rows.length} von ${layered.length} Ereignissen`;
   if (cnt) cnt.textContent = countText;
   const q = panel.querySelector('#ev-q'); if (q) q.placeholder = `${countText} durchsuchen`;
-  const problems = statuses.filter((s) => ['down', 'stale', 'pending'].includes(s.status) && ['autobahn', 'lbm_baustellen', 'nina', 'dwd_warnungen', 'adsblol'].includes(s.id) && (s.id !== 'adsblol' || state.layers.air));
+  const problems = statuses.filter((s) => ['down', 'stale', 'pending'].includes(s.status) && ['autobahn', 'lbm_baustellen', 'mobidata_bw_baustellen', 'mobidata_bw_meldungen', 'lhp_hochwasser', 'nina', 'dwd_warnungen', 'adsblol'].includes(s.id) && (s.id !== 'adsblol' || state.layers.air));
   for (const s of problems) {
     box.append(h('div', { class: 'card-f' }, h('span', { class: 'stale-note' }, `${s.name}: ${s.status === 'down' ? `nicht erreichbar seit ${fmtDateTime(s.failing_since ?? s.last_attempt)}` : s.status === 'pending' ? 'noch kein Abruf' : 'veraltet'}`)));
   }
