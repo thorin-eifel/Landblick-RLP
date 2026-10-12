@@ -11,3 +11,4 @@ pyproj==3.7.2
 tifffile==2026.3.3
 imagecodecs==2026.3.6
 scipy==1.17.1
+scikit-image==0.26.0
