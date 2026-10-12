@@ -161,3 +161,38 @@ def test_point_outside_germany_with_default_tag_has_no_land(storage, registry, t
     export.run_export(storage, registry, tmp_path)
     p = load(tmp_path, "z/12_99/events.json")["features"][0]["properties"]
     assert p["ars"] is None and p["land"] is None
+
+
+def test_start_carries_einheiten_per_kreis_and_land(storage, registry, tmp_path):
+    ev = [
+        mk("irrel", [6.45, 49.85], sev="warning"),      # Eifelkreis Bitburg-Prüm, DE-RP
+        mk("bitburg", [6.52, 49.97], sev="info"),       # derselbe Kreis
+        mk("trier", [6.64, 49.75], sev="notice"),       # Kreisfreie Stadt Trier, DE-RP
+        mk("saar", [6.99, 49.23], sev="info"),          # Regionalverband Saarbrücken, DE-SL
+        mk("lux", [6.13, 49.61], sev="critical"),       # kein deutscher Kreis, Kürzel fehlt: wird nicht gezählt
+    ]
+    storage.replace_snapshot("autobahn", ev)
+    export.run_export(storage, registry, tmp_path)
+    start = load(tmp_path, "start.json")
+    e = {u["key"]: u for u in start["einheiten"]}
+    assert e["kreis:07232"]["n"] == 2 and e["kreis:07232"]["sev"] == "warning" and e["kreis:07232"]["level"] == "kreis"
+    assert e["kreis:07211"]["n"] == 1 and e["kreis:07211"]["name"].endswith("Trier")
+    assert e["land:DE-RP"]["n"] == 3 and e["land:DE-RP"]["sev"] == "warning" and e["land:DE-RP"]["name"] == "Rheinland-Pfalz"
+    assert e["land:DE-SL"]["n"] == 1
+    assert not any(k.startswith("land:LU") for k in e), "Punkt ohne Kreis und ohne Auslandskürzel bleibt ungezählt"
+    assert sum(u["n"] for u in start["einheiten"] if u["level"] == "land") == 4
+
+
+def test_einheiten_ausland_by_region_tag_and_aircraft_excluded():
+    feats = [
+        {"properties": {"type": "traffic", "severity": "warning", "lat": 49.61, "lon": 6.13, "region_tag": "LU"}},
+        {"properties": {"type": "aircraft", "severity": "info", "lat": 49.85, "lon": 6.45, "region_tag": "DE"}},
+    ]
+    out = export_cells.build_einheiten(feats)
+    assert [u["key"] for u in out] == ["land:LU"]
+    assert out[0]["n"] == 1 and out[0]["sev"] == "warning" and out[0]["name"] == "Luxemburg"
+
+
+def test_kreis_label_point_lies_inside_its_own_kreis():
+    for ars, g in export_cells.kreis_geo().items():
+        assert export_cells.kreis_of(g["lat"], g["lon"])["ars"] == ars, g["name"]

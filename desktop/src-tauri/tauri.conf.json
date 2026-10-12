@@ -3,17 +3,42 @@
   "productName": "Landblick - RLP",
   "version": "0.1.0",
   "identifier": "de.ctw.osint",
-  "build": { "frontendDist": "../dist" },
+  "build": {
+    "frontendDist": "../dist"
+  },
   "app": {
     "windows": [],
-    "security": { "csp": null }
+    "security": {
+      "csp": null
+    }
   },
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": ["icons/icon.png"],
-    "externalBin": ["binaries/osint-core", "binaries/pmtiles"],
-    "category": "Utility"
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "externalBin": [
+      "binaries/osint-core",
+      "binaries/pmtiles"
+    ],
+    "category": "Utility",
+    "shortDescription": "Landblick - RLP: Lagebild aus offenen Daten",
+    "longDescription": "Lagebild für Rheinland-Pfalz plus 80 km aus offenen Daten. Läuft lokal, ohne Konto und ohne Tracking.",
+    "windows": {
+      "nsis": {
+        "languages": [
+          "German",
+          "English"
+        ],
+        "installMode": "currentUser",
+        "displayLanguageSelector": false
+      }
+    }
   },
   "plugins": {}
 }
