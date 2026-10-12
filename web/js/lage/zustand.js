@@ -18,15 +18,6 @@ export function setLight(v) { light = v; }
 
 // Startansicht und Bezugspunkt für Entfernungen: Irrel (Ortsmitte, Koordinate vom Betreiber angegeben).
 export const START_VIEW = { lat: 49.84615562322509, lon: 6.456057281843173 };
-export const TOWNS = [
-  ['Irrel', 49.850, 6.450, true], ['Bitburg', 49.975, 6.526], ['Trier', 49.750, 6.637], ['Echternach', 49.812, 6.418],
-  ['Wasserbillig', 49.714, 6.503], ['Luxemburg', 49.611, 6.130], ['Prüm', 50.208, 6.423], ['Wittlich', 49.985, 6.894],
-  ['Saarburg', 49.607, 6.547], ['Daun', 50.199, 6.830], ['Merzig', 49.444, 6.639],
-  // weitere Orte der Region (Radius 120 km): Luxemburg, Ostbelgien, Lothringen, Saarland, Mosel, Hunsrück
-  ['Diekirch', 49.868, 6.157], ['Wiltz', 49.966, 5.932], ['Esch-sur-Alzette', 49.495, 5.981], ['Arlon', 49.683, 5.816], ['Bastogne', 50.000, 5.717],
-  ['St. Vith', 50.281, 6.128], ['Gerolstein', 50.224, 6.657], ['Bernkastel-Kues', 49.916, 7.070], ['Cochem', 50.146, 7.166], ['Idar-Oberstein', 49.708, 7.310],
-  ['Saarlouis', 49.314, 6.751], ['Saarbrücken', 49.234, 6.996], ['Thionville', 49.358, 6.168], ['Metz', 49.119, 6.176], ['Koblenz', 50.357, 7.589],
-];
 // Radarbild blendet beim Hineinzoomen aus (Zoom 11 bis 13); die Regentropfen-Animation bleibt und läuft aus denselben Radardaten weiter
 export const RADAR_OPACITY = ['interpolate', ['linear'], ['zoom'], 11, 0.6, 13, 0];
 export const RING_URL = 'tiles/ring.pmtiles'; // Zoom 14 rund um den Kern bis zum 120-km-Rand: nur dafür da, dass Häuserumrisse im ganzen Gebiet stehen

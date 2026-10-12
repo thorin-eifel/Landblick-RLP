@@ -76,10 +76,6 @@ main { flex: 1; width: 100%; max-width: var(--frame, 1440px); margin: 0 auto; pa
 .controls legend { float: left; margin-right: var(--space-2); color: var(--fg-muted); padding: 0; }
 .controls label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
 .swatch { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-.town { font-size: var(--fs-xs); color: var(--fg-muted); white-space: nowrap; pointer-events: none; text-shadow: 0 0 3px var(--bg), 0 0 3px var(--bg); }
-.town.home { color: var(--fg); font-weight: 600; font-size: var(--fs-xs); }
-.town { color: var(--fg); font-weight: 600; text-shadow: 0 0 3px var(--bg), 0 0 3px var(--bg), 0 0 5px var(--bg); }
-.z-close .town:not(.home) { display: none; } /* ab Zoom 9 beschriftet die Basiskarte die Orte */
 .map-note { position: absolute; left: var(--space-3); bottom: var(--space-3); font-size: var(--fs-xs); color: var(--fg-muted); background: var(--material-thick); padding: 2px 8px; border-radius: var(--radius-full); max-width: 80%; }
 
 /* Popup */
@@ -614,7 +610,6 @@ html[data-karte="mittelalter"] .relief-bar { border: 1px solid #3a2614; border-r
 .legend-h { margin: 0 0 2px; font-size: inherit; font-weight: 600; }
 .med-leg-row { display: flex; align-items: center; gap: 6px; line-height: 1.1; }
 .med-leg-sym { width: 30px; height: 30px; flex: none; }
-html[data-karte="mittelalter"] .town { font-family: "Grenze Gotisch", serif; font-weight: 400; font-size: 1.1rem; color: #3a2614; text-transform: none; letter-spacing: 0; text-shadow: 0 0 3px rgba(238,224,182,.95), 0 0 2px rgba(238,224,182,.95); }
 
 /* Karte um 1450: Ebenenmenü und Detailfeld als Pergamentblätter mit Tintenrand; Farben über die Token der Karten, die Schrift ist die der Legenden */
 html[data-karte="mittelalter"] .lage > .card:first-child, html[data-karte="mittelalter"] .lage > .card:last-child {

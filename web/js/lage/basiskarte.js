@@ -9,7 +9,7 @@ import { MED, MED_COLORS, MED_ICON_STYLE, medFlavor, medievalize } from './mitte
 import { HER_LAYERS, NAT_LAYERS, applyNatureVisibility, paintNature, peakLayers } from './natur.js';
 import { INFRA_LAYER_IDS, paintStops } from './orte.js';
 import { placeLgb } from './lgb.js';
-import { LABEL_SKIP, labelsAndBuildings, landUseLayers, mainRoad, signLayers, waterEdges } from './stil.js';
+import { LABEL_SKIP, labelsAndBuildings, ortsnamenUebersicht, landUseLayers, mainRoad, signLayers, waterEdges } from './stil.js';
 import { applyFlow, fillTempLegend, placeRadar } from './wetterkarte.js';
 import { basemapOk, coreOk, flow, light, map, mapReady, reliefOk, ringOk, state } from './zustand.js';
 
@@ -24,7 +24,7 @@ export function applyBasemap() {
   // Keine Grenzlinien (Länder, Kreise): die Karte zeigt Gelände, Gewässer, Straßen und den Radius
   // roads_shields entfällt: es braucht Sprite-Bilder, die wir nicht ausliefern; die Schilder zeichnen signLayers()
   const dark = flavor === 'dark';
-  let styled = basemapLayers('basemap', med ? medFlavor() : namedFlavor(flavor), { lang: 'de' }).filter((x) => !LABEL_SKIP.test(x.id)).map(mainRoad).map(labelsAndBuildings(dark))
+  let styled = basemapLayers('basemap', med ? medFlavor() : namedFlavor(flavor), { lang: 'de' }).filter((x) => !LABEL_SKIP.test(x.id)).map(mainRoad).map(labelsAndBuildings(dark)).flatMap(ortsnamenUebersicht)
     .map((x) => (coreOk && (x.id === 'buildings' || x.id === 'address_label') ? { ...x, source: 'basemap-core' } : x));   // Gebäude und Hausnummern aus dem Zoom-15-Kern
   // eigene Flächen- und Geländeebenen gleich hinter dem Landnutzungs-Layer des Stils (unter Wasser, Straßen und Relief-Linien)
   const at = styled.findIndex((x) => x.id === 'landuse_park');

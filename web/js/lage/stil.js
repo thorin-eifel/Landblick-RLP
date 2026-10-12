@@ -1,3 +1,4 @@
+import { RLP_UMRISS } from './rlp-umriss.js';
 import { map } from './zustand.js';
 
 // Hauptstraßen (Autobahn, Bundes-/Landstraße, Anschlussstellen, auch Brücken und Tunnel) mit 1-px-Kontur in Schwarz:
@@ -106,6 +107,15 @@ export function rlpBorderLayers(dark) {
       paint: { 'line-color': RLP_RED[k], 'line-opacity': 1, 'line-width': 2 } },
   ];
 }
+// Übersichtskarte (Zoom 5 bis 9): in Rheinland-Pfalz alle Ortsnamen, die die Kacheln auf dieser Stufe führen, außerhalb nur Städte
+// mit mehr als FREMD_MIN_EINWOHNER Einwohnern (Kachelfeld `population`). Ab Zoom 9 gilt überall dieselbe Beschriftung.
+export const FREMD_MIN_EINWOHNER = 80000;
+export function ortsnamenUebersicht(l) {
+  if (l.id !== 'places_locality') return [l];
+  const inRlp = ['within', RLP_UMRISS];
+  const gross = ['>=', ['to-number', ['get', 'population'], 0], FREMD_MIN_EINWOHNER];
+  return [{ ...l, minzoom: 9 }, { ...l, id: 'places_locality_ov', minzoom: 5, maxzoom: 9, filter: ['all', ['==', ['get', 'kind'], 'locality'], ['any', inRlp, gross]] }];
+}
 export const HOUSENO = { light: ['#6b0019', 'rgba(255,255,255,0.9)'], dark: ['#f0b3c4', 'rgba(20,20,20,0.9)'] };
 export function labelsAndBuildings(dark) {
   const k = dark ? 'dark' : 'light';
@@ -140,11 +150,11 @@ export function labelsAndBuildings(dark) {
     } else if (l.id === 'water_waterway_label' || l.id === 'water_label_lakes') {
       out = { ...out, paint: { ...out.paint, 'text-color': WATER_INK[k], 'text-halo-color': HALO[k], 'text-halo-width': 2.2, 'text-halo-blur': 0.3 } };
     } else if (l.id === 'places_locality' || l.id === 'places_subplace') {
-      // Ortsnamen: größer, gesperrt, in voller Textfarbe mit breitem Saum; Irrel steht schon als eigener Marker
+      // Ortsnamen: größer, gesperrt, in voller Textfarbe mit breitem Saum
       // Größe nach Siedlungsgröße: population_rank der Kacheln (1 Einzelhof … 9 Großstadt) → 8 pt bis 12 pt (10,67 bis 16 px),
       // unabhängig vom Zoom. Weiler = Rang 2, Dorf 3 bis 5, Stadt 6 bis 7, Trier = 9. Fehlt der Rang, gilt der kleinste Wert.
       const rank = ['max', 1, ['min', 9, ['to-number', ['get', 'population_rank'], 1]]];
-      out = { ...out, minzoom: 9, filter: ['all', ...(l.filter ? [l.filter] : []), ['!=', 'name', 'Irrel']],
+      out = { ...out, minzoom: 9, ...(l.filter ? { filter: l.filter } : {}),
         layout: { ...out.layout, 'text-size': ['interpolate', ['linear'], rank, 1, SIZE_MIN_PX, 9, SIZE_MAX_PX],
           'text-letter-spacing': 0.06, 'text-transform': ['case', ['>=', rank, 6], 'uppercase', 'none'], 'text-max-width': 8 },
         paint: { ...out.paint, 'text-color': INK[k], 'text-halo-color': HALO[k], 'text-halo-width': 2.8, 'text-halo-blur': 0.3 } };
