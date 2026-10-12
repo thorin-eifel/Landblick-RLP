@@ -12,6 +12,7 @@ tools/bin/
 build/
 web/icons/*.svg
 web/tiles/dem/
+web/tiles/dem-base/
 .claude/
 .DS_Store
 _incoming/
