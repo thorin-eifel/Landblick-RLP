@@ -2,7 +2,7 @@
 # Start: Actions → windows-installer → Run workflow. Die Datei steht danach unter "Artifacts" des Laufs (Zip mit der Setup.exe).
 # Der Installer ist nicht signiert: Windows SmartScreen warnt beim ersten Start ("Weitere Informationen" → "Trotzdem ausführen").
 name: windows-installer
-on: { workflow_dispatch: {}, push: { tags: ["windows-v*"], branches: ["feat/windows-installer"] } }
+on: { workflow_dispatch: {}, push: { tags: ["windows-v*"] } }
 permissions: { contents: read }
 jobs:
   build:
