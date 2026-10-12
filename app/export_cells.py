@@ -280,7 +280,7 @@ def build_start(storage: Storage, registry: Registry, cell_info: dict[str, Any],
     return {
         "version": MANIFEST_VERSION, "generated_at": iso(utcnow()), "meta": payloads.meta_payload(storage),
         "overall": overall, "sources": sources, "warnband": warn[:300], "warnband_total": len(warn),
-        "counts": totals, "cells": cells, "kreise": kreise_table(),
+        "counts": totals, "cells": cells, "kreise": kreise_table(), "einheiten": build_einheiten(events_payload.get("features", [])),
         "kraftstoff": {"stats": (fuel_payload or {}).get("stats"), "lu": (fuel_payload or {}).get("lu")},   # landesweit, nicht an Zellen gebunden
         "disclaimer": payloads.DISCLAIMER,
     }
@@ -289,6 +289,102 @@ def build_start(storage: Storage, registry: Registry, cell_info: dict[str, Any],
 def kreise_table() -> list[dict[str, str]]:
     """Alle Kreise (ARS, Name, Land) für das Filtermenü; ändert sich nur mit der Gliederungsdatei."""
     return sorted(({"ars": k["ars"], "name": k["name"], "land": k["land"]} for k, _ in _gl()._items), key=lambda r: (r["land"], r["name"]))
+
+
+# --- Verwaltungseinheiten für die Übersichtskarte -------------------------------------------------------------------------------
+# Unter Zoom 8 zeigt die Karte keine Rasterzellen, sondern Zählwerte je Land und je Kreis (Lage = Mittelpunkt der Fläche), damit die
+# Darstellung dem Land folgt und nicht dem technischen Raster. Die Zellen bleiben Sache des Backends.
+LAND_NAMEN = {"DE-RP": "Rheinland-Pfalz", "DE-SL": "Saarland", "DE-NW": "Nordrhein-Westfalen", "DE-HE": "Hessen", "DE-BW": "Baden-Württemberg",
+              "DE-BY": "Bayern", "LU": "Luxemburg", "BE": "Belgien", "FR": "Frankreich", "NL": "Niederlande"}
+# Ausland: keine Kreisdaten, feste Lage (Lon, Lat) und grober Rahmen (W, S, O, N) des gezeigten Teils
+AUSLAND = {"LU": ((6.10, 49.78), (5.73, 49.45, 6.53, 50.18)), "BE": ((5.75, 50.10), (5.45, 49.50, 6.40, 50.80)),
+           "FR": ((6.50, 48.95), (4.80, 47.90, 8.30, 49.60)), "NL": ((5.90, 51.20), (5.60, 50.75, 6.20, 51.60))}
+_kreis_geo: dict[str, dict[str, Any]] | None = None
+
+
+def _ring_centroid(ring: list[list[float]]) -> tuple[float, float, float]:
+    """(Fläche, Lon, Lat) des Schwerpunkts eines Rings; Fläche in Grad², vorzeichenlos."""
+    a = cx = cy = 0.0
+    for i in range(len(ring)):
+        x1, y1 = ring[i][:2]
+        x2, y2 = ring[(i + 1) % len(ring)][:2]
+        w = x1 * y2 - x2 * y1
+        a += w
+        cx += (x1 + x2) * w
+        cy += (y1 + y2) * w
+    if abs(a) < 1e-12:
+        return 0.0, ring[0][0], ring[0][1]
+    return abs(a) / 2, cx / (3 * a), cy / (3 * a)
+
+
+def kreis_geo() -> dict[str, dict[str, Any]]:
+    """ARS → {name, land, lon, lat, bbox}. Der Punkt liegt in der Fläche des Kreises und in keiner anderen (Ringkreise um kreisfreie Städte)."""
+    global _kreis_geo
+    if _kreis_geo is not None:
+        return _kreis_geo
+    gl = _gl()
+    out: dict[str, dict[str, Any]] = {}
+    for k, idx in gl._items:
+        parts = [_ring_centroid(poly[0]) for poly in k["polygons"] if poly]
+        tot = sum(a for a, _, _ in parts) or 1.0
+        lon0, lat0 = sum(a * x for a, x, _ in parts) / tot, sum(a * y for a, _, y in parts) / tot
+        pt = (lon0, lat0)
+        if (gl.kreis(lat0, lon0) or {}).get("ars") != k["ars"]:
+            best = None
+            n = 21
+            for i in range(n):
+                for j in range(n):
+                    lon = idx.lon_min + (idx.lon_max - idx.lon_min) * (i + 0.5) / n
+                    lat = idx.lat_min + (idx.lat_max - idx.lat_min) * (j + 0.5) / n
+                    if (gl.kreis(lat, lon) or {}).get("ars") == k["ars"]:
+                        d = (lon - lon0) ** 2 + (lat - lat0) ** 2
+                        if best is None or d < best[0]:
+                            best = (d, lon, lat)
+            if best:
+                pt = (best[1], best[2])
+        out[k["ars"]] = {"name": k["name"], "land": k["land"], "lon": round(pt[0], 4), "lat": round(pt[1], 4),
+                         "bbox": [round(v, 3) for v in (idx.lon_min, idx.lat_min, idx.lon_max, idx.lat_max)], "w": tot}
+    _kreis_geo = out
+    return out
+
+
+def build_einheiten(features: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Zählwerte je Land und je Kreis für die Übersichtskarte: {key, level, name, land, n, sev, lon, lat, bbox}. Flugzeuge zählen nicht.
+
+    Ein Punkt gehört zu seinem Kreis (deutsche Länder) oder zu seinem Auslandskürzel (region_tag); Punkte ohne beides bleiben ungezählt."""
+    geo = kreis_geo()
+    kreise: dict[str, list[int]] = {}
+    laender: dict[str, list[int]] = {}
+    inv = {v: k for k, v in SEV_RANK.items()}
+    for f in features:
+        p = f.get("properties") or {}
+        if p.get("type") == "aircraft":
+            continue
+        r = SEV_RANK.get(p.get("severity"), 0)
+        kr = kreis_of(p.get("lat"), p.get("lon"))
+        if kr:
+            c = kreise.setdefault(kr["ars"], [0, 0]); c[0] += 1; c[1] = max(c[1], r)
+            c = laender.setdefault(kr["land"], [0, 0]); c[0] += 1; c[1] = max(c[1], r)
+        else:
+            tag = p.get("region_tag")
+            if isinstance(tag, str) and tag in AUSLAND:
+                c = laender.setdefault(tag, [0, 0]); c[0] += 1; c[1] = max(c[1], r)
+    out: list[dict[str, Any]] = []
+    for ars, (n, r) in kreise.items():
+        g = geo[ars]
+        out.append({"key": f"kreis:{ars}", "level": "kreis", "name": g["name"], "land": g["land"], "n": n, "sev": inv[r], "lon": g["lon"], "lat": g["lat"], "bbox": g["bbox"]})
+    for land, (n, r) in laender.items():
+        if land in AUSLAND:
+            (lon, lat), bbox = AUSLAND[land]
+        else:   # Schwerpunkt der Kreise des Landes, gewichtet nach Fläche
+            ks = [g for g in geo.values() if g["land"] == land]
+            tot = sum(g["w"] for g in ks) or 1.0
+            lon, lat = sum(g["w"] * g["lon"] for g in ks) / tot, sum(g["w"] * g["lat"] for g in ks) / tot
+            bbox = [min(g["bbox"][0] for g in ks), min(g["bbox"][1] for g in ks), max(g["bbox"][2] for g in ks), max(g["bbox"][3] for g in ks)]
+        out.append({"key": f"land:{land}", "level": "land", "name": LAND_NAMEN.get(land, land), "land": land, "n": n, "sev": inv[r],
+                    "lon": round(lon, 4), "lat": round(lat, 4), "bbox": [round(v, 3) for v in bbox]})
+    out.sort(key=lambda e: (e["level"], e["key"]))
+    return out
 
 
 HASH_DROP = {"generated_at", "age_s", "last_attempt", "last_success", "fetched_at", "source_status", "status", "failing_since",

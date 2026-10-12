@@ -9,7 +9,7 @@
 // Fehler:  Eine Zelle, die nicht kommt, steht in der Statuszeile ("1 Zelle fehlt"); die übrigen bleiben. Nach 30 s ein neuer Versuch.
 import { getJSON } from '../util.js';
 import { GEBIET_LEER, gebietPasst, gebietAktiv } from '../gebiet.js';
-import { KIND_KEY, KIND_MIN_ZOOM, ZellenSpeicher, anreichern, cellsInBounds, dichtePunkte, kindsForZoom, warnbandAlsEreignisse } from '../zellen.js';
+import { KIND_KEY, KIND_MIN_ZOOM, ZellenSpeicher, anreichern, cellsInBounds, dichtePunkte, einheitenPunkte, kindsForZoom, warnbandAlsEreignisse } from '../zellen.js';
 import { map, mapReady, state } from './zustand.js';
 
 export const EVENTS_MIN_ZOOM = KIND_MIN_ZOOM.events;
@@ -117,10 +117,14 @@ export function applyCells(force = false) {
 
 export function pushDichte() {
   if (!mapReady || !state.start || !map.getSource('dichte')) return;
-  const pts = dichtePunkte(state.start.cells);
+  // Zahl je Land und Kreis (start.json `einheiten`); alter Export ohne das Feld: je Rasterzelle
+  const einh = einheitenPunkte(state.start.einheiten);
+  const pts = einh.length ? einh : dichtePunkte(state.start.cells).map((f) => ({ ...f, properties: { ...f.properties, level: 'kreis' } }));
   map.getSource('dichte').setData({ type: 'FeatureCollection', features: pts });
   const hint = document.getElementById('dichte-hinweis');
-  if (hint) hint.textContent = `Übersicht: ${pts.reduce((a, f) => a + f.properties.n, 0)} Ereignisse in ${pts.length} Rasterzellen. Ab Zoomstufe ${EVENTS_MIN_ZOOM} erscheinen die Einzelmeldungen, die Tabelle zeigt schon jetzt alle Warnungen.`;
+  const kreise = pts.filter((f) => f.properties.level === 'kreis').length;
+  const total = einh.length ? einh.filter((f) => f.properties.level === 'land').reduce((a, f) => a + f.properties.n, 0) : pts.reduce((a, f) => a + f.properties.n, 0);
+  if (hint) hint.textContent = `Übersicht: ${total} Ereignisse ${einh.length ? `in ${kreise} Kreisen und Gebieten` : `in ${pts.length} Rasterzellen`}. Ab Zoomstufe ${EVENTS_MIN_ZOOM} erscheinen die Einzelmeldungen, die Tabelle zeigt schon jetzt alle Warnungen.`;
 }
 
 /** Gebiet geändert (Auswahl im Ereignisfilter): neu einsetzen und zeichnen. */
@@ -134,13 +138,13 @@ export function wireView() {
   let t = 0;
   const later = () => { clearTimeout(t); t = setTimeout(() => loadView(), 250); };
   map.on('moveend', later);
-  map.on('click', 'dichte-kreis', (e) => {
+  for (const id of ['dichte-land', 'dichte-kreis']) map.on('click', id, (e) => {
     const f = e.features?.[0];
     if (!f) return;
     const [w, s, ea, n] = JSON.parse(f.properties.bbox);
     map.fitBounds([[w, s], [ea, n]], { padding: 40, duration: 600, maxZoom: EVENTS_MIN_ZOOM + 1.5 });
   });
-  for (const id of ['dichte-kreis']) {
+  for (const id of ['dichte-land', 'dichte-kreis']) {
     map.on('mouseenter', id, () => (map.getCanvas().style.cursor = 'pointer'));
     map.on('mouseleave', id, () => (map.getCanvas().style.cursor = ''));
   }
