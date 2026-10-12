@@ -190,7 +190,7 @@ def test_osm_tiles_radius_mode_single_box_polygon_mode_many(monkeypatch):
     monkeypatch.setattr(osm_tiles, "REGION", SimpleNamespace(mode="polygon", contains=lambda la, lo, margin_km=0: True))
     monkeypatch.setattr(osm_tiles.config, "BBOX", (48.2, 5.0, 51.7, 9.6))
     t = osm_tiles.tiles()
-    assert 12 <= len(t) <= 30
+    assert 40 <= len(t) <= 80   # Kacheln von 0,5 x 0,75 Grad
     assert min(b[0] for b in t) == 48.2 and max(b[2] for b in t) == 51.7 and min(b[1] for b in t) == 5.0 and max(b[3] for b in t) == 9.6
     monkeypatch.setattr(osm_tiles, "REGION", SimpleNamespace(mode="polygon", contains=lambda la, lo, margin_km=0: lo < 6.0))
     assert 0 < len(osm_tiles.tiles()) < len(t)

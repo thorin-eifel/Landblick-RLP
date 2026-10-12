@@ -14,8 +14,8 @@ import math
 from .. import config
 from ..region import REGION
 
-TILE_LAT = 0.8   # Grad, rund 90 km
-TILE_LON = 1.2   # Grad, rund 85 km bei 50° N
+TILE_LAT = 0.5   # Grad, rund 55 km (vorher 0,8: ganz RLP in einem Lauf brachte Overpass mit 429 und 504 ins Straucheln)
+TILE_LON = 0.75  # Grad, rund 54 km bei 50° N
 
 
 def tiles(box: tuple[float, float, float, float] | None = None, tile_lat: float = TILE_LAT, tile_lon: float = TILE_LON) -> list[tuple[float, float, float, float]]:
