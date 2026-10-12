@@ -163,9 +163,42 @@ export function labelsAndBuildings(dark) {
   };
 }
 
+// Klippe in drei Lagen: weiches Geröllband auf der Abbruchseite (rechts der Linienrichtung), heller Saum für Lesbarkeit im Wald,
+// dünne Wandlinie mit Schraffen (lange und kurze Striche im Wechsel, Bild cliff-tick).
+// Mit `dgm` kommen die Wände in Rheinland-Pfalz aus dem Geländemodell (Quelle klippen, Ebene klippen, Attribut drop = Wandhöhe in m);
+// die OpenStreetMap-Klippen der Basiskarte gelten dann nur noch außerhalb des Landes.
+export function cliffLayers(k, dark, ticks, dgm) {
+  const osmFilter = dgm ? ['all', ['==', ['get', 'kind'], 'cliff'], ['!', ['within', RLP_UMRISS]]] : ['==', 'kind', 'cliff'];
+  // Wandhöhe 6 m bis 30 m: Linie und Band wachsen mit der Höhe
+  const byDrop = (lo, hi) => ['interpolate', ['linear'], ['get', 'drop'], 6, lo, 30, hi];
+  const sets = [{ src: { source: 'basemap', 'source-layer': 'earth' }, filter: osmFilter, id: '' }];
+  if (dgm) sets.push({ src: { source: 'klippen', 'source-layer': 'klippen' }, filter: ['>=', ['get', 'drop'], 6], id: '-dgm' });
+  return sets.flatMap(({ src, filter, id }) => {
+    const dg = id === '-dgm';
+    return [
+      { id: `land-cliff-band${id}`, type: 'line', ...src, minzoom: 12, filter,
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': CLIFF_SCREE[k], 'line-opacity': 0.55, 'line-blur': 2.5, 'line-offset': ['interpolate', ['linear'], ['zoom'], 12, 2, 17, 6],
+          'line-width': dg ? ['interpolate', ['linear'], ['zoom'], 12, byDrop(3, 6), 17, byDrop(9, 18)] : ['interpolate', ['linear'], ['zoom'], 12, 4, 17, 12] } },
+      { id: `land-cliff-case${id}`, type: 'line', ...src, minzoom: 12, filter,
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': dark ? '#161616' : '#ffffff', 'line-opacity': 0.5, 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 2.4, 16, 4] } },
+      { id: `land-cliff${id}`, type: 'line', ...src, minzoom: 12, filter,
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': CLIFF[k], 'line-opacity': 1,
+          'line-width': dg ? ['interpolate', ['linear'], ['zoom'], 12, byDrop(0.9, 1.6), 16, byDrop(1.8, 3)] : ['interpolate', ['linear'], ['zoom'], 12, 1.1, 16, 2.2] } },
+      ...(ticks ? [{ id: `land-cliff-teeth${id}`, type: 'symbol', ...src, minzoom: 13, filter,
+        layout: { 'symbol-placement': 'line', 'symbol-spacing': 8, 'icon-image': 'cliff-tick', 'icon-anchor': 'top', 'icon-offset': [0, 0.5],
+          'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true,
+          'icon-size': ['interpolate', ['linear'], ['zoom'], 13, 0.85, 17, 1.25] },
+        paint: { 'icon-color': CLIFF[k], 'icon-opacity': 1 } }] : []),
+    ];
+  });
+}
+
 // Flächen nach Klasse (Wald, Wiese, Buschland, Acker, Feuchtgebiet, Fels), Klippenlinien und Steinbrüche aus der Basiskarte.
 // Die Kacheln führen Klippen als earth/cliff (Linien) und Steinbrüche als benannte Punkte in pois/quarry.
-export function landUseLayers(dark, ticks, rlp = false) {
+export function landUseLayers(dark, ticks, rlp = false, dgm = false) {
   const k = dark ? 'dark' : 'light';
   const fills = Object.entries(LAND_KINDS).flatMap(([cls, kinds]) => {
     // Weinberg und Obstanlage kommen aus der eigenen GeoJSON-Quelle (die Kacheln führen sie nicht)
@@ -205,23 +238,7 @@ export function landUseLayers(dark, ticks, rlp = false) {
       layout: { 'line-join': 'round', 'line-cap': 'round' },
       paint: { 'line-color': BOUND_COLOR[k], 'line-opacity': 0.9, 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 1.2, 14, 2], 'line-dasharray': [0.01, 2.2] } })),
     ...(rlp ? rlpBorderLayers(dark) : []),
-    // Klippe in drei Lagen: weiches Geröllband auf der Abbruchseite (rechts der Linienrichtung), heller Saum für Lesbarkeit im Wald,
-    // dünne Wandlinie mit Schraffen (lange und kurze Striche im Wechsel, Bild cliff-tick)
-    { id: 'land-cliff-band', type: 'line', source: 'basemap', 'source-layer': 'earth', minzoom: 12, filter: ['==', 'kind', 'cliff'],
-      layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': CLIFF_SCREE[k], 'line-opacity': 0.55, 'line-blur': 2.5, 'line-offset': ['interpolate', ['linear'], ['zoom'], 12, 2, 17, 6],
-        'line-width': ['interpolate', ['linear'], ['zoom'], 12, 4, 17, 12] } },
-    { id: 'land-cliff-case', type: 'line', source: 'basemap', 'source-layer': 'earth', minzoom: 12, filter: ['==', 'kind', 'cliff'],
-      layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': dark ? '#161616' : '#ffffff', 'line-opacity': 0.5, 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 2.4, 16, 4] } },
-    { id: 'land-cliff', type: 'line', source: 'basemap', 'source-layer': 'earth', minzoom: 12, filter: ['==', 'kind', 'cliff'],
-      layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': CLIFF[k], 'line-opacity': 1, 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1.1, 16, 2.2] } },
-    ...(ticks ? [{ id: 'land-cliff-teeth', type: 'symbol', source: 'basemap', 'source-layer': 'earth', minzoom: 13, filter: ['==', 'kind', 'cliff'],
-      layout: { 'symbol-placement': 'line', 'symbol-spacing': 8, 'icon-image': 'cliff-tick', 'icon-anchor': 'top', 'icon-offset': [0, 0.5],
-        'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true,
-        'icon-size': ['interpolate', ['linear'], ['zoom'], 13, 0.85, 17, 1.25] },
-      paint: { 'icon-color': CLIFF[k], 'icon-opacity': 1 } }] : []),
+    ...cliffLayers(k, dark, ticks, dgm),
     { id: 'land-quarry-dot', type: 'circle', source: 'basemap', 'source-layer': 'pois', minzoom: 11, filter: ['==', 'kind', 'quarry'],
       paint: { 'circle-radius': 4.5, 'circle-color': QUARRY[k][0], 'circle-stroke-color': dark ? '#161616' : '#ffffff', 'circle-stroke-width': 1.5 } },
     { id: 'land-quarry-label', type: 'symbol', source: 'basemap', 'source-layer': 'pois', minzoom: 12, filter: ['==', 'kind', 'quarry'],

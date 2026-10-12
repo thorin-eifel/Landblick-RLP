@@ -1,6 +1,6 @@
 // Laufzeitobjekte der Seite. Andere Module lesen sie über die gebundenen Importe; gesetzt wird nur über die Setzer unten.
 export let map = null, popup = null, sweep = null, ripples = null, wind = null, windLow = null, flow = null;
-export let mapReady = false, basemapOk = false, coreOk = false, ringOk = false, reliefOk = false;
+export let mapReady = false, basemapOk = false, coreOk = false, ringOk = false, reliefOk = false, klippenOk = false;
 export let light = null;   // Lichtquelle am Zeiger (js/licht.js)
 export function setMap(v) { map = v; }
 export function setPopup(v) { popup = v; }
@@ -13,6 +13,7 @@ export function setMapReady(v) { mapReady = v; }
 export function setBasemapOk(v) { basemapOk = v; }
 export function setCoreOk(v) { coreOk = v; }
 export function setRingOk(v) { ringOk = v; }
+export function setKlippenOk(v) { klippenOk = v; }
 export function setReliefOk(v) { reliefOk = v; }
 export function setLight(v) { light = v; }
 

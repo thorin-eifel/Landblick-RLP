@@ -47,8 +47,8 @@ export function medievalize(styled) {
       pat.push([out.length + 1, patternLayer(x, cls, mk)]);
     } else if (l.id === 'buildings') x = { ...l, paint: { 'fill-pattern': 'med-bldg', 'fill-opacity': 1 } };
     else if (l.id === 'nat-peak-sym') x = { ...l, layout: { ...l.layout, 'icon-image': 'med-peak', 'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.55, 15, 0.85] } };
-    else if (l.id === 'land-cliff') x = { ...l, minzoom: 11, paint: { 'line-color': MED.ink, 'line-opacity': 0.95, 'line-width': ['interpolate', ['linear'], ['zoom'], 11, 1.1, 16, 2.6] } };
-    else if (l.id === 'land-cliff-teeth') x = { ...l, minzoom: 12, layout: { ...l.layout, 'icon-image': 'med-cliff', 'symbol-spacing': 6, 'icon-offset': [0, 0.5],
+    else if (l.id === 'land-cliff' || l.id === 'land-cliff-dgm') x = { ...l, minzoom: 11, paint: { 'line-color': MED.ink, 'line-opacity': 0.95, 'line-width': ['interpolate', ['linear'], ['zoom'], 11, 1.1, 16, 2.6] } };
+    else if (l.id === 'land-cliff-teeth' || l.id === 'land-cliff-teeth-dgm') x = { ...l, minzoom: 12, layout: { ...l.layout, 'icon-image': 'med-cliff', 'symbol-spacing': 6, 'icon-offset': [0, 0.5],
       'icon-size': ['interpolate', ['linear'], ['zoom'], 12, 0.6, 17, 1.15] }, paint: { 'icon-opacity': 0.95 } };
     else if (l.id === 'land-quarry-dot') x = { ...l, paint: { ...l.paint, 'circle-color': MED.road, 'circle-stroke-color': MED.paper } };
     if (x.layout?.['text-font']) {

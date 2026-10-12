@@ -26,7 +26,7 @@ import { INFRA_LAYER_IDS } from './orte.js';
 import { showPopup } from './popup.js';
 import { initSearch } from './suche-karte.js';
 import { applyWind, fillTempLegend, showFlowWind, trackLegendBottom } from './wetterkarte.js';
-import { CORE_URL, RING_URL, START_VIEW, SYMBOL_LAYERS, TILES_URL, light, map, reduceMotion, reliefOk, ripples, setBasemapOk, setCoreOk, setFlow, setLight, setMap, setMapReady, setPopup, setReliefOk, setRingOk, setRipples, setSweep, setWind, setWindLow, state, sweep, wind, windLow } from './zustand.js';
+import { CORE_URL, RING_URL, START_VIEW, SYMBOL_LAYERS, TILES_URL, light, map, reduceMotion, reliefOk, ripples, setBasemapOk, setCoreOk, setFlow, setKlippenOk, setLight, setMap, setMapReady, setPopup, setReliefOk, setRingOk, setRipples, setSweep, setWind, setWindLow, state, sweep, wind, windLow } from './zustand.js';
 
 // ------------------------------------------------------------------ Karte
 // Rahmen der Karte: Umriss von Rheinland-Pfalz (web/geo/rlp.geojson: 6,11–8,51 E, 48,97–50,94 N) mit gleichem Rand ringsum, damit der Mittelpunkt
@@ -261,6 +261,14 @@ export async function setupBasemap() {
       map.addSource('basemap-ring', { type: 'vector', url: `pmtiles://${ringUrl}` });
       setRingOk(true);
     } catch (err) { console.warn('Ringkarte (Zoom 14) nicht verfügbar:', err?.message ?? err); }
+    try {   // Wände aus dem Geländemodell (tools/build_klippen_dgm.py): Vektorkacheln Zoom 12; fehlen sie, zeichnet die Karte nur die OSM-Klippen
+      const kb = new URL('tiles/klippen/', location.href).href;
+      const km = await fetch(kb + 'meta.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      if (km) {
+        map.addSource('klippen', { type: 'vector', tiles: [kb + '{z}/{x}/{y}.pbf'], minzoom: 12, maxzoom: 12 });
+        setKlippenOk(true);
+      }
+    } catch (err) { console.warn('Klippen aus dem Gelaendemodell nicht verfuegbar:', err?.message ?? err); }
     note.replaceChildren('Karte: ', link('https://www.openstreetmap.org/copyright', '© OpenStreetMap-Mitwirkende (ODbL)'), ' · Protomaps');
     if (globalThis.mlcontour) note.append(' · ', RELIEF_ATTRIBUTION);
   } catch (err) {
