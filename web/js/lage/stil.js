@@ -169,10 +169,10 @@ export function labelsAndBuildings(dark) {
 // die OpenStreetMap-Klippen der Basiskarte gelten dann nur noch außerhalb des Landes.
 export function cliffLayers(k, dark, ticks, dgm) {
   const osmFilter = dgm ? ['all', ['==', ['get', 'kind'], 'cliff'], ['!', ['within', RLP_UMRISS]]] : ['==', 'kind', 'cliff'];
-  // Wandhöhe 6 m bis 30 m: Linie und Band wachsen mit der Höhe
-  const byDrop = (lo, hi) => ['interpolate', ['linear'], ['get', 'drop'], 6, lo, 30, hi];
+  // Wandhöhe 5 m bis 30 m: Linie und Band wachsen mit der Höhe
+  const byDrop = (lo, hi) => ['interpolate', ['linear'], ['get', 'drop'], 5, lo, 30, hi];
   const sets = [{ src: { source: 'basemap', 'source-layer': 'earth' }, filter: osmFilter, id: '' }];
-  if (dgm) sets.push({ src: { source: 'klippen', 'source-layer': 'klippen' }, filter: ['>=', ['get', 'drop'], 6], id: '-dgm' });
+  if (dgm) sets.push({ src: { source: 'klippen', 'source-layer': 'klippen' }, filter: ['>=', ['get', 'drop'], 5], id: '-dgm' });
   return sets.flatMap(({ src, filter, id }) => {
     const dg = id === '-dgm';
     return [

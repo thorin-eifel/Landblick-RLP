@@ -2,7 +2,7 @@
 """Klippen und Felswände aus dem Landes-DGM1 ableiten und als Vektorkacheln (Zoom 12) ablegen.
 
 Zweck:      Die Klippen der Basiskarte stammen aus OpenStreetMap und sind lückenhaft und grob. Das Geländemodell
-            kennt jede Steilwand: wo das 4-m-Raster steiler als ~55 Grad fällt, steht eine Wand. Dieses Werkzeug
+            kennt jede Steilwand: wo das 4-m-Raster steiler als ~48 Grad fällt, steht eine Wand. Dieses Werkzeug
             zieht daraus Linien mit Laufrichtung (Abbruchseite rechts der Linie, wie bei den OSM-Klippen) und die
             Wandhöhe als Attribut `drop`. Die Karte zeichnet sie mit denselben Schraffen wie die OSM-Klippen.
 Quelle:     Landes-DGM1 RLP (© GeoBasis-DE / LVermGeoRP, dl-de/by-2-0, Daten bearbeitet) über das 4-m-Raster aus
@@ -275,10 +275,10 @@ def main() -> int:
     ap.add_argument("--out", type=Path, required=True, help="Zielordner der Kacheln, z. B. web/tiles/klippen")
     ap.add_argument("--bbox", type=float, nargs=4, metavar=("LON0", "LAT0", "LON1", "LAT1"), help="nur dieser Ausschnitt")
     ap.add_argument("--chunk", type=int, default=8, help="Blockgröße in km")
-    ap.add_argument("--slope", type=float, default=55.0, help="Mindestneigung in Grad")
-    ap.add_argument("--min-cells", type=int, default=8, help="kleinste Steilfläche in Zellen (16 m²)")
-    ap.add_argument("--min-len", type=float, default=24.0, help="kürzeste Linie in m")
-    ap.add_argument("--min-drop", type=float, default=6.0, help="kleinster Höhenunterschied beidseits in m")
+    ap.add_argument("--slope", type=float, default=48.0, help="Mindestneigung in Grad")
+    ap.add_argument("--min-cells", type=int, default=6, help="kleinste Steilfläche in Zellen (16 m² je Zelle)")
+    ap.add_argument("--min-len", type=float, default=20.0, help="kürzeste Linie in m")
+    ap.add_argument("--min-drop", type=float, default=5.0, help="kleinster Höhenunterschied beidseits in m")
     ap.add_argument("--sigma", type=float, default=0.6, help="Glättung des Höhenfelds in Zellen")
     ap.add_argument("--simplify", type=float, default=3.0, help="Vereinfachung in m")
     ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) - 1))
