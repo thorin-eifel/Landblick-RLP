@@ -11,7 +11,7 @@ import { INFRA_LAYER_IDS, paintStops } from './orte.js';
 import { placeLgb } from './lgb.js';
 import { LABEL_SKIP, labelsAndBuildings, ortsnamenUebersicht, landUseLayers, mainRoad, signLayers, waterEdges } from './stil.js';
 import { applyFlow, fillTempLegend, placeRadar } from './wetterkarte.js';
-import { basemapOk, coreOk, flow, light, map, mapReady, reliefOk, ringOk, state } from './zustand.js';
+import { basemapOk, coreOk, flow, light, klippenOk, map, mapReady, reliefOk, ringOk, state } from './zustand.js';
 
 // Stil-Layer der Basiskarte unter den eigenen Ebenen; beim Wechsel Hell/Dunkel neu aufgebaut
 export function applyBasemap() {
@@ -28,7 +28,7 @@ export function applyBasemap() {
     .map((x) => (coreOk && (x.id === 'buildings' || x.id === 'address_label') ? { ...x, source: 'basemap-core' } : x));   // Gebäude und Hausnummern aus dem Zoom-15-Kern
   // eigene Flächen- und Geländeebenen gleich hinter dem Landnutzungs-Layer des Stils (unter Wasser, Straßen und Relief-Linien)
   const at = styled.findIndex((x) => x.id === 'landuse_park');
-  styled.splice(at >= 0 ? at + 1 : 0, 0, ...landUseLayers(dark, map.hasImage('cliff-tick'), !!map.getSource('rlp-grenze')));
+  styled.splice(at >= 0 ? at + 1 : 0, 0, ...landUseLayers(dark, map.hasImage('cliff-tick'), !!map.getSource('rlp-grenze'), klippenOk));
   waterEdges(styled, dark);
   styled.push(...peakLayers(dark, map.hasImage('peak-tri')));   // Gipfel oben auf den Beschriftungen des Stils
   if (med) styled = medievalize(styled);

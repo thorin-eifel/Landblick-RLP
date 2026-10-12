@@ -42,3 +42,25 @@ test('Umriss: Trier, Mainz und Irrel liegen darin, Saarbrücken, Luxemburg und K
   for (const [n, lon, lat] of [['Trier', 6.64, 49.75], ['Mainz', 8.27, 50.0], ['Irrel', 6.45, 49.85], ['Koblenz', 7.59, 50.36]]) assert.ok(inside(lon, lat), n);
   for (const [n, lon, lat] of [['Saarbrücken', 7.0, 49.23], ['Luxemburg', 6.13, 49.61], ['Köln', 6.96, 50.94], ['Echternach', 6.42, 49.81]]) assert.ok(!inside(lon, lat), n);
 });
+
+test('Klippen: mit Geländemodell zweiter Satz aus der Quelle klippen, OSM-Klippen nur außerhalb von Rheinland-Pfalz', async () => {
+  const { cliffLayers } = await import('../../web/js/lage/stil.js');
+  const ohne = cliffLayers('light', false, true, false);
+  assert.deepEqual(ohne.map((l) => l.id), ['land-cliff-band', 'land-cliff-case', 'land-cliff', 'land-cliff-teeth']);
+  assert.ok(ohne.every((l) => l.source === 'basemap'));
+  const mit = cliffLayers('light', false, true, true);
+  const dgm = mit.filter((l) => l.id.endsWith('-dgm'));
+  assert.equal(dgm.length, 4);
+  assert.ok(dgm.every((l) => l.source === 'klippen' && l['source-layer'] === 'klippen'));
+  const osm = mit.find((l) => l.id === 'land-cliff');
+  assert.equal(osm.filter[0], 'all');
+  assert.equal(osm.filter[2][0], '!');                // innerhalb des Umrisses nicht doppelt zeichnen
+  assert.equal(osm.filter[2][1][0], 'within');
+});
+
+test('Ansicht aus der Adresse: gültige Werte, sonst null', async () => {
+  const { ansichtAusAdresse } = await import('../../web/js/ansicht.js');
+  assert.deepEqual(ansichtAusAdresse('#15/49.861/6.448'), { zoom: 15, lat: 49.861, lon: 6.448 });
+  assert.deepEqual(ansichtAusAdresse('#14.5/49/6'), { zoom: 14.5, lat: 49, lon: 6 });
+  for (const bad of ['#debug', '', undefined, '#99/49/6', '#12/95/6', '#12/49/200', '#12/49', '#12/a/b', '#12/49/6/1']) assert.equal(ansichtAusAdresse(bad), null, String(bad));
+});

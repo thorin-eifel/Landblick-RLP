@@ -206,6 +206,14 @@ Höhenlinien rechnet `web/vendor/maplibre-contour` (BSD-3) im Browser in einem W
 Fehlt `tiles/dem/README.txt`, bleibt die Karte ohne Relief und läuft normal. Code: `web/js/relief.js`.
 Namensnennung steht auf `quellen.html`. Höhenwerte sind Raster (in RLP ca. 6 m, sonst ca. 30 m), keine Vermessung.
 
+### Felskanten aus dem DGM1
+
+In RLP stammen Wandlinien (Klippen) nicht aus OSM, sondern aus dem 4-m-Raster: `tools/build_klippen_dgm.py` sucht Hänge ab 48 Grad, dünnt sie zu Linien aus, richtet sie talwärts und trägt die Höhendifferenz (`drop`, mindestens 5 m) als Attribut ein. Ausgabe sind Vektorkacheln Zoom 12 in `tiles/klippen/` (mit `meta.json`, Namensnennung „Daten bearbeitet").
+
+    .venv-dem/bin/python tools/build_klippen_dgm.py --work ~/Claude/OSINT/dgm1-work --out web/tiles/klippen   # RLP gesamt: ca. 20 000 Linien, 2,3 MB
+
+Fehlt `tiles/klippen/meta.json`, zeigt die Karte wie bisher die OSM-Klippen. Mit Kacheln werden OSM-Klippen innerhalb von RLP ausgeblendet, außerhalb bleiben sie. Die Linien sind abgeleitet, keine Vermessung; kleine Gabelungen bleiben möglich.
+
 ## Weitere Quellen (Umwelt)
 
 | Quelle | Collector | Inhalt | Takt |

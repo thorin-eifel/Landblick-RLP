@@ -12,6 +12,7 @@ import { createRipples } from '../ripples.js';
 import { SWEEP_GREEN, createSweep } from '../sweep.js';
 import { KIND_MIN_ZOOM } from '../zellen.js';
 import { loadTerrain } from '../terrain.js';
+import { ansichtAusAdresse } from '../ansicht.js';
 import { $, getJSON, h, link } from '../util.js';
 import { createWind, fillWindLegend } from '../wind.js';
 import { applyBasemap, wireElevation } from './basiskarte.js';
@@ -26,7 +27,7 @@ import { INFRA_LAYER_IDS } from './orte.js';
 import { showPopup } from './popup.js';
 import { initSearch } from './suche-karte.js';
 import { applyWind, fillTempLegend, showFlowWind, trackLegendBottom } from './wetterkarte.js';
-import { CORE_URL, RING_URL, START_VIEW, SYMBOL_LAYERS, TILES_URL, light, map, reduceMotion, reliefOk, ripples, setBasemapOk, setCoreOk, setFlow, setLight, setMap, setMapReady, setPopup, setReliefOk, setRingOk, setRipples, setSweep, setWind, setWindLow, state, sweep, wind, windLow } from './zustand.js';
+import { CORE_URL, RING_URL, START_VIEW, SYMBOL_LAYERS, TILES_URL, light, map, reduceMotion, reliefOk, ripples, setBasemapOk, setCoreOk, setFlow, setKlippenOk, setLight, setMap, setMapReady, setPopup, setReliefOk, setRingOk, setRipples, setSweep, setWind, setWindLow, state, sweep, wind, windLow } from './zustand.js';
 
 // ------------------------------------------------------------------ Karte
 // Rahmen der Karte: Umriss von Rheinland-Pfalz (web/geo/rlp.geojson: 6,11–8,51 E, 48,97–50,94 N) mit gleichem Rand ringsum, damit der Mittelpunkt
@@ -198,6 +199,8 @@ export async function initMap() {
   });
 
   map.fitBounds(RLP_BBOX, { padding: 24, animate: false });   // Start: ganz Rheinland-Pfalz, mittig (das Gebiet steht fest, es gibt keinen gewählten Mittelpunkt)
+  const ansicht = ansichtAusAdresse(location.hash);   // Link auf eine Ansicht: #zoom/breite/länge
+  if (ansicht) map.jumpTo({ center: [ansicht.lon, ansicht.lat], zoom: ansicht.zoom });
   await setupBasemap();
   setReliefOk(await setupRelief(map));
   if (reliefOk) setLight(createLight(map, { demTile, onError: (e) => console.warn('Licht:', e), reduce: reduceMotion, wind: () => { const c = map.getCenter(); const w = wind?.sample?.(c.lng, c.lat); return w ? { speed: w.speed, from: w.from } : null; } }));
@@ -273,6 +276,14 @@ export async function setupBasemap() {
       map.addSource('basemap-ring', { type: 'vector', url: `pmtiles://${ringUrl}` });
       setRingOk(true);
     } catch (err) { console.warn('Ringkarte (Zoom 14) nicht verfügbar:', err?.message ?? err); }
+    try {   // Wände aus dem Geländemodell (tools/build_klippen_dgm.py): Vektorkacheln Zoom 12; fehlen sie, zeichnet die Karte nur die OSM-Klippen
+      const kb = new URL('tiles/klippen/', location.href).href;
+      const km = await fetch(kb + 'meta.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      if (km) {
+        map.addSource('klippen', { type: 'vector', tiles: [kb + '{z}/{x}/{y}.pbf'], minzoom: 12, maxzoom: 12 });
+        setKlippenOk(true);
+      }
+    } catch (err) { console.warn('Klippen aus dem Gelaendemodell nicht verfuegbar:', err?.message ?? err); }
     note.replaceChildren('Karte: ', link('https://www.openstreetmap.org/copyright', '© OpenStreetMap-Mitwirkende (ODbL)'), ' · Protomaps');
     if (globalThis.mlcontour) note.append(' · ', RELIEF_ATTRIBUTION);
   } catch (err) {
