@@ -276,11 +276,11 @@ export async function setupBasemap() {
       map.addSource('basemap-ring', { type: 'vector', url: `pmtiles://${ringUrl}` });
       setRingOk(true);
     } catch (err) { console.warn('Ringkarte (Zoom 14) nicht verfügbar:', err?.message ?? err); }
-    try {   // Wände aus dem Geländemodell (tools/build_klippen_dgm.py): Vektorkacheln Zoom 12; fehlen sie, zeichnet die Karte nur die OSM-Klippen
+    try {   // Wände aus dem Geländemodell (tools/build_klippen_dgm.py): Vektorkacheln Zoom 13; fehlen sie, zeichnet die Karte nur die OSM-Klippen
       const kb = new URL('tiles/klippen/', location.href).href;
       const km = await fetch(kb + 'meta.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
       if (km) {
-        map.addSource('klippen', { type: 'vector', tiles: [kb + '{z}/{x}/{y}.pbf'], minzoom: 12, maxzoom: 12 });
+        map.addSource('klippen', { type: 'vector', tiles: [kb + '{z}/{x}/{y}.pbf'], minzoom: 13, maxzoom: 13 });
         setKlippenOk(true);
       }
     } catch (err) { console.warn('Klippen aus dem Gelaendemodell nicht verfuegbar:', err?.message ?? err); }

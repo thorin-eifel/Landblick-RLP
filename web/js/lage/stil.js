@@ -60,7 +60,7 @@ export const LAND = {
 // Tinte der Signaturen (Rgba), Bilder lp-<klasse>-<light|dark> aus icons.js registerLandPatterns()
 export const PAT_MIN_ZOOM = 12;
 export const PROTECTED = { light: '#2e7d3c', dark: '#7fd18a' };
-export const CLIFF = { light: '#0e0f11', dark: '#dedad2' }; // dunkles Steingrau bzw. helles Grau, bewusst kein Braun: Höhenlinien sind braun
+export const CLIFF = { light: '#000000', dark: '#dedad2' }; // dunkles Steingrau bzw. helles Grau, bewusst kein Braun: Höhenlinien sind braun
 export const CLIFF_SCREE = { light: '#6f675b', dark: '#8d8578' };   // Geröllband am Fuß der Wand
 export const QUARRY = { light: ['#8a6d3b', '#4a3a1c'], dark: ['#d9b56b', '#f0dcae'] };
 export const LAND_KINDS = {
@@ -165,41 +165,48 @@ export function labelsAndBuildings(dark) {
 
 // Klippe in drei Lagen: weiches Geröllband auf der Abbruchseite (rechts der Linienrichtung), heller Saum für Lesbarkeit im Wald,
 // dünne Wandlinie mit Schraffen (lange und kurze Striche im Wechsel, Bild cliff-tick).
-// Mit `dgm` kommen die Wände in Rheinland-Pfalz aus dem Geländemodell (Quelle klippen, Ebene klippen, Attribut drop = Wandhöhe in m);
+// Mit `dgm` kommen die Wände in Rheinland-Pfalz aus dem Geländemodell (Quelle klippen, Ebenen wand, kante, schraffur, Attribut drop = Wandhöhe in m);
 // die OpenStreetMap-Klippen der Basiskarte gelten dann nur noch außerhalb des Landes.
 export function cliffLayers(k, dark, ticks, dgm) {
   const osmFilter = dgm ? ['all', ['==', ['get', 'kind'], 'cliff'], ['!', ['within', RLP_UMRISS]]] : ['==', 'kind', 'cliff'];
   // Wandhöhe 5 m bis 30 m: Linie und Band wachsen mit der Höhe
   const byDrop = (lo, hi) => ['interpolate', ['linear'], ['get', 'drop'], 5, lo, 30, hi];
-  const sets = [{ src: { source: 'basemap', 'source-layer': 'earth' }, filter: osmFilter, id: '' }];
-  if (dgm) sets.push({ src: { source: 'klippen', 'source-layer': 'klippen' }, filter: ['>=', ['get', 'drop'], 5], id: '-dgm' });
-  return sets.flatMap(({ src, filter, id }) => {
-    const dg = id === '-dgm';
-    return [
-      { id: `land-cliff-band${id}`, type: 'line', ...src, minzoom: 12, filter,
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': CLIFF_SCREE[k], 'line-opacity': 0.55, 'line-blur': 2.5, 'line-offset': ['interpolate', ['linear'], ['zoom'], 12, 2, 17, 6],
-          'line-width': dg ? ['interpolate', ['linear'], ['zoom'], 12, byDrop(3, 6), 17, byDrop(9, 18)] : ['interpolate', ['linear'], ['zoom'], 12, 4, 17, 12] } },
-      { id: `land-cliff-case${id}`, type: 'line', ...src, minzoom: 12, filter,
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': dark ? '#161616' : '#fbf8f0', 'line-opacity': dg ? 0.85 : 0.5,
-          'line-width': dg ? ['interpolate', ['linear'], ['zoom'], 12, byDrop(3, 4.5), 16, byDrop(5, 8)] : ['interpolate', ['linear'], ['zoom'], 12, 2.4, 16, 4] } },
-      { id: `land-cliff${id}`, type: 'line', ...src, minzoom: 12, filter,
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': CLIFF[k], 'line-opacity': 1,
-          'line-width': dg ? ['interpolate', ['linear'], ['zoom'], 12, byDrop(1.3, 2.2), 16, byDrop(2.4, 4)] : ['interpolate', ['linear'], ['zoom'], 12, 1.1, 16, 2.2] } },
-      ...(ticks ? [{ id: `land-cliff-teeth${id}`, type: 'symbol', ...src, minzoom: 13, filter,
-        layout: { 'symbol-placement': 'line', 'symbol-spacing': dg ? 7 : 8, 'icon-image': 'cliff-tick', 'icon-anchor': 'top', 'icon-offset': [0, 0.5],
-          'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true,
-          'icon-size': dg ? ['interpolate', ['linear'], ['zoom'], 13, 1.1, 17, 1.7] : ['interpolate', ['linear'], ['zoom'], 13, 0.85, 17, 1.25] },
-        paint: { 'icon-color': CLIFF[k], 'icon-opacity': 1 } }] : []),
-    ];
-  });
+  const round = { 'line-cap': 'round', 'line-join': 'round' };
+  const osm = { source: 'basemap', 'source-layer': 'earth' };
+  const out = [
+    { id: 'land-cliff-band', type: 'line', ...osm, minzoom: 12, filter: osmFilter, layout: round,
+      paint: { 'line-color': CLIFF_SCREE[k], 'line-opacity': 0.55, 'line-blur': 2.5, 'line-offset': ['interpolate', ['linear'], ['zoom'], 12, 2, 17, 6],
+        'line-width': ['interpolate', ['linear'], ['zoom'], 12, 4, 17, 12] } },
+    { id: 'land-cliff-case', type: 'line', ...osm, minzoom: 12, filter: osmFilter, layout: round,
+      paint: { 'line-color': dark ? '#161616' : '#ffffff', 'line-opacity': 0.5, 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 2.4, 16, 4] } },
+    { id: 'land-cliff', type: 'line', ...osm, minzoom: 12, filter: osmFilter, layout: round,
+      paint: { 'line-color': CLIFF[k], 'line-opacity': 1, 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1.1, 16, 2.2] } },
+    ...(ticks ? [{ id: 'land-cliff-teeth', type: 'symbol', ...osm, minzoom: 13, filter: osmFilter,
+      layout: { 'symbol-placement': 'line', 'symbol-spacing': 8, 'icon-image': 'cliff-tick', 'icon-anchor': 'top', 'icon-offset': [0, 0.5],
+        'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true,
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 13, 0.85, 17, 1.25] },
+      paint: { 'icon-color': CLIFF[k], 'icon-opacity': 1 } }] : []),
+  ];
+  if (!dgm) return out;
+  // Aus dem DGM1 (1 m) gezeichnete Felswand: helle Wandfläche (Polygon, 60 % Deckkraft), Striche in Fallrichtung (von oben nach
+  // unten, kurz, schwarz) und obenauf die Oberkante. Die Kacheln (Zoom 13) führen Meter-genaue Geometrie; die Wandhöhe `drop`
+  // bestimmt die Breite der Oberkante.
+  const wall = (layer) => ({ source: 'klippen', 'source-layer': layer });
+  return [
+    ...out,
+    { id: 'land-cliff-wand-dgm', type: 'fill', ...wall('wand'), minzoom: 13,
+      paint: { 'fill-color': dark ? '#625c52' : '#c7bca4', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.33], 'fill-antialias': true } },
+    { id: 'land-cliff-schraffur-dgm', type: 'line', ...wall('schraffur'), minzoom: 14, layout: round,
+      paint: { 'line-color': CLIFF[k], 'line-opacity': 0.9, 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 0.5, 17, 0.9, 19, 1.4] } },
+    { id: 'land-cliff-dgm', type: 'line', ...wall('kante'), minzoom: 13, layout: round, filter: ['>=', ['get', 'drop'], 5],
+      paint: { 'line-color': CLIFF[k], 'line-opacity': 1,
+        'line-width': ['interpolate', ['linear'], ['zoom'], 13, byDrop(0.8, 1.4), 16, byDrop(1.4, 2.4), 18, byDrop(2, 3.4)] } },
+  ];
 }
 
 // Flächen nach Klasse (Wald, Wiese, Buschland, Acker, Feuchtgebiet, Fels), Klippenlinien und Steinbrüche aus der Basiskarte.
 // Die Kacheln führen Klippen als earth/cliff (Linien) und Steinbrüche als benannte Punkte in pois/quarry.
-export function landUseLayers(dark, ticks, rlp = false, dgm = false) {
+export function landUseLayers(dark, rlp = false) {
   const k = dark ? 'dark' : 'light';
   const fills = Object.entries(LAND_KINDS).flatMap(([cls, kinds]) => {
     // Weinberg und Obstanlage kommen aus der eigenen GeoJSON-Quelle (die Kacheln führen sie nicht)
@@ -239,7 +246,6 @@ export function landUseLayers(dark, ticks, rlp = false, dgm = false) {
       layout: { 'line-join': 'round', 'line-cap': 'round' },
       paint: { 'line-color': BOUND_COLOR[k], 'line-opacity': 0.9, 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 1.2, 14, 2], 'line-dasharray': [0.01, 2.2] } })),
     ...(rlp ? rlpBorderLayers(dark) : []),
-    ...cliffLayers(k, dark, ticks, dgm),
     { id: 'land-quarry-dot', type: 'circle', source: 'basemap', 'source-layer': 'pois', minzoom: 11, filter: ['==', 'kind', 'quarry'],
       paint: { 'circle-radius': 4.5, 'circle-color': QUARRY[k][0], 'circle-stroke-color': dark ? '#161616' : '#ffffff', 'circle-stroke-width': 1.5 } },
     { id: 'land-quarry-label', type: 'symbol', source: 'basemap', 'source-layer': 'pois', minzoom: 12, filter: ['==', 'kind', 'quarry'],
