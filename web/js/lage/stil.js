@@ -114,7 +114,7 @@ export function ortsnamenUebersicht(l) {
   if (l.id !== 'places_locality') return [l];
   const inRlp = ['within', RLP_UMRISS];
   const gross = ['>=', ['to-number', ['get', 'population'], 0], FREMD_MIN_EINWOHNER];
-  return [{ ...l, minzoom: 9 }, { ...l, id: 'places_locality_ov', minzoom: 5, maxzoom: 9, filter: ['all', ...(l.filter ? [l.filter] : []), ['any', inRlp, gross]] }];
+  return [{ ...l, minzoom: 9 }, { ...l, id: 'places_locality_ov', minzoom: 5, maxzoom: 9, filter: ['all', ['==', ['get', 'kind'], 'locality'], ['any', inRlp, gross]] }];
 }
 export const HOUSENO = { light: ['#6b0019', 'rgba(255,255,255,0.9)'], dark: ['#f0b3c4', 'rgba(20,20,20,0.9)'] };
 export function labelsAndBuildings(dark) {

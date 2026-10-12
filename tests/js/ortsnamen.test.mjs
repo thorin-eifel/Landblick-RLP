@@ -18,6 +18,7 @@ test('places_locality wird zu Detailebene ab Zoom 9 und Übersichtsebene Zoom 5 
   assert.equal(ov.minzoom, 5);
   assert.equal(ov.maxzoom, 9);
   const any = ov.filter[2];
+  assert.deepEqual(ov.filter[1], ['==', ['get', 'kind'], 'locality'], 'Ausdruckssyntax, keine alte Filtersyntax mischen');
   assert.equal(any[0], 'any');
   assert.equal(any[1][0], 'within');
   assert.equal(any[1][1], RLP_UMRISS);

@@ -11,6 +11,7 @@ web/tiles/*.pmtiles
 tools/bin/
 build/
 web/icons/*.svg
+!web/icons/tanken.svg
 web/tiles/dem/
 web/tiles/dem-base/
 .claude/
