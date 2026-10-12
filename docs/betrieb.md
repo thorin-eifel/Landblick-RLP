@@ -206,13 +206,16 @@ Höhenlinien rechnet `web/vendor/maplibre-contour` (BSD-3) im Browser in einem W
 Fehlt `tiles/dem/README.txt`, bleibt die Karte ohne Relief und läuft normal. Code: `web/js/relief.js`.
 Namensnennung steht auf `quellen.html`. Höhenwerte sind Raster (in RLP ca. 6 m, sonst ca. 30 m), keine Vermessung.
 
-### Felskanten aus dem DGM1
+### Felswände aus dem DGM1
 
-In RLP stammen Wandlinien (Klippen) nicht aus OSM, sondern aus dem 4-m-Raster: `tools/build_klippen_dgm.py` sucht Hänge ab 48 Grad, dünnt sie zu Linien aus, richtet sie talwärts und trägt die Höhendifferenz (`drop`, mindestens 5 m) als Attribut ein. Ausgabe sind Vektorkacheln Zoom 12 in `tiles/klippen/` (mit `meta.json`, Namensnennung „Daten bearbeitet").
+In RLP stammen Felswände nicht aus OSM, sondern aus dem 1-m-DGM1: `tools/build_klippen_dgm.py` findet die Steilzone (Hysterese 55/47 Grad auf dem um 1,5 m geglätteten Gelände), macht daraus Flächen und leitet je Wand drei Ebenen ab: `wand` (Polygon mit Löchern), `kante` (Oberkante, Wand rechts der Laufrichtung) und `schraffur` (kurze Striche in Fallrichtung, von oben nach unten). `drop` ist die Wandhöhe in m (mindestens 5 m). Ausgabe sind Vektorkacheln Zoom 13 in `tiles/klippen/` (mit `meta.json`, Namensnennung „Daten bearbeitet").
 
-    .venv-dem/bin/python tools/build_klippen_dgm.py --work ~/Claude/OSINT/dgm1-work --out web/tiles/klippen   # RLP gesamt: ca. 20 000 Linien, 2,3 MB
+Der Lauf braucht die 1-m-Rohkacheln. Standardmäßig lädt er nur Kilometerkacheln mit Steilhängen im 4-m-Raster samt Nachbarn, mit `--all-tiles` das ganze Land. Rohkacheln liegen komprimiert in `<work>/raw/` (rund 22 GB für RLP), ein Abbruch setzt beim nächsten Aufruf fort.
 
-Fehlt `tiles/klippen/meta.json`, zeigt die Karte wie bisher die OSM-Klippen. Mit Kacheln werden OSM-Klippen innerhalb von RLP ausgeblendet, außerhalb bleiben sie. Die Linien sind abgeleitet, keine Vermessung; kleine Gabelungen bleiben möglich.
+    .venv-dem/bin/python tools/build_klippen_dgm.py --work ~/Claude/OSINT/dgm1-work --out web/tiles/klippen --all-tiles   # RLP: ca. 21 000 Wände, 0,9 Mio. Striche, 24 MB; Download 33 GB, Gesamtlauf rund 3 Stunden
+    .venv-dem/bin/python tools/build_klippen_dgm.py --work ... --out ... --bbox 7.70 50.10 7.76 50.14                     # Ausschnitt (Loreley), 20 Sekunden
+
+Fehlt `tiles/klippen/meta.json`, zeigt die Karte wie bisher die OSM-Klippen. Mit Kacheln werden OSM-Klippen innerhalb von RLP ausgeblendet, außerhalb bleiben sie. Die Flächen sind abgeleitet, keine Vermessung; künstliche Böschungen (Steinbrüche, Einschnitte) erscheinen ebenfalls, wenn sie höher als 5 m und steiler als 55 Grad sind.
 
 ## Weitere Quellen (Umwelt)
 
