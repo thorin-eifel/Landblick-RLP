@@ -5,7 +5,7 @@ jobs:
   build:
     strategy:
       fail-fast: false
-      matrix: { os: [macos-latest, windows-latest, ubuntu-22.04] }
+      matrix: { os: [macos-latest, ubuntu-22.04] }   # Windows: windows-installer.yml (PowerShell statt bash)
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
