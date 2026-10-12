@@ -165,15 +165,51 @@ def orient(pts_rc: np.ndarray, h: np.ndarray, off_m: float = 8.0) -> tuple[np.nd
     return pts_rc, float(d)
 
 
-def block_lines(h: np.ndarray, slope: float, min_cells: int, min_len_m: float, min_drop: float,
-                sigma: float, simplify_m: float) -> list[tuple[np.ndarray, float]]:
-    """Linien eines Höhenfelds: Liste von (Punkte als (Zeile, Spalte)-Feld in Zellen, Höhenunterschied m)."""
+def along_contour(h: np.ndarray, pts_rc: np.ndarray, tol_deg: float, sigma: float = 2.0) -> np.ndarray:
+    """Je Stützpunkt: läuft die Linie entlang der Höhenlinie (Tangente quer zum Gefälle)? Wände, die quer über Höhenlinien
+    laufen, widersprechen dem Gelände und fliegen raus."""
     from scipy import ndimage as ndi
+    bad = ~np.isfinite(h)
+    idx = ndi.distance_transform_edt(bad, return_distances=False, return_indices=True)
+    g = ndi.gaussian_filter(h[tuple(idx)], sigma, mode="nearest")
+    gy, gx = np.gradient(g, RES)
+    t = np.gradient(pts_rc, axis=0)
+    t /= np.where(np.hypot(t[:, 0], t[:, 1]) == 0, 1, np.hypot(t[:, 0], t[:, 1]))[:, None]
+    ay = ndi.map_coordinates(gy, [pts_rc[:, 0], pts_rc[:, 1]], order=1, mode="nearest")
+    ax = ndi.map_coordinates(gx, [pts_rc[:, 0], pts_rc[:, 1]], order=1, mode="nearest")
+    gn = np.hypot(ay, ax)
+    cosang = np.abs(t[:, 0] * ay + t[:, 1] * ax) / np.where(gn == 0, np.inf, gn)
+    ok = cosang < np.sin(np.radians(tol_deg))
+    # Ausreißer glätten (Mehrheit über 5 Punkte), damit eine Ecke die Linie nicht zerhackt
+    return ndi.uniform_filter1d(ok.astype(float), 5, mode="nearest") >= 0.5
+
+
+def runs(ok: np.ndarray) -> list[tuple[int, int]]:
+    out, i, n = [], 0, len(ok)
+    while i < n:
+        if ok[i]:
+            j = i
+            while j + 1 < n and ok[j + 1]:
+                j += 1
+            out.append((i, j + 1))
+            i = j + 1
+        else:
+            i += 1
+    return out
+
+
+def block_lines(h: np.ndarray, slope: float, min_cells: int, min_len_m: float, min_drop: float,
+                sigma: float, simplify_m: float, low: float = 40.0, tol: float = 35.0) -> list[tuple[np.ndarray, float]]:
+    """Linien eines Höhenfelds: Liste von (Punkte als (Zeile, Spalte)-Feld in Zellen, Höhenunterschied m).
+    Hysterese: Kerne ab `slope` Grad, verbunden über Hang ab `low` Grad (hält Kanten zusammen). Stücke, die quer zu den
+    Höhenlinien laufen (mehr als `tol` Grad Abweichung), werden verworfen."""
+    from scipy import ndimage as ndi
+    from skimage.filters import apply_hysteresis_threshold
     from skimage.morphology import skeletonize
     from shapely.geometry import LineString
 
-    s = slope_deg(h, sigma)
-    steep = np.nan_to_num(s, nan=0.0) >= slope
+    s = np.nan_to_num(slope_deg(h, sigma), nan=0.0)
+    steep = apply_hysteresis_threshold(s, min(low, slope), slope)
     if not steep.any():
         return []
     lab, n = ndi.label(steep, structure=np.ones((3, 3)))
@@ -191,11 +227,19 @@ def block_lines(h: np.ndarray, slope: float, min_cells: int, min_len_m: float, m
         ls = LineString(pts[:, ::-1]).simplify(simplify_m / RES)
         if ls.length * RES < min_len_m:
             continue
-        pts = chaikin(np.array(ls.coords)[:, ::-1])
-        res = orient(pts, h)
-        if res is None or res[1] < min_drop:
-            continue
-        out.append(res)
+        # vereinfachte Linie wieder dicht besetzen (alle ~2 Zellen), damit Glättung und Richtungsprüfung greifen
+        ls = LineString(chaikin(np.array(ls.coords)[:, ::-1], 3)[:, ::-1])
+        k = max(int(ls.length / 2.0), 2)
+        pts = np.array([ls.interpolate(i / k, normalized=True).coords[0] for i in range(k + 1)])[:, ::-1]
+        ok = along_contour(h, pts, tol)
+        for a, b in runs(ok):
+            part = pts[a:b]
+            if len(part) < 3 or LineString(part[:, ::-1]).length * RES < min_len_m:
+                continue
+            res = orient(part, h)
+            if res is None or res[1] < min_drop:
+                continue
+            out.append(res)
     return out
 
 
@@ -279,8 +323,10 @@ def main() -> int:
     ap.add_argument("--min-cells", type=int, default=6, help="kleinste Steilfläche in Zellen (16 m² je Zelle)")
     ap.add_argument("--min-len", type=float, default=20.0, help="kürzeste Linie in m")
     ap.add_argument("--min-drop", type=float, default=5.0, help="kleinster Höhenunterschied beidseits in m")
+    ap.add_argument("--low", type=float, default=40.0, help="untere Hysterese-Schwelle in Grad")
+    ap.add_argument("--tol", type=float, default=35.0, help="größte Abweichung der Linie von der Höhenlinie in Grad")
     ap.add_argument("--sigma", type=float, default=0.6, help="Glättung des Höhenfelds in Zellen")
-    ap.add_argument("--simplify", type=float, default=3.0, help="Vereinfachung in m")
+    ap.add_argument("--simplify", type=float, default=4.0, help="Vereinfachung in m")
     ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     ap.add_argument("-v", "--verbose", action="store_true")
     a = ap.parse_args()
@@ -298,7 +344,7 @@ def main() -> int:
         box_km = (int(min(xs) // 1000), int(min(ys) // 1000), int(max(xs) // 1000), int(max(ys) // 1000))
         have = {k for k in have if box_km[0] <= k[0] <= box_km[2] and box_km[1] <= k[1] <= box_km[3]}
     es, ns = [k[0] for k in have], [k[1] for k in have]
-    kw = dict(slope=a.slope, min_cells=a.min_cells, min_len_m=a.min_len, min_drop=a.min_drop, sigma=a.sigma, simplify_m=a.simplify)
+    kw = dict(slope=a.slope, min_cells=a.min_cells, min_len_m=a.min_len, min_drop=a.min_drop, sigma=a.sigma, simplify_m=a.simplify, low=a.low, tol=a.tol)
     jobs = []
     for e0 in range(min(es) - min(es) % a.chunk, max(es) + 1, a.chunk):
         for n0 in range(min(ns) - min(ns) % a.chunk, max(ns) + 1, a.chunk):
@@ -320,7 +366,7 @@ def main() -> int:
     meta = {
         "attribution": "Wandlinien abgeleitet aus dem DGM1: © GeoBasis-DE / LVermGeoRP, dl-de/by-2-0 [Daten bearbeitet]",
         "zoom": TILE_Z, "layer": "klippen", "attributes": {"drop": "Höhenunterschied beidseits der Wand in m (± 8 m)"},
-        "params": {"slope_deg": a.slope, "min_cells": a.min_cells, "min_len_m": a.min_len, "min_drop_m": a.min_drop, "sigma": a.sigma, "simplify_m": a.simplify},
+        "params": {"slope_deg": a.slope, "min_cells": a.min_cells, "min_len_m": a.min_len, "min_drop_m": a.min_drop, "sigma": a.sigma, "simplify_m": a.simplify, "low_deg": a.low, "tol_deg": a.tol},
         "lines": len(lines), "tiles": n,
     }
     (a.out / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")

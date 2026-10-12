@@ -70,3 +70,12 @@ def test_trace_loest_staffelecken():
     sk[4, 5] = True                                    # Treppenecke
     ch = K.trace(sk)
     assert len(ch) == 1 and len(ch[0]) == 7
+
+
+def test_wand_quer_zu_den_hoehenlinien_wird_verworfen():
+    """Eine Linie, die dem Gefälle folgt (statt der Höhenlinie), widerspricht dem Gelände."""
+    h = np.tile(np.linspace(400, 300, 300, dtype=np.float32)[:, None], (1, 300))     # Gefälle nach Süden
+    laengs = np.array([[r, 150.0] for r in range(40, 260, 2)])                       # Nord-Süd, mit dem Gefälle
+    quer = np.array([[150.0, c] for c in range(40, 260, 2)])                         # West-Ost, entlang der Höhenlinie
+    assert not K.along_contour(h, laengs, 35.0).any()
+    assert K.along_contour(h, quer, 35.0).all()
