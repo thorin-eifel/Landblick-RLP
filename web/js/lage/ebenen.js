@@ -50,7 +50,7 @@ export function applyLayerFilters() {
   applyBlitzVisibility();
   applyStopsVisibility();
   applyNatureVisibility();
-  if (reliefOk) { setReliefVisible(map, state.layers.relief); applyLight(); applyLegend(); }
+  if (reliefOk) { setReliefVisible(map, state.layers.relief, state.layers.contours); applyLight(); applyLegend(); }
 }
 
 export function wire() {

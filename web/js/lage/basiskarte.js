@@ -71,7 +71,7 @@ export function paintWater(dark, med) {
 
 export function applyRelief() {
   const dark = document.documentElement.dataset.ansicht === 'dunkel';
-  if (reliefOk) buildRelief(map, dark, state.layers.relief, !!state.layers.medieval);
+  if (reliefOk) buildRelief(map, dark, state.layers.relief, state.layers.contours, !!state.layers.medieval);
   applyLight(dark);
   fillLegend($('#relief-bar'), dark);
   applyLegend();
@@ -95,7 +95,10 @@ export function applyLight(dark = document.documentElement.dataset.ansicht === '
 
 export function applyLegend() {
   const box = $('#relief-legend');
-  if (box) box.hidden = !(reliefOk && state.layers.relief);
+  if (!box) return;
+  const shade = state.layers.relief, lines = state.layers.contours;
+  box.hidden = !(reliefOk && (shade || lines));
+  for (const el of box.querySelectorAll('.relief-title, .relief-bar, .relief-scale')) el.hidden = !shade;   // Farbskala nur mit Höhenfärbung
 }
 
 // Höhe unter dem Zeiger (Maus) bzw. am Tippunkt (Touch), gedrosselt auf einen Abruf gleichzeitig
@@ -109,7 +112,7 @@ export function wireElevation() {
     busy = true;
     while (last) {
       const cur = last; last = null;
-      const v = state.layers.relief ? await elevationAt(cur.lng, cur.lat) : null;
+      const v = state.layers.relief || state.layers.contours ? await elevationAt(cur.lng, cur.lat) : null;
       out.textContent = v == null ? 'Höhe: –' : `Höhe: ${v} m ü. NN`;
     }
     busy = false;

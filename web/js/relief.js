@@ -69,10 +69,11 @@ export async function setupRelief(map) {
 }
 
 /** Ebenen (neu) anlegen und passend einordnen: Färbung und Schummerung über Landnutzung, unter Wasser und Straßen. */
-export function buildRelief(map, dark, visible, med = false) {
+export function buildRelief(map, dark, shade, contours, med = false) {
   if (!dem) return;
   const s = med ? MED_STYLE : STYLE[dark ? 'dark' : 'light'];
-  const vis = visible ? 'visible' : 'none';
+  const vis = shade ? 'visible' : 'none';              // Höhenfärbung und Schummerung
+  const visLines = contours ? 'visible' : 'none';       // Höhenlinien und ihre Beschriftung
   for (const id of RELIEF_LAYERS) if (map.getLayer(id)) map.removeLayer(id);
   const ramp = ['interpolate', ['linear'], ['elevation'], ...(med ? MED_RAMP : RAMP[dark ? 'dark' : 'light']).flat()];
   const anchor = 'radius-fill';
@@ -86,18 +87,24 @@ export function buildRelief(map, dark, visible, med = false) {
     paint: { 'hillshade-exaggeration': s.hill, 'hillshade-shadow-color': s.shadow, 'hillshade-highlight-color': s.high,
       'hillshade-accent-color': s.accent, 'hillshade-illumination-direction': 315 } }, under);
   const level = ['coalesce', ['get', 'level'], 0];
-  map.addLayer({ id: 'relief-contour', type: 'line', source: CONTOUR_SRC, 'source-layer': 'contours', minzoom: 7, layout: { visibility: vis, 'line-join': 'round' },
+  map.addLayer({ id: 'relief-contour', type: 'line', source: CONTOUR_SRC, 'source-layer': 'contours', minzoom: 7, layout: { visibility: visLines, 'line-join': 'round' },
     paint: { 'line-color': ['case', ['>=', level, 1], s.contourMajor, s.contour],
       'line-width': ['interpolate', ['linear'], ['zoom'], 7, ['case', ['>=', level, 1], 0.5, 0.25], 13, ['case', ['>=', level, 1], 1.3, 0.7]] } }, over);
   map.addLayer({ id: 'relief-contour-label', type: 'symbol', source: CONTOUR_SRC, 'source-layer': 'contours', minzoom: 10,
     filter: ['>=', level, 1],
-    layout: { visibility: vis, 'symbol-placement': 'line', 'text-field': ['concat', ['to-string', ['get', 'ele']], ' m'], 'text-font': [med ? 'Grenze Gotisch Regular' : 'Noto Sans Regular'],
+    layout: { visibility: visLines, 'symbol-placement': 'line', 'text-field': ['concat', ['to-string', ['get', 'ele']], ' m'], 'text-font': [med ? 'Grenze Gotisch Regular' : 'Noto Sans Regular'],
       'text-size': 10, 'text-max-angle': 30, 'symbol-spacing': 320 },
     paint: { 'text-color': s.label, 'text-halo-color': s.halo, 'text-halo-width': 1.4 } });
 }
 
-export function setReliefVisible(map, on) {
-  for (const id of RELIEF_LAYERS) if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
+export const SHADE_LAYERS = ['relief-color', 'relief-hill'];
+export const CONTOUR_LAYERS = ['relief-contour', 'relief-contour-label'];
+
+/** Schummerung/Höhenfärbung und Höhenlinien getrennt ein- oder ausblenden. */
+export function setReliefVisible(map, shade, contours) {
+  const set = (ids, on) => { for (const id of ids) if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none'); };
+  set(SHADE_LAYERS, shade);
+  set(CONTOUR_LAYERS, contours);
 }
 
 /** Rohe Höhenkachel (Meter, zeilenweise) für das Lichtmodell; wirft, wenn es die Kachel nicht gibt. */
