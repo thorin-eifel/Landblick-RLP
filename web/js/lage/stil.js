@@ -165,7 +165,7 @@ export function labelsAndBuildings(dark) {
 
 // Klippe in drei Lagen: weiches Geröllband auf der Abbruchseite (rechts der Linienrichtung), heller Saum für Lesbarkeit im Wald,
 // dünne Wandlinie mit Schraffen (lange und kurze Striche im Wechsel, Bild cliff-tick).
-// Mit `dgm` kommen die Wände in Rheinland-Pfalz aus dem Geländemodell (Quelle klippen, Ebene klippen, Attribut drop = Wandhöhe in m);
+// Mit `dgm` kommen die Wände in Rheinland-Pfalz aus dem Geländemodell (Quelle klippen, Ebenen wand, kante, schraffur, Attribut drop = Wandhöhe in m);
 // die OpenStreetMap-Klippen der Basiskarte gelten dann nur noch außerhalb des Landes.
 export function cliffLayers(k, dark, ticks, dgm) {
   const osmFilter = dgm ? ['all', ['==', ['get', 'kind'], 'cliff'], ['!', ['within', RLP_UMRISS]]] : ['==', 'kind', 'cliff'];
@@ -188,21 +188,19 @@ export function cliffLayers(k, dark, ticks, dgm) {
       paint: { 'icon-color': CLIFF[k], 'icon-opacity': 1 } }] : []),
   ];
   if (!dgm) return out;
-  // Aus dem DGM1 gezeichnete Felsflanke (Maßgabe: gezeichnete Wand statt Strichlinie): helle Wandfläche unter der Oberkante,
-  // geneigte Striche (Schraffur), gebrochene Schichtlinien, obenauf die Oberkante. Maße kommen als Meter aus den Kacheln und
-  // wachsen mit dem Zoom; die Wandhöhe (`drop`) bestimmt Breite von Fläche und Oberkante.
+  // Aus dem DGM1 (1 m) gezeichnete Felswand: helle Wandfläche (Polygon, 60 % Deckkraft), Striche in Fallrichtung (von oben nach
+  // unten, kurz, schwarz) und obenauf die Oberkante. Die Kacheln (Zoom 13) führen Meter-genaue Geometrie; die Wandhöhe `drop`
+  // bestimmt die Breite der Oberkante.
   const wall = (layer) => ({ source: 'klippen', 'source-layer': layer });
   return [
     ...out,
     { id: 'land-cliff-wand-dgm', type: 'fill', ...wall('wand'), minzoom: 13,
       paint: { 'fill-color': dark ? '#625c52' : '#c7bca4', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.6], 'fill-antialias': true } },
-    { id: 'land-cliff-schicht-dgm', type: 'line', ...wall('schicht'), minzoom: 14, layout: round,
-      paint: { 'line-color': dark ? '#b5ad9e' : '#000000', 'line-opacity': 0.75, 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 0.8, 18, 1.6] } },
     { id: 'land-cliff-schraffur-dgm', type: 'line', ...wall('schraffur'), minzoom: 14, layout: round,
-      paint: { 'line-color': CLIFF[k], 'line-opacity': 1, 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 1, 18, 2] } },
-    { id: 'land-cliff-dgm', type: 'line', ...wall('klippen'), minzoom: 12, layout: round, filter: ['>=', ['get', 'drop'], 5],
+      paint: { 'line-color': CLIFF[k], 'line-opacity': 0.9, 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 0.5, 17, 0.9, 19, 1.4] } },
+    { id: 'land-cliff-dgm', type: 'line', ...wall('kante'), minzoom: 13, layout: round, filter: ['>=', ['get', 'drop'], 5],
       paint: { 'line-color': CLIFF[k], 'line-opacity': 1,
-        'line-width': ['interpolate', ['linear'], ['zoom'], 12, byDrop(1.2, 2), 16, byDrop(1.8, 3), 18, byDrop(2.4, 4)] } },
+        'line-width': ['interpolate', ['linear'], ['zoom'], 13, byDrop(0.8, 1.4), 16, byDrop(1.4, 2.4), 18, byDrop(2, 3.4)] } },
   ];
 }
 

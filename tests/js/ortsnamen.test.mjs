@@ -50,9 +50,9 @@ test('Klippen: mit Geländemodell zweiter Satz aus der Quelle klippen, OSM-Klipp
   assert.ok(ohne.every((l) => l.source === 'basemap'));
   const mit = cliffLayers('light', false, true, true);
   const dgm = mit.filter((l) => l.id.endsWith('-dgm'));
-  assert.deepEqual(dgm.map((l) => l.id), ['land-cliff-wand-dgm', 'land-cliff-schicht-dgm', 'land-cliff-schraffur-dgm', 'land-cliff-dgm']);
+  assert.deepEqual(dgm.map((l) => l.id), ['land-cliff-wand-dgm', 'land-cliff-schraffur-dgm', 'land-cliff-dgm']);
   assert.ok(dgm.every((l) => l.source === 'klippen'));
-  assert.deepEqual(dgm.map((l) => l['source-layer']), ['wand', 'schicht', 'schraffur', 'klippen']);
+  assert.deepEqual(dgm.map((l) => l['source-layer']), ['wand', 'schraffur', 'kante']);
   assert.equal(dgm[0].type, 'fill');                  // Wandfläche liegt unter Schraffur und Oberkante
   const osm = mit.find((l) => l.id === 'land-cliff');
   assert.equal(osm.filter[0], 'all');

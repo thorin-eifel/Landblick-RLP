@@ -32,6 +32,7 @@ import math
 import os
 import sys
 import time
+import warnings
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from pathlib import Path
@@ -39,6 +40,7 @@ from pathlib import Path
 import numpy as np
 
 log = logging.getLogger("osint.klippen")
+warnings.filterwarnings("ignore", category=FutureWarning)      # scikit-image 0.26 kündigt Parameternamen an, die bis 0.28 gelten
 
 RES = 1.0                     # Rasterweite der Rohkacheln in m
 OFFSET, SCALE = 200.0, 50.0   # uint16 = (h + 200) * 50 (2 cm), 0 = keine Daten
