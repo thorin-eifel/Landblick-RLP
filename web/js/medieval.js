@@ -195,7 +195,7 @@ export function extraLayers(hasContours) {
   const tiers = [['hamlet', 11.5, ['<=', rank, 2], 0.8], ['village', 10, ['all', ['>=', rank, 3], ['<=', rank, 5]], 0.9], ['town', 8.8, ['all', ['>=', rank, 6], ['<=', rank, 8]], 1], ['city', 8, ['>=', rank, 9], 1.15]];
   for (const [kind, minzoom, cond, size] of tiers) {
     out.push({ id: `med-place-${kind}`, type: 'symbol', source: 'basemap', 'source-layer': 'places', minzoom,
-      filter: ['all', ['==', ['get', 'kind'], 'locality'], ['!=', ['get', 'name'], 'Irrel'], cond],
+      filter: ['all', ['==', ['get', 'kind'], 'locality'], cond],
       layout: { 'icon-image': `med-${kind}`, 'icon-size': size * 1.25, 'icon-allow-overlap': true, 'icon-ignore-placement': true } });
   }
   return out;

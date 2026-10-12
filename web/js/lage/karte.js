@@ -26,7 +26,7 @@ import { INFRA_LAYER_IDS } from './orte.js';
 import { showPopup } from './popup.js';
 import { initSearch } from './suche-karte.js';
 import { applyWind, fillTempLegend, showFlowWind, trackLegendBottom } from './wetterkarte.js';
-import { CORE_URL, RING_URL, START_VIEW, SYMBOL_LAYERS, TILES_URL, TOWNS, light, map, reduceMotion, reliefOk, ripples, setBasemapOk, setCoreOk, setFlow, setLight, setMap, setMapReady, setPopup, setReliefOk, setRingOk, setRipples, setSweep, setWind, setWindLow, state, sweep, wind, windLow } from './zustand.js';
+import { CORE_URL, RING_URL, START_VIEW, SYMBOL_LAYERS, TILES_URL, light, map, reduceMotion, reliefOk, ripples, setBasemapOk, setCoreOk, setFlow, setLight, setMap, setMapReady, setPopup, setReliefOk, setRingOk, setRipples, setSweep, setWind, setWindLow, state, sweep, wind, windLow } from './zustand.js';
 
 // ------------------------------------------------------------------ Karte
 // Rahmen der Karte: Umriss von Rheinland-Pfalz (web/geo/rlp.geojson: 6,11–8,51 E, 48,97–50,94 N) mit gleichem Rand ringsum, damit der Mittelpunkt
@@ -173,13 +173,6 @@ export async function initMap() {
   map.addLayer({ id: 'tank-label', type: 'symbol', source: 'tank', minzoom: 12, layout: { visibility: 'none', 'text-field': ['get', 'label'], 'text-font': ['Noto Sans Regular'],
     'text-size': 11, 'text-offset': [0, 1.2], 'text-anchor': 'top', 'text-optional': true },
     paint: { 'text-color': '#8a3d06', 'text-halo-color': '#fff', 'text-halo-width': 1.8 } });
-
-  const syncTowns = () => map.getContainer().classList.toggle('z-close', map.getZoom() >= 9);
-  map.on('zoom', syncTowns); syncTowns();
-  for (const [name, lat, lon, home] of TOWNS) {
-    const el = h('div', { class: `town${home ? ' home' : ''}` }, home ? `● ${name}` : name);
-    new Marker({ element: el, anchor: 'left', offset: [6, 0] }).setLngLat([lon, lat]).addTo(map);
-  }
 
   for (const id of ['ev-fill', 'ev-outline', 'ev-line', 'ev-point', ...SYMBOL_LAYERS, 'air-circle', 'air-sym', 'st-circle', 'st-sym', 'env-circle', 'env-sym', 'tank-circle', 'tank-sym', ...INFRA_LAYER_IDS, 'routes-hit']) {
     map.on('mouseenter', id, () => (map.getCanvas().style.cursor = 'pointer'));

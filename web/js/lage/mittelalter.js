@@ -54,7 +54,7 @@ export function medievalize(styled) {
     if (x.layout?.['text-font']) {
       const water = /^water_/.test(x.id);
       const layout = { ...x.layout, 'text-font': MED_FONT };
-      if (x.id === 'places_locality' || x.id === 'places_subplace') {
+      if (/^places_(locality|subplace)/.test(x.id)) {
         delete layout['text-variable-anchor']; delete layout['text-radial-offset'];
         layout['text-anchor'] = 'top'; layout['text-offset'] = [0, 0.95];   // dicht unter dem Siedlungszeichen
         layout['text-transform'] = 'none'; layout['text-letter-spacing'] = 0;   // gebrochene Schrift: keine Versalien, keine Sperrung
