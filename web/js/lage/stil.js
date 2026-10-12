@@ -60,7 +60,7 @@ export const LAND = {
 // Tinte der Signaturen (Rgba), Bilder lp-<klasse>-<light|dark> aus icons.js registerLandPatterns()
 export const PAT_MIN_ZOOM = 12;
 export const PROTECTED = { light: '#2e7d3c', dark: '#7fd18a' };
-export const CLIFF = { light: '#0e0f11', dark: '#dedad2' }; // dunkles Steingrau bzw. helles Grau, bewusst kein Braun: Höhenlinien sind braun
+export const CLIFF = { light: '#000000', dark: '#dedad2' }; // dunkles Steingrau bzw. helles Grau, bewusst kein Braun: Höhenlinien sind braun
 export const CLIFF_SCREE = { light: '#6f675b', dark: '#8d8578' };   // Geröllband am Fuß der Wand
 export const QUARRY = { light: ['#8a6d3b', '#4a3a1c'], dark: ['#d9b56b', '#f0dcae'] };
 export const LAND_KINDS = {
@@ -197,9 +197,9 @@ export function cliffLayers(k, dark, ticks, dgm) {
     { id: 'land-cliff-wand-dgm', type: 'fill', ...wall('wand'), minzoom: 13,
       paint: { 'fill-color': dark ? '#625c52' : '#c7bca4', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.92], 'fill-antialias': true } },
     { id: 'land-cliff-schicht-dgm', type: 'line', ...wall('schicht'), minzoom: 14, layout: round,
-      paint: { 'line-color': dark ? '#b5ad9e' : '#6f6656', 'line-opacity': 0.85, 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 0.8, 18, 1.6] } },
+      paint: { 'line-color': dark ? '#b5ad9e' : '#000000', 'line-opacity': 0.75, 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 0.8, 18, 1.6] } },
     { id: 'land-cliff-schraffur-dgm', type: 'line', ...wall('schraffur'), minzoom: 14, layout: round,
-      paint: { 'line-color': CLIFF[k], 'line-opacity': 0.9, 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 1, 18, 2] } },
+      paint: { 'line-color': CLIFF[k], 'line-opacity': 1, 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 1, 18, 2] } },
     { id: 'land-cliff-dgm', type: 'line', ...wall('klippen'), minzoom: 12, layout: round, filter: ['>=', ['get', 'drop'], 5],
       paint: { 'line-color': CLIFF[k], 'line-opacity': 1,
         'line-width': ['interpolate', ['linear'], ['zoom'], 12, byDrop(1.2, 2), 16, byDrop(1.8, 3), 18, byDrop(2.4, 4)] } },
