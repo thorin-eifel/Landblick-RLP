@@ -206,6 +206,12 @@ Höhenlinien rechnet `web/vendor/maplibre-contour` (BSD-3) im Browser in einem W
 Fehlt `tiles/dem/README.txt`, bleibt die Karte ohne Relief und läuft normal. Code: `web/js/relief.js`.
 Namensnennung steht auf `quellen.html`. Höhenwerte sind Raster (in RLP ca. 6 m, sonst ca. 30 m), keine Vermessung.
 
+Zoom 15 und 16 aus dem 1-m-Raster (optional, setzt den Rohordner der Felswände voraus):
+
+    .venv-dem/bin/python tools/build_dem_hires.py --raw dgm1-work/raw --out web/tiles/dem --bbox 7.62 50.08 7.92 50.24 --cover
+
+Je Zielkachel wird bilinear im 1-m-Gitter abgetastet (Zoom 15 ca. 3,1 m, Zoom 16 ca. 1,5 m je Pixel), die Höhe auf 1/16 m gerundet (spart rund die Hälfte der PNG-Größe, Schummerung zeigt keine Stufen). Pixel ohne Landesdaten kommen aus der Elternkachel; `--cover` schreibt außerhalb des Landes Kacheln aus der Elternkachel, damit relief.js dort nicht ins Leere fragt. Messung Loreley (Steilgelände): Zoom 15 rund 50 KB/km², Zoom 16 rund 160 KB/km²; `--measure` rechnet vorab. Danach `hires: {"maxzoom": 16}` in `tiles/dem/meta.json` eintragen, erst dann nutzt relief.js die Kacheln (sonst bleibt es bei Zoom 14 mit Überzoom). Höhenanzeige unter dem Zeiger bleibt bei Zoom 14.
+
 ### Felswände aus dem DGM1
 
 In RLP stammen Felswände nicht aus OSM, sondern aus dem 1-m-DGM1: `tools/build_klippen_dgm.py` findet die Steilzone (Hysterese 55/47 Grad auf dem um 1,5 m geglätteten Gelände), macht daraus Flächen und leitet je Wand drei Ebenen ab: `wand` (Polygon mit Löchern), `kante` (Oberkante, Wand rechts der Laufrichtung) und `schraffur` (kurze Striche in Fallrichtung, von oben nach unten). `drop` ist die Wandhöhe in m (mindestens 5 m). Ausgabe sind Vektorkacheln Zoom 13 in `tiles/klippen/` (mit `meta.json`, Namensnennung „Daten bearbeitet").
