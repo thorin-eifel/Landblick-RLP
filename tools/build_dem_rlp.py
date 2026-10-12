@@ -136,6 +136,8 @@ def reduce_tif(path: Path) -> np.ndarray:
     """GeoTIFF (1000 x 1000, Float32) → uint16 (250 x 250), 0 = keine Daten."""
     import tifffile
     a = tifffile.imread(path).astype(np.float32)
+    if a.shape == (1001, 1001):      # Lieferungen ab 2024: eine Zeile/Spalte Überlapp → unten/rechts abschneiden (≤ 1 m Versatz)
+        a = a[:1000, :1000]
     if a.shape != (1000, 1000):
         raise ValueError(f"unerwartete Größe {a.shape}")
     a[(a <= -9000) | ~np.isfinite(a)] = np.nan
