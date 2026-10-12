@@ -111,3 +111,12 @@ def test_tif_wird_auf_1000_gekappt_und_nodata_erkannt():
     tifffile.imwrite(b, a)
     q = K.tif_to_u16(b.getvalue())
     assert q.shape == (1000, 1000) and q[0, 0] == 0 and abs(q[500, 500] / K.SCALE - K.OFFSET - 250.0) < 0.02
+
+
+def test_rohkacheln_npz_und_npy_werden_gelesen(tmp_path):
+    a = np.full((1000, 1000), int((300 + K.OFFSET) * K.SCALE), np.uint16)
+    np.savez_compressed(tmp_path / "100_5500.npz", a=a)
+    np.save(tmp_path / "101_5500.npy", a)
+    h = K.load_block(tmp_path, 100, 5500, 102, 5500)
+    assert h.shape == (1000, 3000)
+    assert abs(float(h[0, 10]) - 300) < 0.02 and abs(float(h[0, 1500]) - 300) < 0.02 and np.isnan(h[0, 2500])

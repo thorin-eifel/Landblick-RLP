@@ -8,15 +8,16 @@ Zweck:      Die Klippen der Basiskarte stammen aus OpenStreetMap und sind lücke
               kante      Oberkante, Laufrichtung so, dass die Wand rechts der Linie liegt, Attribut drop
               schraffur  kurze Striche in Fallrichtung (von oben nach unten, nicht quer zum Hang)
 Quelle:     Landes-DGM1 RLP, © GeoBasis-DE / LVermGeoRP, dl-de/by-2-0 (Daten bearbeitet), 1 m, Rohkacheln von
-            https://geobasis-rlp.de/data/dgm1/current/ . Es werden nur Kacheln geladen, in denen das 4-m-Raster
-            (work/red, siehe tools/build_dem_rlp.py) Steilhänge zeigt, plus ihre Nachbarn (rund ein Zehntel des Landes).
+            https://geobasis-rlp.de/data/dgm1/current/ . Standard: nur Kacheln laden, in denen das 4-m-Raster
+            (work/red, siehe tools/build_dem_rlp.py) Steilhänge zeigt, plus Nachbarn; mit --all-tiles das ganze Land (rund 32 GB).
 Ablauf:     1. Kandidatenkacheln aus dem 4-m-Raster wählen (Neigung >= --cand-slope), Nachbarn dazu
-            2. fehlende Rohkacheln laden (Prüfsumme aus der Dateiliste), als uint16 in work/raw/ ablegen (wieder aufnehmbar)
+            2. fehlende Rohkacheln laden (Prüfsumme aus der Dateiliste), als komprimiertes uint16 (.npz) in work/raw/ ablegen (wieder aufnehmbar)
             3. Blöcke von --chunk km (+ 1 km Rand): glätten, Neigung, Steilmaske mit Hysterese, Löcher füllen, öffnen,
                kleine Flächen verwerfen, Umriss als Polygon, Oberkante, Striche entlang des Gefälles
             4. Kacheln Zoom 13 (MVT) nach <out>/13/<x>/<y>.pbf, dazu meta.json
 Aufruf:     python tools/build_klippen_dgm.py --work ~/Claude/OSINT/dgm1-work --out perf-rlp/tiles/klippen
             python tools/build_klippen_dgm.py --work ... --out ... --bbox 7.70 50.10 7.76 50.14      Ausschnitt (Loreley)
+            python tools/build_klippen_dgm.py --work ... --out ... --all-tiles                       ganz Rheinland-Pfalz
             python tools/build_klippen_dgm.py --work ... --out ... --no-fetch                        nur was schon da ist
 Exit:       0 = fertig, 1 = Fehler / keine Kacheln
 """
@@ -72,9 +73,23 @@ def tif_to_u16(content: bytes) -> np.ndarray:
     return np.clip(q, 0, 65535).astype(np.uint16)
 
 
+def raw_path(raw: Path, e: int, n: int) -> Path | None:
+    """Rohkachel im Cache: .npz (komprimiert) oder .npy (älterer Lauf)."""
+    for ext in ("npz", "npy"):
+        p = raw / f"{e}_{n}.{ext}"
+        if p.exists():
+            return p
+    return None
+
+
+def read_raw(p: Path) -> np.ndarray:
+    a = np.load(p)
+    return a["a"] if p.suffix == ".npz" else a
+
+
 def fetch_raw(client, item: dict, raw: Path) -> str:
-    dest = raw / f"{item['e']}_{item['n']}.npy"
-    if dest.exists():
+    dest = raw / f"{item['e']}_{item['n']}.npz"
+    if raw_path(raw, item["e"], item["n"]):
         return "skip"
     for attempt in range(4):
         try:
@@ -83,8 +98,8 @@ def fetch_raw(client, item: dict, raw: Path) -> str:
                 raise OSError(f"HTTP {r.status_code}")
             if hashlib.sha256(r.content).hexdigest() != item["sha"]:
                 raise OSError("Prüfsumme stimmt nicht")
-            tmp = raw / f".{item['e']}_{item['n']}.tmp.npy"
-            np.save(tmp, tif_to_u16(r.content))
+            tmp = raw / f".{item['e']}_{item['n']}.tmp.npz"
+            np.savez_compressed(tmp, a=tif_to_u16(r.content))
             os.replace(tmp, dest)
             return "ok"
         except Exception as e:  # noqa: BLE001 - Netz, Datei, Format: alles wird gezählt und beim nächsten Lauf wiederholt
@@ -123,10 +138,10 @@ def load_block(raw: Path, e0: int, n0: int, e1: int, n1: int) -> np.ndarray:
     mos = np.zeros((rows, cols), np.uint16)
     for a in range(e0, e1 + 1):
         for b in range(n0, n1 + 1):
-            p = raw / f"{a}_{b}.npy"
-            if p.exists():
+            p = raw_path(raw, a, b)
+            if p:
                 r0, c0 = (n1 - b) * 1000, (a - e0) * 1000
-                mos[r0:r0 + 1000, c0:c0 + 1000] = np.load(p)
+                mos[r0:r0 + 1000, c0:c0 + 1000] = read_raw(p)
     h = mos.astype(np.float32) / SCALE - OFFSET
     h[mos == 0] = np.nan
     return h
@@ -408,6 +423,7 @@ def main() -> int:
     ap.add_argument("--out", type=Path, required=True, help="Zielordner der Kacheln, z. B. web/tiles/klippen")
     ap.add_argument("--bbox", type=float, nargs=4, metavar=("LON0", "LAT0", "LON1", "LAT1"), help="nur dieser Ausschnitt")
     ap.add_argument("--no-fetch", action="store_true", help="nichts herunterladen, nur vorhandene Rohkacheln verwenden")
+    ap.add_argument("--all-tiles", action="store_true", help="alle Kacheln des 4-m-Rasters verarbeiten (keine Vorauswahl nach Steilheit, rund 32 GB Download)")
     ap.add_argument("--cand-slope", type=float, default=35.0, help="Kandidatenwahl: Neigung im 4-m-Raster in Grad")
     ap.add_argument("--cand-cells", type=int, default=3, help="Kandidatenwahl: Mindestzahl steiler Zellen je Kilometerkachel")
     ap.add_argument("--chunk", type=int, default=2, help="Blockgröße in km (zzgl. 1 km Rand)")
@@ -428,7 +444,10 @@ def main() -> int:
         log.error("keine Kacheln in %s (erst tools/build_dem_rlp.py laufen lassen)", red)
         return 1
     raw.mkdir(parents=True, exist_ok=True)
-    cand = candidates(red, a.cand_slope, a.cand_cells)
+    if a.all_tiles:
+        cand = {tuple(int(v) for v in p.stem.split("_")) for p in red.glob("*_*.npy") if not p.name.endswith(".tmp.npy")}
+    else:
+        cand = candidates(red, a.cand_slope, a.cand_cells)
     if a.bbox:
         from pyproj import Transformer
         t = Transformer.from_crs("EPSG:4326", CRS_UTM, always_xy=True)
@@ -451,7 +470,7 @@ def main() -> int:
             k = (it["e"], it["n"])
             if k in need and (k not in newest or it["year"] > newest[k]["year"]):
                 newest[k] = it
-        todo = [it for k, it in newest.items() if not (raw / f"{k[0]}_{k[1]}.npy").exists()]
+        todo = [it for k, it in newest.items() if not raw_path(raw, *k)]
         log.info("%d Rohkacheln fehlen, %.1f GB Download", len(todo), sum(i["size"] for i in todo) / 1e9)
         if todo:
             import httpx
@@ -459,12 +478,12 @@ def main() -> int:
             with httpx.Client(headers={"User-Agent": dem.UA}, timeout=120, follow_redirects=False) as client, ThreadPoolExecutor(4) as pool:
                 for i, res in enumerate(pool.map(lambda it: fetch_raw(client, it, raw), todo), 1):
                     stats[res] += 1
-                    if i % 100 == 0 or i == len(todo):
+                    if i % 250 == 0 or i == len(todo):
                         log.info("  geladen %d/%d (%s)", i, len(todo), dict(stats))
             if stats["fail"]:
                 log.warning("%d Kacheln nicht geladen, nächster Lauf holt sie nach", stats["fail"])
 
-    have = {k for k in need if (raw / f"{k[0]}_{k[1]}.npy").exists()}
+    have = {k for k in need if raw_path(raw, *k)}
     core_tiles = {k for k in cand if k in have}
     if not core_tiles:
         log.error("keine Rohkacheln vorhanden")
