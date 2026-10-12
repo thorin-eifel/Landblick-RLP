@@ -1,12 +1,13 @@
 // Geländerelief: Schummerung, Höhenfärbung, Höhenlinien mit Beschriftung, Höhenanzeige unter dem Zeiger.
-// Datenbasis: Terrarium-Höhenkacheln bis Zoom 14. In Rheinland-Pfalz aus dem DGM1 des Landes (LVermGeoRP, dl-de/by-2-0),
+// Datenbasis: Terrarium-Höhenkacheln bis Zoom 14 (mit build_dem_hires.py bis 16, dann steht hires.maxzoom in meta.json). In Rheinland-Pfalz aus dem DGM1 des Landes (LVermGeoRP, dl-de/by-2-0),
 // sonst Mapzen Terrain Tiles (SRTM/EU-DEM); gebaut mit tools/build_dem_rlp.py nach web/tiles/dem/ und vom eigenen Server
 // ausgeliefert. Den Vermerk liefert tiles/dem/meta.json. Kein Abruf bei Dritten.
 // Höhenlinien rechnet das gebündelte maplibre-contour (BSD-3) im Browser in einem Web Worker.
 // Fehlt die Kachelablage oder das Plugin, bleibt die Karte ohne Relief benutzbar (setupRelief liefert false).
 import { addProtocol } from '../vendor/maplibre-gl/maplibre-gl.js';
 
-const DEM_MAXZOOM = 14;
+const DEM_MAXZOOM_BASE = 14;   // Zoom, bis zu dem tiles/dem sicher vollständig ist (build_dem_rlp.py)
+let DEM_MAXZOOM = DEM_MAXZOOM_BASE; // höher, wenn meta.json hires.maxzoom meldet (build_dem_hires.py)
 const ELEV_SRC = 'dem';
 const CONTOUR_SRC = 'contours';
 export const RELIEF_LAYERS = ['relief-color', 'relief-hill', 'relief-contour', 'relief-contour-label'];
@@ -42,6 +43,8 @@ export async function setupRelief(map) {
     if (!probe?.ok) throw new Error('Höhenkacheln fehlen (tools/build_dem.py ausführen)');
     const meta = await fetch(abs('tiles/dem/meta.json')).then((r) => (r.ok ? r.json() : null)).catch(() => null);
     if (typeof meta?.attribution === 'string' && meta.attribution.length < 400) RELIEF_ATTRIBUTION = meta.attribution;
+    const hz = meta?.hires?.maxzoom;
+    if (Number.isInteger(hz) && hz > DEM_MAXZOOM_BASE && hz <= 17) DEM_MAXZOOM = hz;
     const tiles = abs('tiles/dem/') + '{z}/{x}/{y}.png';
     dem = new lib.DemSource({ url: tiles, encoding: 'terrarium', maxzoom: DEM_MAXZOOM, worker: true, cacheSize: 120, timeoutMs: 15000 });
     addProtocol(dem.sharedDemProtocolId, dem.sharedDemProtocolV4);
@@ -100,7 +103,7 @@ export const demTile = (z, x, y) => (dem ? dem.getDemTile(z, x, y) : Promise.rej
 /** Höhe in Metern an einer Koordinate aus der Zoom-14-Kachel, bilinear gemittelt; null, wenn nicht ermittelbar. */
 export async function elevationAt(lng, lat) {
   if (!dem) return null;
-  const z = DEM_MAXZOOM, n = 2 ** z;
+  const z = DEM_MAXZOOM_BASE, n = 2 ** z;
   const fx = ((lng + 180) / 360) * n;
   const sin = Math.sin((lat * Math.PI) / 180);
   const fy = (0.5 - Math.log((1 + sin) / (1 - sin)) / (4 * Math.PI)) * n;

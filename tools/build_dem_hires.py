@@ -10,7 +10,7 @@ Ablauf:     Je Zielkachel die Pixelmitten nach UTM 32 (EPSG:25832) umrechnen, bi
             Pixel ohne Landesdaten (Rand, Lücken) kommen aus der Elternkachel (Zoom 14 bzw. 15), sofern vorhanden.
             Kacheln ohne einen einzigen Landespixel werden nicht geschrieben.
 Aufruf:     python tools/build_dem_hires.py --raw dgm1-work/raw --out web/tiles/dem --bbox 7.05 50.10 7.20 50.18
-            python tools/build_dem_hires.py ... --zooms 15 --quant 8        # nur Zoom 15, Höhe auf 1/8 m runden
+            python tools/build_dem_hires.py ... --zooms 15 --quant 16       # nur Zoom 15, Höhe auf 1/16 m runden
             python tools/build_dem_hires.py ... --measure                  # nichts schreiben, Größe hochrechnen
 Exit:       0 = fertig, 1 = Fehler (z. B. keine Rohkacheln im Ausschnitt)
 """
@@ -109,14 +109,19 @@ def write_tile(path: Path, h: np.ndarray) -> int:
 
 def work(job: tuple) -> tuple[int, int, int, int]:
     """(z, x, y) → (z, 1 = geschrieben, Bytes, Pixel mit Landesdaten)."""
-    raw, out, z, x, y, quant, measure = job
+    raw, out, z, x, y, quant, measure, cover = job
     raw, out = Path(raw), Path(out)
     cache = _CACHE
     lon, lat = pixel_lonlat(z, x, y)
     h = sample(raw, lon, lat, cache)
     ok = ~np.isnan(h)
     if not ok.any():
-        return z, 0, 0, 0
+        if not cover:
+            return z, 0, 0, 0
+        fill = parent_fill(out, z, x, y)                  # außerhalb des Landes: nur hochgerechnete Elternkachel, damit kein Loch entsteht
+        if fill is None:
+            return z, 0, 0, 0
+        return z, 1, write_tile(out / str(z) / str(x) / f"{y}.png", quantize(fill, quant)) if not measure else 0, 0
     if not ok.all():
         fill = parent_fill(out, z, x, y)
         if fill is None:
@@ -143,8 +148,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", required=True, type=Path, help="Kachelordner (Zoom 14 muss dort liegen)")
     ap.add_argument("--bbox", nargs=4, type=float, metavar=("W", "S", "E", "N"), required=True)
     ap.add_argument("--zooms", nargs="+", type=int, default=[15, 16])
-    ap.add_argument("--quant", type=int, default=8, help="Höhe auf 1/quant m runden (Standard 8 = 12,5 cm)")
+    ap.add_argument("--quant", type=int, default=16, help="Höhe auf 1/quant m runden (Standard 16 = 6 cm)")
     ap.add_argument("--jobs", type=int, default=4)
+    ap.add_argument("--cover", action="store_true",
+                    help="auch Kacheln ohne Landesdaten schreiben (aus der Elternkachel hochgerechnet), damit relief.js dort nicht ins Leere fragt")
     ap.add_argument("--measure", action="store_true", help="nur messen, nichts schreiben")
     ap.add_argument("-v", "--verbose", action="store_true")
     a = ap.parse_args(argv)
@@ -157,7 +164,7 @@ def main(argv: list[str] | None = None) -> int:
     for z in sorted(a.zooms):
         x0, y1 = tile_xy(w, s, z)
         x1, y0 = tile_xy(e, n, z)
-        jobs = [(str(a.raw), str(a.out), z, x, y, a.quant, a.measure)
+        jobs = [(str(a.raw), str(a.out), z, x, y, a.quant, a.measure, a.cover)
                 for x in range(x0, x1 + 1) for y in range(y0, y1 + 1)]
         log.info("Zoom %d: %d Kacheln im Ausschnitt", z, len(jobs))
         with ProcessPoolExecutor(a.jobs) as ex:
