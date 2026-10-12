@@ -1,0 +1,208 @@
+{
+ "apiVersion": "1.0 beta, 2025-02-04",
+ "status": "success",
+ "lang": "de",
+ "source": "https://www.hochwasserzentralen.de",
+ "sourceName": "Länderübergreifendes Hochwasserportal (LHP)",
+ "sourceLogo": "https://api.hochwasserzentralen.de/public/v1/images/logo",
+ "licence": "https://creativecommons.org/licenses/by/4.0/deed.de",
+ "licenceName": "CC BY 4.0 - Namensnennung",
+ "title": "Aktuelle Hochwassersituation",
+ "description": "Aktuelle Hochwassersituation an den Pegeln in Deutschland",
+ "updated": "2026-10-12T08:30:48+01:00",
+ "lastModified": "2026-10-12T08:30:48+01:00",
+ "legend": {
+  "title": "Situation am Pegel",
+  "items": [
+   {
+    "lhpClass": 4,
+    "lhpClassName": "Sehr großes Hochwasser",
+    "color": "#941094"
+   },
+   {
+    "lhpClass": 3,
+    "lhpClassName": "Großes Hochwasser",
+    "color": "#de0000"
+   },
+   {
+    "lhpClass": 2,
+    "lhpClassName": "Mittleres Hochwasser",
+    "color": "#ffa500"
+   },
+   {
+    "lhpClass": 1,
+    "lhpClassName": "Kleines Hochwasser",
+    "color": "#ffff00"
+   },
+   {
+    "lhpClass": 0,
+    "lhpClassName": "Kein Hochwasser",
+    "color": "#7CBD5C"
+   },
+   {
+    "lhpClass": -1,
+    "lhpClassName": "Derzeit keine Daten",
+    "color": "#7b7b7b"
+   }
+  ]
+ },
+ "stateLinks": {
+  "DE-BW": "https://www.hvz.baden-wuerttemberg.de",
+  "DE-BY": "https://www.hnd.bayern.de",
+  "DE-HE": "https://hochwasser.hessen.de",
+  "DE-NW": "https://hochwasserportal.nrw.de/lanuv/webpublic/index.html#/Lageberichte"
+ },
+ "type": "FeatureCollection",
+ "bbox": [
+  5.839,
+  55.0933,
+  15.0916,
+  47.2318
+ ],
+ "features": [
+  {
+   "kind": "Station",
+   "id": "BW_105",
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     9.767,
+     48.7884
+    ]
+   },
+   "properties": {
+    "name": "Schwäbisch Gmünd",
+    "water": "Rems",
+    "timestamp": "2026-10-12 09:00:00",
+    "lhpClass": 2,
+    "stateClassName": "Mittleres Hochwasser",
+    "stationLink": "https://www.hvz.baden-wuerttemberg.de/pegel.html?id=00105",
+    "stateId": "DE-BW"
+   },
+   "style": {
+    "color": "#7CBD5C"
+   }
+  },
+  {
+   "kind": "Station",
+   "id": "BW_109",
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     8.516,
+     49.0081
+    ]
+   },
+   "properties": {
+    "name": "Berghausen",
+    "water": "Pfinz",
+    "timestamp": "2026-10-12 09:15:00",
+    "lhpClass": 0,
+    "stateClassName": "Kein Hochwasser",
+    "stationLink": "https://www.hvz.baden-wuerttemberg.de/pegel.html?id=00109",
+    "stateId": "DE-BW"
+   },
+   "style": {
+    "color": "#7CBD5C"
+   }
+  },
+  {
+   "kind": "Station",
+   "id": "NW_2710080",
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     7.108,
+     50.7364
+    ]
+   },
+   "properties": {
+    "name": "Bonn",
+    "water": "Rhein",
+    "timestamp": "2026-10-12 09:15:00",
+    "lhpClass": 3,
+    "stateClassName": "Großes Hochwasser",
+    "stationLink": "https://www.hochwasser.rlp.de/flussgebiet/mittelrhein/bonn",
+    "stateId": "DE-NW"
+   },
+   "style": {
+    "color": "#7CBD5C"
+   }
+  },
+  {
+   "kind": "Station",
+   "id": "NW_2721390000100",
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     8.0264,
+     50.894
+    ]
+   },
+   "properties": {
+    "name": "Weidenau",
+    "water": "Sieg",
+    "timestamp": "2026-10-12 09:15:00",
+    "lhpClass": 1,
+    "stateClassName": "Kleines Hochwasser",
+    "stationLink": "https://www.hochwasserportal.nrw/webpublic/#/overview/Wasserstand/station/28754/Weidenau/Wasserstand",
+    "stateId": "DE-NW"
+   },
+   "style": {
+    "color": "#7CBD5C"
+   }
+  },
+  {
+   "kind": "Station",
+   "id": "HE_23940359",
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     8.7669,
+     49.6388
+    ]
+   },
+   "properties": {
+    "name": "Fahrenbach",
+    "water": "Weschnitz",
+    "timestamp": "2026-10-12 09:15:00",
+    "lhpClass": 4,
+    "stateClassName": "Sehr großes Hochwasser",
+    "stationLink": "https://www.hlnug.de/static/pegel/wiskiweb3/webpublic/#/overview/Wasserstand/station/41248/Fahrenbach?period=P7D",
+    "stateId": "DE-HE"
+   },
+   "style": {
+    "color": "#7CBD5C"
+   }
+  },
+  {
+   "kind": "Station",
+   "id": "BY_10026293",
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     9.9866,
+     48.3891
+    ]
+   },
+   "properties": {
+    "name": "Neu-Ulm",
+    "water": "Donau",
+    "timestamp": "2026-10-12 09:15:00",
+    "lhpClass": 0,
+    "stateClassName": "Kein Hochwasser",
+    "stationLink": "https://www.hnd.bayern.de/search/go?suche=pegel&id=10026293",
+    "stateId": "DE-BY"
+   },
+   "style": {
+    "color": "#7CBD5C"
+   }
+  }
+ ]
+}

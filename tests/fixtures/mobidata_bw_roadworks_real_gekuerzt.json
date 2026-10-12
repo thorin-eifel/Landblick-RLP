@@ -1,0 +1,271 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.00909,
+      48.69427
+     ],
+     [
+      9.009101,
+      48.69425
+     ],
+     [
+      9.009101,
+      48.69425
+     ],
+     [
+      9.00912,
+      48.69422
+     ]
+    ]
+   },
+   "properties": {
+    "id": "2454613-26379445-26379446-26379672.001",
+    "type": "CONSTRUCTION",
+    "subtype": "",
+    "description": "keine Beschreibung vorhanden Straßenneubau IBM Straße Gehwegeinengung",
+    "reference": "MobiData BW",
+    "street": "Gemeindestraße",
+    "direction": "BOTH_DIRECTIONS",
+    "starttime": "2024-11-15T00:00:00.000+01:00",
+    "endtime": "2027-12-31T23:59:00.000+01:00"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.99537,
+      48.692461
+     ],
+     [
+      8.99533,
+      48.69253
+     ],
+     [
+      8.995279,
+      48.69255
+     ],
+     [
+      8.99523,
+      48.69256
+     ],
+     [
+      8.99505,
+      48.69254
+     ]
+    ]
+   },
+   "properties": {
+    "id": "2454613-36810818-36810819-36811059.001",
+    "type": "CONSTRUCTION",
+    "subtype": "",
+    "description": "Thea-Rasche-Straße Straßenausbau",
+    "reference": "MobiData BW",
+    "street": "Gemeindestraße",
+    "direction": "BOTH_DIRECTIONS",
+    "starttime": "2025-03-24T00:00:00.000+01:00",
+    "endtime": "2027-12-31T23:59:00.000+01:00"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.110721,
+      47.606249
+     ],
+     [
+      8.110684,
+      47.60628
+     ],
+     [
+      8.110603,
+      47.606339
+     ],
+     [
+      8.110557,
+      47.606373
+     ],
+     [
+      8.110479,
+      47.606428
+     ],
+     [
+      8.110371,
+      47.606502
+     ],
+     [
+      8.110278,
+      47.606575
+     ],
+     [
+      8.110232,
+      47.606615
+     ],
+     [
+      8.110206,
+      47.606641
+     ],
+     [
+      8.110188,
+      47.606668
+     ],
+     [
+      8.110176,
+      47.606693
+     ],
+     [
+      8.110164,
+      47.60672
+     ]
+    ]
+   },
+   "properties": {
+    "id": "1487640-1487641-1487644-3508083-sperrung.001",
+    "type": "ROAD_CLOSED",
+    "subtype": "ROAD_CLOSED_CONSTRUCTION",
+    "description": "L154 Albtalsperrung",
+    "reference": "MobiData BW",
+    "street": "L154 Albbruck-St. Blasien",
+    "direction": "BOTH_DIRECTIONS",
+    "starttime": "2015-06-01T00:00:00.000+02:00",
+    "endtime": "2026-12-31T23:59:00.000+01:00"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      8.97773,
+      48.68549
+     ],
+     [
+      8.977781,
+      48.68543
+     ],
+     [
+      8.97779,
+      48.68542
+     ],
+     [
+      8.97801,
+      48.68519
+     ],
+     [
+      8.9781,
+      48.68509
+     ]
+    ]
+   },
+   "properties": {
+    "id": "2454613-33765717-33765718-33765727-sperrung.001",
+    "type": "ROAD_CLOSED",
+    "subtype": "ROAD_CLOSED_CONSTRUCTION",
+    "description": "A81 Erweiterung AS Sindelfingen-Ost - AS Böblingen-Hulb",
+    "reference": "MobiData BW",
+    "street": "Gemeindestraße",
+    "direction": "BOTH_DIRECTIONS",
+    "starttime": "2025-03-03T00:00:00.000+01:00",
+    "endtime": "2027-03-31T23:59:00.000+02:00"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.01109,
+      48.6953
+     ],
+     [
+      9.01124,
+      48.69481
+     ],
+     [
+      9.0112,
+      48.69465
+     ],
+     [
+      9.01107,
+      48.69458
+     ],
+     [
+      9.01058,
+      48.69445
+     ],
+     [
+      9.00965,
+      48.69429
+     ],
+     [
+      9.00937,
+      48.69425
+     ],
+     [
+      9.00825,
+      48.69411
+     ]
+    ]
+   },
+   "properties": {
+    "id": "2454613-93868435-93868436-93868742-sperrung.001",
+    "type": "ROAD_CLOSED",
+    "subtype": "ROAD_CLOSED_CONSTRUCTION",
+    "description": "A81 Erweiterung AS Sindelfingen-Ost - AS Böblingen-Hulb",
+    "reference": "MobiData BW",
+    "street": "Gemeindestraße",
+    "direction": "ONE_DIRECTION",
+    "starttime": "2026-04-12T00:00:00.000+02:00",
+    "endtime": "2027-10-19T23:59:00.000+02:00"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      9.00909,
+      48.69427
+     ],
+     [
+      9.009101,
+      48.69425
+     ],
+     [
+      9.009101,
+      48.69425
+     ],
+     [
+      9.00912,
+      48.69422
+     ]
+    ]
+   },
+   "properties": {
+    "id": "synthetisch-autobahn",
+    "type": "CONSTRUCTION",
+    "subtype": "",
+    "description": "keine Beschreibung vorhanden Straßenneubau IBM Straße Gehwegeinengung",
+    "reference": "MobiData BW",
+    "street": "A5 Karlsruhe-Basel",
+    "direction": "BOTH_DIRECTIONS",
+    "starttime": "2024-11-15T00:00:00.000+01:00",
+    "endtime": "2027-12-31T23:59:00.000+01:00"
+   }
+  }
+ ]
+}
