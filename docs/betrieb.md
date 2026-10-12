@@ -354,6 +354,16 @@ python -m app.desktop --data-dir /tmp/osint-demo --pmtiles tools/bin/pmtiles    
 desktop/build-sidecar.sh && cd desktop && npm install --include=dev && npx tauri build
 ```
 
+### Windows-Installer
+
+Der Installer (NSIS, eine `Landblick - RLP_<Version>_x64-setup.exe`, rund 50 MB) wird auf einem Windows-Runner gebaut, nicht lokal: GitHub → Actions → **windows-installer** → *Run workflow*; nach rund 8 Minuten steht er im Lauf unter *Artifacts* (`landblick-windows-installer`, Zip mit der Setup.exe). Ein Tag `windows-v*` startet den Lauf ebenfalls. Lokal auf Windows: `powershell -File desktop\build-sidecar.ps1`, danach `cd desktop; npm install --include=dev; npx tauri build --bundles nsis` (Python 3.11+, Node 22, Rust und die Visual-Studio-Build-Tools nötig).
+
+- **Installation:** pro Benutzer (`currentUser`, ohne Administratorrechte), Deutsch, Eintrag im Startmenü und Deinstallation über „Apps“. Der Installer holt bei Bedarf WebView2 nach (Windows 11 hat es, Windows 10 braucht eine Internetverbindung dafür).
+- **Erster Start:** Die App öffnet die Einrichtungsseite, lädt die Karte für das ganze Gebiet (rund 1,5 GB, einmalig, wiederaufnehmbar) und beginnt zu sammeln. Daten und Zugangsdaten liegen in `%APPDATA%\de.ctw.osint`; Deinstallieren lässt sie stehen (zum Zurücksetzen den Ordner löschen).
+- **Nicht signiert:** Windows SmartScreen meldet „Der Computer wurde durch Windows geschützt“. *Weitere Informationen → Trotzdem ausführen*. Ein Code-Signing-Zertifikat ist offen.
+- **Nicht getestet auf echter Hardware:** Der Bau läuft durch, der Rauchtest des Sidecars (`app.region` im gebündelten Programm) ist Teil des Baus; der Lauf der App unter Windows ist beim ersten Test auf dem PC zu prüfen (Windows-Firewall-Abfrage für den lokalen Dienst, Pfade, Antivirus-Fehlalarme bei PyInstaller-Programmen).
+
+
 Grenzen der ersten Fassung: Suchindex, Gewässernetz, Höhenkacheln und Routen (`web/geo`, `web/tiles/dem`, `tools/build_*.py`) werden über die Werkzeuge in `tools/` für die Landesfläche gebaut, nicht von der App. Quellen für Luxemburg, Rheinland-Pfalz und Ostbelgien liefern nur dort Daten; bundesweite (DWD, NINA, Autobahn, Bright Sky) funktionieren überall in Deutschland. Das Bündeln mit PyInstaller und die Installer sind hier nicht gebaut worden (Sandbox ohne WebKit, nur Linux): erster Build auf Mac, Windows und Linux steht aus.
 
 ## Frontend: Zellenbetrieb (ab R5)

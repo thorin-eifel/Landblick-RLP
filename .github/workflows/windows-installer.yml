@@ -1,0 +1,33 @@
+# Baut den Windows-Installer (NSIS, Einzeldatei Setup.exe) auf einem Windows-Runner und legt ihn als Artefakt ab.
+# Start: Actions → windows-installer → Run workflow. Die Datei steht danach unter "Artifacts" des Laufs (Zip mit der Setup.exe).
+# Der Installer ist nicht signiert: Windows SmartScreen warnt beim ersten Start ("Weitere Informationen" → "Trotzdem ausführen").
+name: windows-installer
+on: { workflow_dispatch: {}, push: { tags: ["windows-v*"] } }
+permissions: { contents: read }
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Sidecar (Python-Dienst und pmtiles)
+        shell: pwsh
+        run: ./desktop/build-sidecar.ps1
+      - name: Installer
+        shell: pwsh
+        working-directory: desktop
+        run: |
+          npm install --include=dev
+          npx tauri build --bundles nsis
+      - name: Ergebnis
+        shell: pwsh
+        run: Get-ChildItem desktop/src-tauri/target/release/bundle/nsis | Format-Table Name, Length
+      - uses: actions/upload-artifact@v4
+        with:
+          name: landblick-windows-installer
+          path: desktop/src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error

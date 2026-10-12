@@ -32,6 +32,7 @@ import { CORE_URL, RING_URL, START_VIEW, SYMBOL_LAYERS, TILES_URL, light, map, r
 // ------------------------------------------------------------------ Karte
 // Rahmen der Karte: Umriss von Rheinland-Pfalz (web/geo/rlp.geojson: 6,11–8,51 E, 48,97–50,94 N) mit gleichem Rand ringsum, damit der Mittelpunkt
 // des Rahmens der Mittelpunkt des Landes ist. MapLibre rückt beim Herauszoomen auf diese Mitte und kürzt den Zoom, bis der Rahmen den Bildschirm füllt.
+const LAND_MAX_ZOOM = 6.5;   // Übersicht: darunter eine Zahl je Land, darüber je Kreis, ab KIND_MIN_ZOOM.events die Einzelmeldungen
 const RLP_BBOX = [[6.112, 48.967], [8.508, 50.942]];
 const RAND_LON = 1.2, RAND_LAT = 0.75;   // Grad Luft um den kleinsten Ausschnitt
 const RLP_RAHMEN = [[RLP_BBOX[0][0] - RAND_LON, RLP_BBOX[0][1] - RAND_LAT], [RLP_BBOX[1][0] + RAND_LON, RLP_BBOX[1][1] + RAND_LAT]];   // erster Rahmen bis zur ersten Messung
@@ -121,13 +122,24 @@ export async function initMap() {
     layout: { visibility: state.iconsOk ? 'visible' : 'none' },
     paint: { 'circle-radius': 3.5, 'circle-color': sevColor(c), 'circle-stroke-color': c.white, 'circle-stroke-width': 1 } });
 
-  // Dichte bei kleinen Zoomstufen (unter EVENTS_MIN_ZOOM): je Rasterzelle eine Zahl statt Tausender Einzelsymbole; Daten aus start.json
+  // Übersicht bei kleinen Zoomstufen (unter EVENTS_MIN_ZOOM): eine Zahl je Land, näher je Kreis, an der Lage der Fläche (start.json `einheiten`);
+  // ohne dieses Feld (alter Export) je Rasterzelle. Von Einzelmeldungen wichtig nach unwichtig: Warnungen stehen schon hier als Punkte.
   map.addSource('dichte', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-  map.addLayer({ id: 'dichte-kreis', type: 'circle', source: 'dichte', maxzoom: KIND_MIN_ZOOM.events,
-    paint: { 'circle-radius': ['interpolate', ['linear'], ['sqrt', ['get', 'n']], 1, 9, 30, 26], 'circle-color': sevColor(c, 'sev'), 'circle-opacity': 0.85, 'circle-stroke-color': c.white, 'circle-stroke-width': 1.5 } });
-  map.addLayer({ id: 'dichte-zahl', type: 'symbol', source: 'dichte', maxzoom: KIND_MIN_ZOOM.events,
-    layout: { 'text-field': ['to-string', ['get', 'n']], 'text-font': ['Noto Sans Regular'], 'text-size': 12, 'text-allow-overlap': true },
+  const LAND = ['==', ['get', 'level'], 'land'], KREIS = ['==', ['get', 'level'], 'kreis'];
+  const rad = (lo, hi) => ['interpolate', ['linear'], ['sqrt', ['get', 'n']], 1, lo, 60, hi];
+  const circ = (id, filter, r, minzoom, maxzoom) => map.addLayer({ id, type: 'circle', source: 'dichte', minzoom, maxzoom, filter,
+    layout: { 'circle-sort-key': ['*', -1, ['get', 'n']] },
+    paint: { 'circle-radius': r, 'circle-color': sevColor(c, 'sev'), 'circle-opacity': 0.88, 'circle-stroke-color': c.white, 'circle-stroke-width': 1.5 } });
+  const num = (id, filter, size, minzoom, maxzoom) => map.addLayer({ id, type: 'symbol', source: 'dichte', minzoom, maxzoom, filter,
+    layout: { 'text-field': ['to-string', ['get', 'n']], 'text-font': ['Noto Sans Regular'], 'text-size': size, 'text-allow-overlap': true },
     paint: { 'text-color': ['match', ['get', 'sev'], 'warning', '#111', 'notice', '#111', c.white] } });   // dunkle Schrift auf Orange und Gelb (Kontrast), weiß auf Rot und Blau
+  const name = (id, filter, size, off, minzoom, maxzoom) => map.addLayer({ id, type: 'symbol', source: 'dichte', minzoom, maxzoom, filter,
+    layout: { 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Regular'], 'text-size': size, 'text-anchor': 'top', 'text-offset': off, 'text-optional': true,
+      'symbol-sort-key': ['*', -1, ['get', 'n']], 'text-max-width': 8 },
+    paint: { 'text-color': c.ink ?? '#222', 'text-halo-color': c.white, 'text-halo-width': 2, 'text-halo-blur': 0.3 } });
+  circ('dichte-land', LAND, rad(16, 34), 0, LAND_MAX_ZOOM);  num('dichte-land-zahl', LAND, 14, 0, LAND_MAX_ZOOM);  name('dichte-land-name', LAND, 13, [0, 2.2], 0, LAND_MAX_ZOOM);
+  circ('dichte-kreis', KREIS, rad(8, 22), LAND_MAX_ZOOM, KIND_MIN_ZOOM.events);  num('dichte-kreis-zahl', KREIS, 12, LAND_MAX_ZOOM, KIND_MIN_ZOOM.events);
+  name('dichte-kreis-name', KREIS, 11, [0, 1.6], 7, KIND_MIN_ZOOM.events);
 
   // Luftverkehr: eigene Quelle, weil sie sich jede Sekunde bewegt
   map.addSource('air', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });

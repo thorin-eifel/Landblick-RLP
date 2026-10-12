@@ -1,7 +1,7 @@
 // Tests für web/js/zellen.js: Zellenwahl, Laden, Verwerfen, Fehler je Zelle, Prüfsummen, Zusammenführen, Anreichern.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cellId, cellsInBounds, kindsForZoom, ZellenSpeicher, anreichern, ebenenBudget, warnbandAlsEreignisse, dichtePunkte } from '../../web/js/zellen.js';
+import { cellId, cellsInBounds, kindsForZoom, ZellenSpeicher, anreichern, ebenenBudget, warnbandAlsEreignisse, dichtePunkte, einheitenPunkte, kurzname } from '../../web/js/zellen.js';
 
 const manifest = (files) => ({ cells: [...new Set(Object.keys(files).map((r) => r.split('/')[1]))], files: Object.fromEntries(Object.entries(files).map(([r, sha]) => [r, { sha256: sha }])) });
 const feat = (id, cell) => ({ type: 'Feature', id, geometry: { type: 'Point', coordinates: [0, 0] }, properties: { id, source_id: 'nina' } });
@@ -126,4 +126,20 @@ test('Dichtepunkte: Zellmitte, Anzahl, höchste Stufe; leere Zellen entfallen', 
   assert.equal(out.length, 1);
   assert.deepEqual(out[0].geometry.coordinates, [6.25, 49.75]);
   assert.equal(out[0].properties.n, 5); assert.equal(out[0].properties.sev, 'warning');
+});
+
+test('Einheiten: je Land und Kreis ein Punkt an der Lage der Fläche, leere entfallen, Kurznamen', () => {
+  const e = [
+    { key: 'land:DE-RP', level: 'land', name: 'Rheinland-Pfalz', n: 9, sev: 'warning', lon: 7.5, lat: 49.9, bbox: [6, 49, 8.5, 51] },
+    { key: 'kreis:07211', level: 'kreis', name: 'Kreisfreie Stadt Trier', n: 2, sev: 'info', lon: 6.65, lat: 49.76, bbox: [6.55, 49.7, 6.75, 49.86] },
+    { key: 'kreis:07232', level: 'kreis', name: 'Eifelkreis Bitburg-Prüm', n: 0, sev: 'info', lon: 6.4, lat: 50.06, bbox: [6.1, 49.8, 6.7, 50.3] },
+  ];
+  const out = einheitenPunkte(e);
+  assert.equal(out.length, 2);
+  assert.deepEqual(out[1].geometry.coordinates, [6.65, 49.76]);
+  assert.equal(out[1].properties.name, 'Trier'); assert.equal(out[1].properties.level, 'kreis'); assert.equal(out[0].properties.sev, 'warning');
+  assert.deepEqual(JSON.parse(out[1].properties.bbox), [6.55, 49.7, 6.75, 49.86]);
+  assert.deepEqual(einheitenPunkte(undefined), []);
+  assert.equal(kurzname('Landkreis Ahrweiler'), 'Ahrweiler'); assert.equal(kurzname('Eifelkreis Bitburg-Prüm'), 'Eifelkreis Bitburg-Prüm');
+  assert.equal(kurzname('Regionalverband Saarbrücken'), 'Saarbrücken');
 });

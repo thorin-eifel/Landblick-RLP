@@ -223,3 +223,17 @@ export function dichtePunkte(cells, art = 'events') {
     properties: { id, n: c.counts[art], sev: c.max_severity ?? 'info', bbox: JSON.stringify(c.bbox) },
   }));
 }
+
+/** Kurzname für die Karte: „Kreisfreie Stadt Trier“ → „Trier“, „Landkreis Ahrweiler“ → „Ahrweiler“, „Eifelkreis Bitburg-Prüm“ bleibt. */
+export function kurzname(name) {
+  return String(name ?? '').replace(/^(Kreisfreie Stadt|Landkreis|Stadtkreis|Kreis|Regionalverband|Städteregion|Stadt)\s+/, '').trim() || String(name ?? '');
+}
+
+/** Verwaltungseinheiten des Startpakets (start.json `einheiten`) als Punkte: je Land und je Kreis eine Zahl an der Lage der Fläche.
+ *  Ohne `einheiten` (alter Export) fehlt die Liste; dann greift der Aufrufer auf dichtePunkte zurück. */
+export function einheitenPunkte(einheiten) {
+  return (einheiten ?? []).filter((u) => u.n > 0 && Number.isFinite(u.lon) && Number.isFinite(u.lat)).map((u) => ({
+    type: 'Feature', geometry: { type: 'Point', coordinates: [u.lon, u.lat] },
+    properties: { id: u.key, level: u.level, name: kurzname(u.name), n: u.n, sev: u.sev ?? 'info', bbox: JSON.stringify(u.bbox) },
+  }));
+}
