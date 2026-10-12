@@ -63,6 +63,17 @@ def test_reduce_tif_mittelt_und_markiert_luecken(tmp_path):
     assert abs((r[100, 50] / B.SCALE - B.OFFSET) - (400.0 + 0.1 * (50 * 4 + 1.5))) < 0.2
 
 
+def test_reduce_tif_nimmt_1001er_kacheln(tmp_path):
+    import tifffile
+    a = np.full((1001, 1001), 400.0, np.float32)
+    p = tmp_path / "k.tif"
+    tifffile.imwrite(p, a)
+    assert B.reduce_tif(p).shape == (250, 250)
+    tifffile.imwrite(p, np.full((999, 999), 400.0, np.float32))
+    with pytest.raises(ValueError):
+        B.reduce_tif(p)
+
+
 def _red_with_plane(tmp_path, e_km, n_km):
     """4-m-Raster einer Ebene h = 300 + 0,05 * (E - E0) + 0,02 * (N - N0), E/N in UTM-Metern."""
     red = tmp_path / "red"
