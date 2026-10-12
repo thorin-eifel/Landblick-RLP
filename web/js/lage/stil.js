@@ -208,7 +208,7 @@ export function cliffLayers(k, dark, ticks, dgm) {
 
 // Flächen nach Klasse (Wald, Wiese, Buschland, Acker, Feuchtgebiet, Fels), Klippenlinien und Steinbrüche aus der Basiskarte.
 // Die Kacheln führen Klippen als earth/cliff (Linien) und Steinbrüche als benannte Punkte in pois/quarry.
-export function landUseLayers(dark, ticks, rlp = false, dgm = false) {
+export function landUseLayers(dark, rlp = false) {
   const k = dark ? 'dark' : 'light';
   const fills = Object.entries(LAND_KINDS).flatMap(([cls, kinds]) => {
     // Weinberg und Obstanlage kommen aus der eigenen GeoJSON-Quelle (die Kacheln führen sie nicht)
@@ -248,7 +248,6 @@ export function landUseLayers(dark, ticks, rlp = false, dgm = false) {
       layout: { 'line-join': 'round', 'line-cap': 'round' },
       paint: { 'line-color': BOUND_COLOR[k], 'line-opacity': 0.9, 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 1.2, 14, 2], 'line-dasharray': [0.01, 2.2] } })),
     ...(rlp ? rlpBorderLayers(dark) : []),
-    ...cliffLayers(k, dark, ticks, dgm),
     { id: 'land-quarry-dot', type: 'circle', source: 'basemap', 'source-layer': 'pois', minzoom: 11, filter: ['==', 'kind', 'quarry'],
       paint: { 'circle-radius': 4.5, 'circle-color': QUARRY[k][0], 'circle-stroke-color': dark ? '#161616' : '#ffffff', 'circle-stroke-width': 1.5 } },
     { id: 'land-quarry-label', type: 'symbol', source: 'basemap', 'source-layer': 'pois', minzoom: 12, filter: ['==', 'kind', 'quarry'],

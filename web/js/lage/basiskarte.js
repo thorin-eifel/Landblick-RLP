@@ -9,7 +9,7 @@ import { MED, MED_COLORS, MED_ICON_STYLE, medFlavor, medievalize } from './mitte
 import { HER_LAYERS, NAT_LAYERS, applyNatureVisibility, paintNature, peakLayers } from './natur.js';
 import { INFRA_LAYER_IDS, paintStops } from './orte.js';
 import { placeLgb } from './lgb.js';
-import { LABEL_SKIP, labelsAndBuildings, ortsnamenUebersicht, landUseLayers, mainRoad, signLayers, waterEdges } from './stil.js';
+import { LABEL_SKIP, cliffLayers, labelsAndBuildings, ortsnamenUebersicht, landUseLayers, mainRoad, signLayers, waterEdges } from './stil.js';
 import { applyFlow, fillTempLegend, placeRadar } from './wetterkarte.js';
 import { basemapOk, coreOk, flow, light, klippenOk, map, mapReady, reliefOk, ringOk, state } from './zustand.js';
 
@@ -28,7 +28,10 @@ export function applyBasemap() {
     .map((x) => (coreOk && (x.id === 'buildings' || x.id === 'address_label') ? { ...x, source: 'basemap-core' } : x));   // Gebäude und Hausnummern aus dem Zoom-15-Kern
   // eigene Flächen- und Geländeebenen gleich hinter dem Landnutzungs-Layer des Stils (unter Wasser, Straßen und Relief-Linien)
   const at = styled.findIndex((x) => x.id === 'landuse_park');
-  styled.splice(at >= 0 ? at + 1 : 0, 0, ...landUseLayers(dark, map.hasImage('cliff-tick'), !!map.getSource('rlp-grenze'), klippenOk));
+  styled.splice(at >= 0 ? at + 1 : 0, 0, ...landUseLayers(dark, !!map.getSource('rlp-grenze')));
+  // Klippen weit oben: über Relief, Höhenlinien, Vegetation, Gewässer und Straßen, unter den Beschriftungen
+  const lab0 = styled.findIndex((x) => x.layout?.['text-font'] && !x.id.startsWith('land-'));
+  styled.splice(lab0 < 0 ? styled.length : lab0, 0, ...cliffLayers(dark ? 'dark' : 'light', dark, map.hasImage('cliff-tick'), klippenOk));
   waterEdges(styled, dark);
   styled.push(...peakLayers(dark, map.hasImage('peak-tri')));   // Gipfel oben auf den Beschriftungen des Stils
   if (med) styled = medievalize(styled);
