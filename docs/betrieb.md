@@ -192,15 +192,19 @@ tail -f ~/Library/Logs/osint-live.log
 ## Höhenrelief
 
 Schummerung, Höhenfärbung, Höhenlinien (mit Beschriftung der Hauptlinien) und Höhenanzeige unter dem Zeiger.
-Datenbasis: Terrarium-Kacheln der Mapzen Terrain Tiles (AWS Open Data; hier EU-DEM und SRTM), einmalig geholt:
+Datenbasis: Terrarium-Kacheln bis Zoom 14. In Rheinland-Pfalz stammen sie aus dem DGM1 des Landes (LVermGeoRP, 1 m Gitter, dl-de/by-2-0), außerhalb aus den Mapzen Terrain Tiles (AWS Open Data; EU-DEM und SRTM, rund 30 m). Messung bei Irrel: Mapzen weicht vom Landesmodell im Mittel um 9,6 m ab, an Einzelstellen bis 36 m.
+Zwei Schritte, beide einmalig und wiederaufnehmbar:
 
-    .venv/bin/python tools/build_dem.py            # Zoom 6 bis 12, ca. 200 MB nach web/tiles/dem/ (Ausschnitt 48.9–50.8 N, 5.0–7.9 O)
-    .venv/bin/python tools/build_dem.py --max-zoom 11   # gröber, deutlich kleiner
+    .venv/bin/python tools/build_dem.py                          # Mapzen Zoom 6 bis 12, ca. 200 MB nach web/tiles/dem-base/ (Rückfall und Außenbereich)
+    .venv/bin/python tools/build_dem_rlp.py --check              # zählt: rund 21 000 Landeskacheln, 32 GB Download
+    .venv/bin/python tools/build_dem_rlp.py                      # lädt, mittelt auf 4 m (Arbeitsordner _scratch/dgm1, ca. 3 GB), schreibt web/tiles/dem/ Zoom 6 bis 14 (ca. 1,5 GB)
+    .venv/bin/python tools/build_dem_rlp.py --budget-s 900       # in Portionen, Exit 2 = Befehl wiederholen
 
-Die Kacheln liegen nicht im Repository (`.gitignore`) und müssen mit auf den Webspace (`web/tiles/dem/`, inkl. `README.txt`, die dient als Prüfdatei).
-Höhenlinien rechnet `web/vendor/maplibre-contour` (BSD-3) im Browser in einem Worker; Ziffern kommen aus `web/fonts/` (Noto Sans, OFL).
+Die Landesdaten kommen von `geobasis-rlp.de/data/dgm1/` (Dateiliste `meta4/dgm1_tif_07.meta4`, Prüfsummen werden verglichen). Das Werkzeug legt `tiles/dem/meta.json` mit dem Namensnennungstext an (Jahre der Befliegung); die Karte zeigt ihn unten rechts. Außerhalb von RLP sind die Kacheln ab Zoom 13 nur aus Mapzen hochgerechnet (kein Gewinn an Genauigkeit, aber lückenlos). Für Luxemburg, Saarland, NRW, Hessen, Baden-Württemberg gibt es eigene offene Geländemodelle, die sich im selben Schema einbauen ließen (noch nicht geprüft, Lizenzen offen).
+Die Kacheln liegen nicht im Repository (`.gitignore`) und müssen mit auf den Webspace (`web/tiles/dem/`, inkl. `README.txt` als Prüfdatei und `meta.json`). `dem-base/` und `_scratch/` bleiben lokal.
+Höhenlinien rechnet `web/vendor/maplibre-contour` (BSD-3) im Browser in einem Worker (ab Zoom 7, bis 2,5 m Abstand bei Zoom 16); Ziffern kommen aus `web/fonts/` (Noto Sans, OFL).
 Fehlt `tiles/dem/README.txt`, bleibt die Karte ohne Relief und läuft normal. Code: `web/js/relief.js`.
-Namensnennung steht auf `quellen.html`. Höhenwerte sind Raster (ca. 30 m), keine Vermessung.
+Namensnennung steht auf `quellen.html`. Höhenwerte sind Raster (in RLP ca. 6 m, sonst ca. 30 m), keine Vermessung.
 
 ## Weitere Quellen (Umwelt)
 

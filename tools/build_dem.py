@@ -2,7 +2,7 @@
 """Höhenmodell-Kacheln für das Relief holen (Terrarium-Kodierung) und lokal ablegen.
 
 Zweck:      Lädt die Terrarium-Höhenkacheln (Mapzen Terrain Tiles auf AWS Open Data) für die Region (region.yaml, bei OSINT_REGION=region.yaml Rheinland-Pfalz plus 80 km)
-            einmalig nach web/tiles/dem/{z}/{x}/{y}.png. Die Karte zeigt daraus Schummerung, Höhenfärbung
+            einmalig nach web/tiles/dem-base/{z}/{x}/{y}.png (Basis und Rückfall für tools/build_dem_rlp.py, das die Landeshöhen darüberlegt und nach web/tiles/dem/ schreibt). Die Karte zeigt daraus Schummerung, Höhenfärbung
             und Höhenlinien; beim Betrachten wird kein Drittserver angefragt.
 Quelle:     https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png
             Datenbasis laut Mapzen/Nextzen-Dokumentation für Europa: SRTM (30 m), EU-DEM und weitere.
@@ -35,7 +35,7 @@ BBOX_WIDE = {"lat_min": _S - 1.0, "lat_max": _N + 1.0, "lon_min": _W - 1.5, "lon
 WIDE_MAX_ZOOM = 9
 URL = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
 UA = "Landblick/1.0 (DEM tiles, one-off fetch)"
-DEST = Path(__file__).resolve().parent.parent / "web" / "tiles" / "dem"
+DEST = Path(__file__).resolve().parent.parent / "web" / "tiles" / "dem-base"
 
 
 def tile(lat: float, lon: float, z: int) -> tuple[int, int]:
@@ -78,7 +78,7 @@ def main() -> int:
     ap.add_argument("--min-zoom", type=int, default=6)
     ap.add_argument("--max-zoom", type=int, default=12)
     ap.add_argument("--check", action="store_true")
-    ap.add_argument("--dest", type=Path, default=DEST, help="Zielordner (Standard web/tiles/dem)")
+    ap.add_argument("--dest", type=Path, default=DEST, help="Zielordner (Standard web/tiles/dem-base)")
     ap.add_argument("--budget-s", type=float, default=0, help="nach dieser Zeit aufhören (Exit 2 = Befehl wiederholen), 0 = unbegrenzt")
     args = ap.parse_args()
     dest = args.dest
