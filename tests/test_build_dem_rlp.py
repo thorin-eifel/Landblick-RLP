@@ -138,3 +138,32 @@ def test_pixel_lonlat_mitte_der_kachel():
     n = 2**14
     assert abs(lon[0, 0] - ((8512 + 0.5 / 256) / n * 360 - 180)) < 1e-9
     assert lat[0, 0] > lat[-1, 0] and math.isfinite(lat[0, 0])
+
+
+def _base_rampe(tmp_path, bx, by, k=2.0):
+    """Mapzen-Zoom-12-Kacheln (3 x 3 um bx, by) mit linearer Rampe: k Meter je Basispixel nach Osten und Süden."""
+    jj, ii = np.mgrid[0:256, 0:256]
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            h = 300 + k * (dx * 256 + ii + 0.5) + k * (dy * 256 + jj + 0.5)
+            B.write_png(tmp_path / "12" / str(bx + dx) / f"{by + dy}.png", h.astype(np.float32))
+
+
+def test_upsample_base_schliesst_an_der_kachelgrenze_ohne_stufe(tmp_path):
+    """Zwei Zoom-14-Nachbarn unter verschiedenen Zoom-12-Kacheln: ein Pixel Abstand, kein Sprung (sonst Linie in der Schummerung)."""
+    bx, by, k = 2100, 1400, 2.0
+    _base_rampe(tmp_path, bx, by, k)
+    x = 4 * bx + 3                                         # letzte Spalte unter der Basiskachel
+    a = B.upsample_base(tmp_path, 14, x, 4 * by + 1)
+    b = B.upsample_base(tmp_path, 14, x + 1, 4 * by + 1)   # erste Spalte unter der Nachbarkachel
+    step = b[:, 0] - a[:, -1]
+    assert np.allclose(step, k / 4, atol=0.02), step[:3]    # ein Zoom-14-Pixel = ein Viertel Basispixel
+    want = 300 + k * (192.125) + k * (64.125)               # Pixel (0, 0) von a: Mitte bei 192,125 Basispixeln nach Osten, 64,125 nach Süden
+    assert abs(float(a[0, 0]) - want) < 0.05
+
+
+def test_upsample_base_ohne_nachbarn_und_ohne_basis(tmp_path):
+    B.write_png(tmp_path / "12" / "10" / "10.png", np.full((256, 256), 150.0, np.float32))
+    f = B.upsample_base(tmp_path, 13, 20, 20)
+    assert f is not None and not np.isnan(f).any() and abs(float(f.mean()) - 150) < 0.05
+    assert B.upsample_base(tmp_path, 13, 2, 2) is None
