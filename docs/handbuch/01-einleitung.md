@@ -26,7 +26,7 @@ Diese Regeln sind nicht verhandelbar. Sie stehen so in der Projektanweisung und 
 2. **Offene Daten, offene Lizenzen.** Jede Quelle hat einen Eintrag im Quellenregister mit Lizenz und Namensnennung. Ohne Eintrag läuft kein Sammler. Wo die Bedingungen unklar sind, bleibt die Quelle aus.
 3. **Lokal zuerst.** Betrieb auf eigener Hardware oder bei einem EU-Hoster. Die Karte kommt aus eigenen Kacheln, nicht aus einem Kartendienst. Die Suche läuft im Browser.
 4. **Herkunft immer sichtbar.** Jede Kachel und jede Meldung zeigt Quelle, Abrufzeit und Alter. Alte Daten werden als alt markiert, nicht versteckt.
-5. **Ehrlich bei Unsicherheit.** Schätzungen sind als Schätzungen gekennzeichnet (etwa die Abflussbahnen bei Starkregen). Es gibt keine Warnung, die nur eine Rechnung behauptet.
+5. **Ehrlich bei Unsicherheit.** Schätzungen sind als Schätzungen gekennzeichnet (etwa Höhenwerte aus Rasterdaten, keine Vermessung). Es gibt keine Warnung, die nur eine Rechnung behauptet.
 6. **Ausfallsicher.** Fällt eine Quelle aus, bleibt der Rest stehen. Die Kachel sagt „Quelle nicht erreichbar seit …“.
 7. **Kein Amtsersatz.** Siehe oben.
 
