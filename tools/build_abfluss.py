@@ -172,6 +172,21 @@ def ketten(acc: np.ndarray, d: np.ndarray, mask: np.ndarray, schwelle_m2: float)
     return idx, stuecke
 
 
+def glatt(pts: list[tuple[float, float]], runden: int = 2) -> list[tuple[float, float]]:
+    """Ecken abschneiden (Chaikin): D8 kennt nur acht Richtungen, die Rohlinie läuft deshalb treppenförmig. Anfang und Ende bleiben stehen,
+    damit Stücke an Zusammenflüssen und Kachelgrenzen weiter aneinanderstoßen."""
+    for _ in range(runden):
+        if len(pts) < 3:
+            break
+        neu = [pts[0]]
+        for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+            neu.append((0.75 * x0 + 0.25 * x1, 0.75 * y0 + 0.25 * y1))
+            neu.append((0.25 * x0 + 0.75 * x1, 0.25 * y0 + 0.75 * y1))
+        neu.append(pts[-1])
+        pts = neu
+    return pts
+
+
 def klasse(m2: float) -> int:
     return max(0, int(math.log(max(m2 / 10000.0, 1.0)) / math.log(KLASSE_FAKTOR)))
 
@@ -189,13 +204,13 @@ def abfluss_kacheln(mvt, acc, d, mask, x0, y0, zooms) -> dict:
         t0 = time.time()
         idx, stuecke = ketten(acc, d, mask, SCHWELLE_HA[z] * 10000.0)
         s = 2 ** (ZGRID - z)
-        tol = 2.0 ** (12 - z)           # 0,5 Bildschirmpixel in Zoom-14-Pixeln
+        tol = 2.0 ** (12 - z) / 2       # 0,25 Bildschirmpixel in Zoom-14-Pixeln (geglättete Linie, sonst wieder eckig)
         n = 0
         for pos, wert, eigner in stuecke:
             c = idx[np.array(pos)]
             gx = (c % W) + 0.5 + x0 * 256
             gy = (c // W) + 0.5 + y0 * 256
-            pts = list(zip(gx.tolist(), gy.tolist()))
+            pts = glatt(list(zip(gx.tolist(), gy.tolist())))
             if len(pts) > 2 and tol > 0.3:
                 pts = list(LineString(pts).simplify(tol, preserve_topology=False).coords)
             if len(pts) < 2:

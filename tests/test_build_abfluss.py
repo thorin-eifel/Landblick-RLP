@@ -73,3 +73,12 @@ def test_ketten_ohne_treffer():
     d = np.zeros((4, 4), np.uint8)
     idx, stuecke = ba.ketten(acc, d, np.ones((4, 4), bool), 1.0)
     assert idx.size == 0 and stuecke == []
+
+
+def test_glatt_haelt_enden_und_schneidet_ecken():
+    roh = [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (2.0, 1.0)]
+    g = ba.glatt(roh)
+    assert g[0] == roh[0] and g[-1] == roh[-1]
+    assert len(g) > len(roh)
+    assert (1.0, 0.0) not in g                           # die Ecke selbst ist weg
+    assert ba.glatt(roh[:2]) == roh[:2]
