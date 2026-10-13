@@ -165,6 +165,52 @@ Gemessen wird nicht geschätzt: `tools/dauerlauf.py sample` hängt alle zehn Min
 11. **Rate Limiting** für eine öffentliche Demo entfällt bei statischen Dateien weitgehend, Missbrauch fängt der Hoster ab. Trotzdem im Vertrag nachsehen.
 12. **Offene Punkte aus Abschnitt 12** der Projektanweisung (Name/Domain, Hosting, GPU, Quellenpflege, Luxemburg) sind weiter offen. Hosting ist mit IONOS entschieden; „GPU“ entfällt, solange die lokalen Modelle (Phase 3) nicht kommen.
 
+## Installation auf einem Dauerläufer (Windows, Linux, macOS)
+
+Ein Skript richtet die Sammelstelle auf einem Rechner ein, der durchläuft: `install.ps1` (Windows), `install.sh` (Linux, macOS), beide rufen `install.py` auf. Voraussetzung ist Python 3.11 oder neuer (getestet: 3.11; unter Windows 3.12 empfohlen, bei 3.13 und neuer vorher prüfen, ob alle gepinnten Pakete Räder haben) und der Ordner dieses Repositorys.
+
+```
+# Windows (PowerShell, normale Rechte genügen)
+powershell -ExecutionPolicy Bypass -File install.ps1 -Kontakt name@example.org -Dauerlauf -RuhezustandAus
+# Linux / macOS
+./install.sh --kontakt name@example.org --dauerlauf
+# Zustand, Entfernen
+powershell -File install.ps1 -Status          ./install.sh --status
+powershell -File install.ps1 -Deinstall       ./install.sh --deinstall
+```
+
+Was passiert, der Reihe nach: `.venv` anlegen und `requirements.txt` installieren; `.env` aus der Vorlage schreiben (Kontakt-Mail für den User-Agent ist Pflicht, die Adresse aus der Vorlage wird nie übernommen); optional die Basiskarte holen (`--karte voll`, rund 1,5 GB von build.protomaps.com, die pmtiles-CLI wird nach Rückfrage geladen, der Lauf ist wiederaufnehmbar); erste Datensammlung und Export (`tools/zyklus.py --erst`: jede Quelle einmal, die langsamen kommen mit dem Zeitplan); Jobs anlegen; prüfen, ob der Webserver antwortet. Quellen mit Zugangsdaten (z. B. Tankerkönig, NASA FIRMS) bleiben ohne Schlüssel in `.env` im Zustand „ausgefallen“; das ist gewollt und steht in der Gesundheitsprüfung.
+
+| Job | Takt | Aufgabe |
+|---|---|---|
+| zyklus | alle 5 Minuten | fällige Quellen abrufen, exportieren (`tools/zyklus.py`) |
+| spaet | alle 30 Minuten | langsame Quellen (große Abfragen), bis 3 Stunden Laufzeit |
+| backup | täglich 03:15 | Datenbank sichern, Rückspieltest (`tools/backup.py --keep 14 --verify-after`) |
+| health | alle 10 Minuten | Gesundheitsprüfung (`tools/gesundheit.py`) |
+| web | dauerhaft | lokaler Webserver auf `--bind`:`--port` (Standard 127.0.0.1:8080) |
+| live | dauerhaft | Luftverkehr in kurzem Takt (mit `--ohne-live` aus) |
+| dauerlauf | alle 10 Minuten | Probe für das R6-Protokoll (nur mit `--dauerlauf`) |
+
+Jeder Job läuft über `tools/lauf.py`: keine Shell-Umleitung, keine Konsolenfenster unter Windows, Ausgabe nach `data/logs/<job>.log` (rotierend, 5 Dateien zu 2 MB), Umlaute stimmen. Zeitplaner: Windows-Aufgabenplanung (Ordner „Landblick“, versteckte Aufgaben, bei Absturz Neustart nach einer Minute, nie zwei Instanzen), systemd (`landblick-*.timer` und `.service`, Benutzerdienste mit `loginctl enable-linger`, mit `--system` unter `/etc/systemd/system`), launchd (`de.ctw.landblick-*`).
+
+**Läuft es ohne Anmeldung?** Standard sind Aufgaben des angemeldeten Benutzers: Windows führt sie nur aus, solange er angemeldet ist (Sperrbildschirm genügt). Für einen echten Dauerläufer ohne Anmeldung: `-System` in einem Administrator-Fenster, die Aufgaben laufen dann als SYSTEM; unter Linux `sudo ./install.sh --system`. Unter macOS laufen LaunchAgents nur bei angemeldetem Benutzer. **Ruhezustand** stoppt jeden Zyklus: `-RuhezustandAus` stellt unter Windows den Standby im Netzbetrieb ab, anderswo nennt der Installer den Befehl.
+
+**Netz:** Der Webserver hat keine Anmeldung. Mit `--bind 0.0.0.0` ist die Seite im lokalen Netz sichtbar, nie ohne Firewall oder Reverse-Proxy ins Internet stellen. Datenschutz und Quellenregister sind unverändert: ausgehend gehen nur die Abrufe laut `sources.yaml` und, wenn gewählt, der Kartenabruf.
+
+### Windows-Test: Checkliste
+
+Der Windows-Teil ist unter Linux nur durch Tests der erzeugten Aufgabendateien abgedeckt (wohlgeformtes XML, Trigger, Pfade mit Leerzeichen), nicht auf echtem Windows gelaufen. Beim ersten Test prüfen und Abweichungen notieren:
+
+1. Installer endet mit „Fertig. Oberfläche: http://127.0.0.1:8080/“, die Seite zeigt Daten (bei `-Karte keine` nur die Weltkarte als Hintergrund).
+2. Aufgabenplanung → Ordner „Landblick“ zeigt sieben Aufgaben (ohne `-Dauerlauf` sechs); „Letztes Ergebnis“ 0x0 bei zyklus, spaet, backup; health darf 0x1 (Warnung) zeigen.
+3. `data\logs\zyklus.log` bekommt alle fünf Minuten einen Block „[start] … [ende] Code 0“.
+4. Beim Start einer Aufgabe blitzt kein Konsolenfenster auf (`pythonw.exe` plus `CREATE_NO_WINDOW`).
+5. `python tools\gesundheit.py` und `python tools\backup.py --verify` laufen durch (SQLite-Pfade mit Laufwerksbuchstaben und Leerzeichen sind abgedeckt, auf echtem Windows aber ungeprüft).
+6. Nach Neustart ohne Anmeldung (nur mit `-System`) laufen `web` und `live` wieder an.
+7. Windows Defender oder Firewall melden etwas: Python im Ordner `.venv` freigeben, Fund notieren (bei PyInstaller-Programmen bekannt, hier nicht zu erwarten).
+
+Bekannte Grenzen: `lauf.py --timeout` greift nur, solange der Befehl Ausgabe schreibt; die harte Grenze setzt der Zeitplaner (ExecutionTimeLimit bzw. TimeoutStartSec). Der Upload (`PUBLISH_ENABLED=1`) braucht bash und lftp und ist unter Windows nicht vorgesehen. Kartenbau und Landesdaten-Werkzeuge außer `build_region_tiles.py` (Höhenmodell, Gebäude, Abfluss) gehören nicht zum Installer; ihre Ergebnisse (`web/tiles/*.pmtiles`) kopiert man vom Bau-Rechner in `web/tiles/`.
+
 ## Sammelstelle auf dem Mac (launchd)
 
 Stand: läuft auf dem Mac des Betreibers, Python 3.11 in `.venv`, Zyklus alle 5 Minuten.

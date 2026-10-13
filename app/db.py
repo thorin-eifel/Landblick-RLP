@@ -111,6 +111,11 @@ CREATE TABLE IF NOT EXISTS meta (
 """
 
 
+def ro_uri(path: Path | str) -> str:
+    """SQLite-URI für schreibgeschützten Zugriff. as_uri() kodiert Laufwerksbuchstaben und Leerzeichen (Windows: file:///C:/…)."""
+    return Path(path).resolve().as_uri() + "?mode=ro"
+
+
 class Storage:
     """Dünne Schicht über sqlite3. Zugriffe sind über ein Lock serialisiert."""
 
@@ -119,7 +124,7 @@ class Storage:
         self.readonly = readonly
         self._lock = threading.RLock()
         if readonly:
-            uri = f"file:{self.path}?mode=ro"
+            uri = ro_uri(self.path)
             self._conn = sqlite3.connect(uri, uri=True, check_same_thread=False, timeout=10)
         else:
             self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -369,4 +374,4 @@ class Storage:
         return self._query("SELECT 1 x")[0]["x"] == 1
 
 
-__all__ = ["Storage", "SCHEMA"]
+__all__ = ["Storage", "SCHEMA", "ro_uri"]

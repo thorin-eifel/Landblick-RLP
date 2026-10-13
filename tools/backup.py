@@ -8,6 +8,7 @@ Parameter:  --db PFAD      Quelle (Standard $OSINT_DB_PATH oder data/osint.sqlit
             --keep N       Anzahl aufzubewahrender Sicherungen (Standard 14)
             --loop SEK     Dauerbetrieb: alle SEK Sekunden wiederholen (Standard: einmalig)
 Beispiel:   python tools/backup.py --keep 7
+            --verify-after nach der Sicherung gleich den Wiederherstellungstest laufen lassen (Aufruf für Zeitplaner)
             --verify       keine neue Sicherung: die neueste Sicherung in einen Wegwerf-Ordner zurückspielen und prüfen
                            (Integrität, Tabellen- und Zeilenzahlen gegen die Prüfsummendatei, lesbar über Storage)
 Beispiel:   python tools/backup.py --keep 7
@@ -29,6 +30,9 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from app.db import ro_uri  # noqa: E402
 
 log = logging.getLogger("backup")
 
@@ -57,7 +61,7 @@ def backup_once(db: Path, out_dir: Path, keep: int) -> Path:
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     target = out_dir / f"osint-{stamp}.sqlite"
     tmp = target.with_suffix(".tmp")
-    src = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+    src = sqlite3.connect(ro_uri(db), uri=True)
     try:
         dst = sqlite3.connect(tmp)
         try:
@@ -70,7 +74,7 @@ def backup_once(db: Path, out_dir: Path, keep: int) -> Path:
     if result != "ok":
         tmp.unlink(missing_ok=True)
         raise RuntimeError(f"Integritätsprüfung der Sicherung fehlgeschlagen: {result}")
-    ro = sqlite3.connect(f"file:{tmp}?mode=ro", uri=True)
+    ro = sqlite3.connect(ro_uri(tmp), uri=True)
     try:
         counts = table_counts(ro)
     finally:
@@ -104,7 +108,7 @@ def verify_latest(out_dir: Path) -> dict:
     with tempfile.TemporaryDirectory(prefix="osint-restore-") as tmp:
         restored = Path(tmp) / "osint.sqlite"
         shutil.copy2(latest, restored)
-        conn = sqlite3.connect(f"file:{restored}?mode=ro", uri=True)
+        conn = sqlite3.connect(ro_uri(restored), uri=True)
         try:
             check = conn.execute("PRAGMA integrity_check").fetchone()[0]
             counts = table_counts(conn)
@@ -135,6 +139,7 @@ def main() -> int:
     ap.add_argument("--keep", type=int, default=14)
     ap.add_argument("--loop", type=int, default=0, metavar="SEK")
     ap.add_argument("--verify", action="store_true")
+    ap.add_argument("--verify-after", action="store_true")
     args = ap.parse_args()
     logging.basicConfig(level="INFO", format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     if args.verify:
@@ -148,6 +153,8 @@ def main() -> int:
     while True:
         try:
             backup_once(Path(args.db), Path(args.dir), args.keep)
+            if args.verify_after:
+                verify_latest(Path(args.dir))
             rc = 0
         except Exception as exc:  # noqa: BLE001
             log.error("Sicherung fehlgeschlagen: %s", exc)
