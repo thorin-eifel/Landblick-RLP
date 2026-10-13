@@ -11,7 +11,7 @@ import { INFRA_LAYER_IDS, paintStops } from './orte.js';
 import { placeLgb } from './lgb.js';
 import { LABEL_SKIP, cliffLayers, labelsAndBuildings, ortsnamenUebersicht, landUseLayers, mainRoad, signLayers, waterEdges } from './stil.js';
 import { applyFlow, fillTempLegend, placeRadar } from './wetterkarte.js';
-import { basemapOk, coreOk, flow, light, klippenOk, map, mapReady, reliefOk, ringOk, state } from './zustand.js';
+import { basemapOk, coreOk, flow, gebOk, light, klippenOk, map, mapReady, reliefOk, ringOk, state } from './zustand.js';
 
 // Stil-Layer der Basiskarte unter den eigenen Ebenen; beim Wechsel Hell/Dunkel neu aufgebaut
 export function applyBasemap() {
@@ -25,7 +25,10 @@ export function applyBasemap() {
   // roads_shields entfällt: es braucht Sprite-Bilder, die wir nicht ausliefern; die Schilder zeichnen signLayers()
   const dark = flavor === 'dark';
   let styled = basemapLayers('basemap', med ? medFlavor() : namedFlavor(flavor), { lang: 'de' }).filter((x) => !LABEL_SKIP.test(x.id)).map(mainRoad).map(labelsAndBuildings(dark)).flatMap(ortsnamenUebersicht)
-    .map((x) => (coreOk && (x.id === 'buildings' || x.id === 'address_label') ? { ...x, source: 'basemap-core' } : x));   // Gebäude und Hausnummern aus dem Zoom-15-Kern
+    .map((x) => {   // Gebäude: Hausumringe/OSM-Mischung (Zoom 14/15); sonst Kern. Hausnummern bleiben im Kern.
+      if (gebOk && x.id === 'buildings') return { ...x, source: 'basemap-geb' };
+      return coreOk && (x.id === 'buildings' || x.id === 'address_label') ? { ...x, source: 'basemap-core' } : x;
+    });
   // eigene Flächen- und Geländeebenen gleich hinter dem Landnutzungs-Layer des Stils (unter Wasser, Straßen und Relief-Linien)
   const at = styled.findIndex((x) => x.id === 'landuse_park');
   styled.splice(at >= 0 ? at + 1 : 0, 0, ...landUseLayers(dark, !!map.getSource('rlp-grenze')));
@@ -35,7 +38,7 @@ export function applyBasemap() {
   waterEdges(styled, dark);
   styled.push(...peakLayers(dark, map.hasImage('peak-tri')));   // Gipfel oben auf den Beschriftungen des Stils
   if (med) styled = medievalize(styled);
-  if (ringOk) {   // gleiche Gebäudeebenen noch einmal aus dem Ring; Kern und Ring überlappen nicht, nichts wird doppelt gezeichnet
+  if (ringOk && !gebOk) {   // gleiche Gebäudeebenen noch einmal aus dem Ring; Kern und Ring überlappen nicht, nichts wird doppelt gezeichnet
     const at2 = styled.map((x) => x.id).lastIndexOf('buildings-line');
     const extra = styled.filter((x) => x.id === 'buildings' || x.id === 'buildings-line').map((x) => ({ ...x, id: `${x.id}-ring`, source: 'basemap-ring' }));
     styled.splice((at2 >= 0 ? at2 : styled.findIndex((x) => x.id === 'buildings')) + 1, 0, ...extra);
