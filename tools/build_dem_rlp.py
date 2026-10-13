@@ -18,6 +18,7 @@ Aufruf:     python tools/build_dem_rlp.py --check                      zählen, 
             python tools/build_dem_rlp.py --bbox 6.3 49.75 6.6 49.95   nur ein Ausschnitt (Test)
             python tools/build_dem_rlp.py                              alles (Stunden, Exit 2 = wiederholen)
             python tools/build_dem_rlp.py --budget-s 600               in Portionen
+            python tools/build_dem_rlp.py --no-fetch --force --only-gaps   Rand und Außenbereich neu, ohne Download (nach Änderung am Hochrechnen)
 Voraussetzung: web/tiles/dem-base/ mit Mapzen-Kacheln Zoom 6 bis 12 (python tools/build_dem.py), pip install
             -r requirements-tools.txt (numpy, pillow, pyproj, tifffile, imagecodecs).
 Höflichkeit: ehrlicher User-Agent, 4 gleichzeitige Abrufe, vorhandene Dateien werden übersprungen.
@@ -226,22 +227,47 @@ def sample_state(red: Path, z: int, x: int, y: int, have: set[tuple[int, int]]) 
     return v.astype(np.float32)
 
 
+_BCACHE: dict = {}
+
+
+def _base_png(base: Path, x: int, y: int) -> np.ndarray | None:
+    key = (str(base), x, y)
+    if key not in _BCACHE:
+        if len(_BCACHE) > 48:
+            _BCACHE.pop(next(iter(_BCACHE)))
+        _BCACHE[key] = read_png(base / str(BASEZ) / str(x) / f"{y}.png")
+    return _BCACHE[key]
+
+
 def upsample_base(base: Path, z: int, x: int, y: int) -> np.ndarray | None:
-    """Kachel (z>12) aus der Mapzen-Kachel Zoom 12 hochgerechnet (bilinear); None, wenn die Basis fehlt."""
-    from scipy.ndimage import zoom
-    d = z - BASEZ
-    s = 2**d
-    parent = read_png(base / str(BASEZ) / str(x // s) / f"{y // s}.png")
-    if parent is None:
+    """Kachel (z > 12) aus den Mapzen-Kacheln Zoom 12 hochgerechnet (bilinear); None, wenn die Basis fehlt.
+
+    Die Pixelmitten der Zielkachel werden im Pixelraster der Basis gesucht, in einem Mosaik aus der Basiskachel und ihren
+    acht Nachbarn. So schließen benachbarte Zielkacheln ohne Stufe aneinander an. (Ein Hochskalieren der einzelnen Kachel
+    mit scipy.ndimage.zoom richtet Eck- statt Mittelpunkte aus und liefert an jeder Kachelgrenze einen Sprung, den die
+    Schummerung als gerade Linie zeigt.)"""
+    from scipy.ndimage import distance_transform_edt, map_coordinates
+    s = 2 ** (z - BASEZ)
+    bx, by = x // s, y // s
+    if _base_png(base, bx, by) is None:
         return None
-    size = 256 // s
-    cx, cy = (x % s) * size, (y % s) * size
-    # eine Zeile/Spalte Rand mitnehmen, damit die Ränder zwischen Nachbarkacheln gleich werden
-    pad = np.pad(parent, 1, mode="edge")
-    crop = pad[cy:cy + size + 2, cx:cx + size + 2]
-    up = zoom(crop, 256 / size, order=1, mode="nearest")
-    off = int(round(256 / size))
-    return up[off:off + 256, off:off + 256].astype(np.float32)
+    rows = []
+    for dy in (-1, 0, 1):
+        row = []
+        for dx in (-1, 0, 1):
+            t = _base_png(base, bx + dx, by + dy)
+            row.append(t if t is not None else np.full((256, 256), np.nan, np.float32))
+        rows.append(np.concatenate(row, axis=1))
+    m = np.concatenate(rows, axis=0)
+    bad = np.isnan(m)
+    if bad.any():                                         # Nachbar fehlt (Rand der Abdeckung): nächsten gültigen Wert fortsetzen
+        idx = distance_transform_edt(bad, return_distances=False, return_indices=True)
+        m = m[tuple(idx)]
+    f = (np.arange(256) + 0.5) / s - 0.5                  # Pixelmitte der Zielkachel im Raster der Basis
+    col = 256 + (x - bx * s) * (256 // s) + f
+    row_ = 256 + (y - by * s) * (256 // s) + f
+    rr, cc = np.meshgrid(row_, col, indexing="ij")
+    return map_coordinates(m, [rr, cc], order=1, mode="nearest", prefilter=False).astype(np.float32)
 
 
 def touches(z: int, x: int, y: int, have: set[tuple[int, int]]) -> bool:
@@ -259,12 +285,14 @@ def touches(z: int, x: int, y: int, have: set[tuple[int, int]]) -> bool:
 
 def build_top(args: tuple) -> tuple[int, int, str]:
     """Zoom-14-Kachel schreiben. Rückgabe (x, y, "state"|"base"|"none")."""
-    x, y, red_s, base_s, out_s, have, force = args
+    x, y, red_s, base_s, out_s, have, force, only_gaps = args
     red, base, out = Path(red_s), Path(base_s), Path(out_s)
     dest = out / str(MAXZ) / str(x) / f"{y}.png"
     if dest.exists() and not force:
         return x, y, "keep"
     st = sample_state(red, MAXZ, x, y, have)
+    if only_gaps and st is not None and np.isfinite(st).all():
+        return x, y, "keep"                                # reine Landesdaten: unverändert lassen
     fallback = upsample_base(base, MAXZ, x, y)
     if st is None and fallback is None:
         return x, y, "none"
@@ -299,7 +327,7 @@ def merge_children(out: Path, base: Path, z: int, x: int, y: int, touched: set[t
 
 
 def stage_tiles(items_have: set[tuple[int, int]], bbox: tuple[float, float, float, float], work: Path, base: Path, out: Path,
-                force: bool, budget_s: float, region) -> tuple[bool, dict]:
+                force: bool, budget_s: float, region, only_gaps: bool = False) -> tuple[bool, dict]:
     t0 = time.monotonic()
     red = work / "red"
     lon0, lat0, lon1, lat1 = bbox
@@ -312,7 +340,7 @@ def stage_tiles(items_have: set[tuple[int, int]], bbox: tuple[float, float, floa
             if region is None or region.contains(float(la[0, 0]), float(lo[0, 0]), margin_km=6):
                 cand.append((x, y))
     log.info("Stufe 2: %d Zoom-14-Kacheln im Gebiet", len(cand))
-    jobs = [(x, y, str(red), str(base), str(out), items_have, force) for x, y in cand]
+    jobs = [(x, y, str(red), str(base), str(out), items_have, force, only_gaps) for x, y in cand]
     stats = {"state": 0, "base": 0, "none": 0, "keep": 0}
     with ProcessPoolExecutor(max(1, (os.cpu_count() or 2) - 0)) as pool:
         for k, (x, y, kind) in enumerate(pool.map(build_top, jobs, chunksize=16), 1):
@@ -379,6 +407,9 @@ def main() -> int:
     ap.add_argument("--region", type=Path, default=ROOT / "region.yaml")
     ap.add_argument("--check", action="store_true", help="nur zählen")
     ap.add_argument("--force", action="store_true", help="vorhandene Kacheln neu schreiben")
+    ap.add_argument("--no-fetch", action="store_true", help="nichts laden: nur mit den vorhandenen 4-m-Rasterkacheln in work/red/ arbeiten")
+    ap.add_argument("--only-gaps", action="store_true",
+                    help="Zoom-14-Kacheln mit reinen Landesdaten unverändert lassen, nur Rand und Außenbereich neu schreiben (mit --force)")
     ap.add_argument("--budget-s", type=float, default=0, help="Zeitbudget je Stufe, 0 = unbegrenzt")
     ap.add_argument("-v", "--verbose", action="store_true")
     a = ap.parse_args()
@@ -411,22 +442,33 @@ def main() -> int:
     if not (a.base / str(BASEZ)).exists():
         log.error("Mapzen-Kacheln fehlen: %s (zuerst python tools/build_dem.py --dest %s)", a.base, a.base)
         return 1
-    ok, fail, more = stage_reduce(items, a.work, a.budget_s)
-    log.info("Stufe 1: %d geladen, %d fehlgeschlagen", ok, fail)
-    if fail:
-        return 1
-    if more:
-        return 2
+    if a.no_fetch:
+        log.info("Stufe 1 übersprungen (--no-fetch)")
+    else:
+        ok, fail, more = stage_reduce(items, a.work, a.budget_s)
+        log.info("Stufe 1: %d geladen, %d fehlgeschlagen", ok, fail)
+        if fail:
+            return 1
+        if more:
+            return 2
     red = a.work / "red"
     have = {(i["e"], i["n"]) for i in items if (red / f"{i['e']}_{i['n']}.npy").exists()}
-    done, stats = stage_tiles(have, bbox, a.work, a.base, a.out, a.force, a.budget_s, region)
+    done, stats = stage_tiles(have, bbox, a.work, a.base, a.out, a.force, a.budget_s, region, a.only_gaps)
     log.info("Stufe 2: %s", stats)
     if not done:
         return 2
     years = [i["year"] for i in items if (i["e"], i["n"]) in have] or [0]
     meta = {"attribution": attribution(years), "source": "LVermGeoRP DGM1", "licence": "dl-de/by-2-0", "years": [min(years), max(years)],
             "built": time.strftime("%Y-%m-%d"), "max_zoom": MAXZ, "bbox": list(bbox)}
-    (a.out / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
+    old = a.out / "meta.json"
+    if old.exists():                                       # Eintrag der Zoom-15/16-Kacheln (build_dem_hires.py) nicht verlieren
+        try:
+            hires = json.loads(old.read_text(encoding="utf-8")).get("hires")
+        except (OSError, ValueError):
+            hires = None
+        if hires:
+            meta["hires"] = hires
+    old.write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
     size = sum(p.stat().st_size for p in a.out.rglob("*.png")) / 1e6
     (a.out / "README.txt").write_text(
         "Höhenkacheln (Terrarium-Kodierung), Zoom 6 bis 14.\n"
