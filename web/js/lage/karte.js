@@ -265,7 +265,7 @@ export async function setupBasemap() {
       const core = new PMTiles(coreUrl);
       await core.getHeader();
       protocol.add(core);
-      map.addSource('basemap-core', { type: 'vector', url: `pmtiles://${coreUrl}`, tileSize: 256 });   // 256er Kachelmaß: die Zoom-15-Kacheln (alle Gebäude) gelten schon ab Kartenzoom 14
+      map.addSource('basemap-core', { type: 'vector', url: `pmtiles://${coreUrl}` });   // kein tileSize: MapLibre 5 lässt bei Vektorquellen nur 512 zu (mit 256 lud der Kern gar nicht, und um Irrel fehlten die Gebäude)
       setCoreOk(true);
     } catch (err) { console.warn('Kernkarte (Zoom 15) nicht verfügbar:', err?.message ?? err); }
     try {   // Ring um den Kern (nur Zoom 14): Häuserumrisse im restlichen Radius, ohne Hausnummern
@@ -281,7 +281,7 @@ export async function setupBasemap() {
       const geb = new PMTiles(gebUrl);
       await geb.getHeader();
       protocol.add(geb);
-      map.addSource('basemap-geb', { type: 'vector', url: `pmtiles://${gebUrl}`, tileSize: 256 });   // 256er Kachelmaß wie beim Kern: Zoom-15-Kacheln ab Kartenzoom 14
+      map.addSource('basemap-geb', { type: 'vector', url: `pmtiles://${gebUrl}` });   // Zoom 14 gilt ab Kartenzoom 14, Zoom 15 ab 15 (darüber hochgezoomt)
       setGebOk(true);
     } catch (err) { console.warn('Gebäudeebene (Hausumringe) nicht verfügbar:', err?.message ?? err); }
     try {   // Wände aus dem Geländemodell (tools/build_klippen_dgm.py): Vektorkacheln Zoom 13; fehlen sie, zeichnet die Karte nur die OSM-Klippen

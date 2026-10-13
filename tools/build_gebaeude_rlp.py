@@ -16,7 +16,7 @@ Ablauf:     1. Hausumringe lesen, nach Web-Mercator umrechnen, je Kachel Zoom 15
 Aufruf:     python tools/build_gebaeude_rlp.py --hu hu/gebaeude_hu.shp --core perf-rlp/tiles/core.pmtiles \\
                 --ring perf-rlp/tiles/ring.pmtiles --grenze web/geo/rlp.geojson --out perf-rlp/tiles/gebaeude.pmtiles
             python tools/build_gebaeude_rlp.py ... --bbox 6.35 49.80 6.55 49.92        Ausschnitt (Probe, in Sekunden)
-Parameter:  --min-z14 120  Mindestfläche (m², Umgrenzungsrechteck) der Hausumringe in den Zoom-14-Kacheln
+Parameter:  --min-z14 40   Mindestfläche (m², Umgrenzungsrechteck) der Hausumringe in den Zoom-14-Kacheln
 Exit:       0 = fertig, 1 = Fehler
 """
 from __future__ import annotations
@@ -414,7 +414,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--grenze", type=Path, required=True, help="Landesgrenze als GeoJSON (web/geo/rlp.geojson)")
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--bbox", type=float, nargs=4, metavar=("W", "S", "E", "N"), help="nur dieser Ausschnitt (Probe)")
-    ap.add_argument("--min-z14", type=float, default=120.0, help="Mindestfläche in m² für Zoom 14")
+    ap.add_argument("--min-z14", type=float, default=40.0, help="Mindestfläche in m² für Zoom 14")
     ap.add_argument("--stand", default="Juli 2026", help="Stand der Hausumringe für die Metadaten")
     args = ap.parse_args(argv)
     logging.basicConfig(level="INFO", format="%(asctime)s %(levelname)s %(message)s")
@@ -424,10 +424,10 @@ def main(argv: list[str] | None = None) -> int:
     log.info("Hausumringe: %d", n)
     if args.core:
         k, d = add_osm(args.core, {14, 15}, grenze, tiles, args.bbox)
-        log.info("OSM aus core: %d außerhalb übernommen, %d innerhalb verworfen", k, d)
+        log.info("OSM aus core: %d Gebäude außerhalb übernommen, %d innerhalb verworfen (Kacheln ganz im Land zählen als eins)", k, d)
     if args.ring:
         k, d = add_osm(args.ring, {14}, grenze, tiles, args.bbox)
-        log.info("OSM aus ring: %d außerhalb übernommen, %d innerhalb verworfen", k, d)
+        log.info("OSM aus ring: %d Gebäude außerhalb übernommen, %d innerhalb verworfen (Kacheln ganz im Land zählen als eins)", k, d)
     res = write_pmtiles(tiles, args.out, args.stand)
     log.info("fertig: %d Kacheln, %.1f MB", res["kacheln"], res["bytes"] / 1e6)
     return 0
