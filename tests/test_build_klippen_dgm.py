@@ -73,6 +73,16 @@ def test_loch_bleibt_loch():
     assert any(len(list(w["poly"].interiors)) >= 1 for w in found)
 
 
+def test_schmale_schlucht_wird_gefunden_flacher_hohlweg_nicht():
+    h = np.full((240, 240), 400.0, np.float32)
+    h[:, 118:121] = 388.0                                     # Spalte: 3 m breit, 12 m tief, 240 m lang
+    assert any(w["poly"].bounds[3] - w["poly"].bounds[1] > 150 and w["drop"] >= 5 for w in K.derive(h)), "Schlucht fehlt"
+    assert K.derive(h, slot_depth=0) == []                    # ohne Erkennung bleibt sie unsichtbar (Neigungsfilter allein reicht nicht)
+    flach = np.full((240, 240), 400.0, np.float32)
+    flach[:, 118:121] = 397.0                                 # Hohlweg: 3 m tief
+    assert K.derive(flach) == []
+
+
 def test_nodata_rand_ist_keine_wand():
     h = feld()
     h[:, 150:] = np.nan
