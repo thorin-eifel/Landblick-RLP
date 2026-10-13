@@ -49,13 +49,14 @@ export const GREEN = { light: '#9fc98a', dark: '#2f6a43' };
 // Flächenfarben nach OSM-Klasse (Farbe, Deckkraft); dezent, damit Relief, Straßen und Ereignisse führen
 // Farben nach der Natur: Wald dunkles Blattgrün, Wiese frisches Gelbgrün, Weide/Rasen satteres Grün, Busch olivgrau,
 // Heide Heidekraut-Violett, Acker Stoppelgelb, Obst helles Apfelgrün, Wein Strohgelb, Moor blaugrün, Fels Steingrau, Sand Hellgelb.
+// Die Grundtöne entsprechen den Grundfarben der Luftbild-Muster in vegetation.js, damit der Übergang bei Zoom 11 bis 13 ruhig bleibt.
 export const LAND = {
-  light: { forest: ['#5f9f5b', 0.55], meadow: ['#c4dc8a', 0.5], grass: ['#a9d57c', 0.5], scrub: ['#94a862', 0.5], heath: ['#bb98ae', 0.5],
-    farmland: ['#e9dcaa', 0.45], orchard: ['#bdd677', 0.5], vineyard: ['#cfc27c', 0.5], allotment: ['#d6e4a2', 0.5], wetland: ['#8fc4a8', 0.55],
-    rock: ['#b6ab9c', 0.6], sand: ['#f0e3b2', 0.6], cemetery: ['#b5d0a4', 0.55] },
-  dark: { forest: ['#245234', 0.6], meadow: ['#4a7240', 0.5], grass: ['#3f7040', 0.5], scrub: ['#505e36', 0.5], heath: ['#5e4a58', 0.5],
-    farmland: ['#5f5733', 0.4], orchard: ['#4c6a35', 0.5], vineyard: ['#5d5a30', 0.5], allotment: ['#4f6a3f', 0.5], wetland: ['#2b5f58', 0.55],
-    rock: ['#6d675f', 0.6], sand: ['#6f6747', 0.55], cemetery: ['#3d5f45', 0.55] },
+  light: { forest: ['#3f6b3a', 0.7], meadow: ['#a9c262', 0.6], grass: ['#8fc062', 0.6], scrub: ['#8a9a58', 0.6], heath: ['#8c7a55', 0.6],
+    farmland: ['#d3c286', 0.6], orchard: ['#a6c46a', 0.6], vineyard: ['#cdbf86', 0.6], allotment: ['#cdd698', 0.6], wetland: ['#7fb0a0', 0.65],
+    rock: ['#a89d90', 0.65], sand: ['#e8d9a0', 0.65], cemetery: ['#a2c08e', 0.6] },
+  dark: { forest: ['#1d3a28', 0.7], meadow: ['#46703c', 0.6], grass: ['#3f7040', 0.6], scrub: ['#4a5a34', 0.6], heath: ['#4e4438', 0.6],
+    farmland: ['#6a6038', 0.6], orchard: ['#456a35', 0.6], vineyard: ['#5c5a32', 0.6], allotment: ['#4f6a3f', 0.6], wetland: ['#2f5f58', 0.65],
+    rock: ['#6a645c', 0.65], sand: ['#6f6747', 0.6], cemetery: ['#3d5f45', 0.6] },
 };
 // Tinte der Signaturen (Rgba), Bilder lp-<klasse>-<light|dark> aus icons.js registerLandPatterns()
 export const PAT_MIN_ZOOM = 12;
@@ -221,7 +222,7 @@ export function landUseLayers(dark, rlp = false) {
     const img = `lp-${cls}-${k}`;
     if (!map.hasImage(img)) return [fill];
     return [fill, { id: `land-${cls}-pat`, type: 'fill', ...src, minzoom: PAT_MIN_ZOOM - 1, filter: fill.filter,
-      paint: { 'fill-pattern': img, 'fill-opacity': ['interpolate', ['linear'], ['zoom'], PAT_MIN_ZOOM - 1, 0, PAT_MIN_ZOOM + 1, 0.9], 'fill-antialias': false } }];
+      paint: { 'fill-pattern': img, 'fill-opacity': ['interpolate', ['linear'], ['zoom'], PAT_MIN_ZOOM - 1, 0, PAT_MIN_ZOOM + 1, 0.92], 'fill-antialias': false } }];
   });
   return [
     ...fills,
