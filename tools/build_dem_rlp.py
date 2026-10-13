@@ -51,6 +51,7 @@ NODATA = -9999.0
 STEP = 4              # Mittelung 4 x 4 Pixel: 1 m -> 4 m; Zoom 14 hat rund 6 m je Pixel
 CELL = 1000 // STEP   # 250 Pixel je Kilometer
 OFFSET, SCALE = 200.0, 10.0   # uint16 = (h + 200) * 10, 0 = keine Daten
+RAW_SCALE = 50.0              # Rohkacheln für die Felswände (--keep-raw): uint16 = (h + 200) * 50, wie in build_klippen_dgm.py
 MAXZ, MINZ, BASEZ = 14, 6, 12
 log = logging.getLogger("dem_rlp")
 
@@ -133,14 +134,33 @@ def utm_bbox(bbox: tuple[float, float, float, float]) -> tuple[float, float, flo
 
 
 # ------------------------------------------------------------------ Stufe 1: reduzieren
-def reduce_tif(path: Path) -> np.ndarray:
-    """GeoTIFF (1000 x 1000, Float32) → uint16 (250 x 250), 0 = keine Daten."""
+def read_tif(path: Path) -> np.ndarray:
+    """GeoTIFF → Float32 (1000 x 1000), Meter, -9999 = keine Daten (unverändert)."""
     import tifffile
     a = tifffile.imread(path).astype(np.float32)
     if a.shape == (1001, 1001):      # Lieferungen ab 2024: eine Zeile/Spalte Überlapp → unten/rechts abschneiden (≤ 1 m Versatz)
         a = a[:1000, :1000]
     if a.shape != (1000, 1000):
         raise ValueError(f"unerwartete Größe {a.shape}")
+    return a
+
+
+def raw_u16(a: np.ndarray) -> np.ndarray:
+    """1-m-Raster → uint16 (1000 x 1000) im Format der Rohkacheln von tools/build_klippen_dgm.py (RAW_SCALE muss dort stimmen), 0 = keine Daten."""
+    bad = (a <= -9000) | ~np.isfinite(a)
+    q = np.rint((np.where(bad, 0, a) + OFFSET) * RAW_SCALE)
+    q[bad | (q < 1)] = 0
+    return np.clip(q, 0, 65535).astype(np.uint16)
+
+
+def reduce_tif(path: Path) -> np.ndarray:
+    """GeoTIFF (1000 x 1000, Float32) → uint16 (250 x 250), 0 = keine Daten."""
+    return reduce_array(read_tif(path))
+
+
+def reduce_array(a: np.ndarray) -> np.ndarray:
+    """Float32 (1000 x 1000) → uint16 (250 x 250). Ändert a nicht."""
+    a = a.copy()
     a[(a <= -9000) | ~np.isfinite(a)] = np.nan
     blocks = a.reshape(CELL, STEP, CELL, STEP)
     ok = np.isfinite(blocks).sum(axis=(1, 3))
@@ -152,10 +172,10 @@ def reduce_tif(path: Path) -> np.ndarray:
     return np.clip(q, 0, 65535).astype(np.uint16)
 
 
-def fetch_one(client, item: dict, red_dir: Path) -> str:
+def fetch_one(client, item: dict, red_dir: Path, raw_dir: Path | None = None) -> str:
     dest = red_dir / f"{item['e']}_{item['n']}.npy"
     if dest.exists():
-        return "skip"
+        return "skip"   # Kacheln ohne Rohkachel holt build_klippen_dgm.py bei Bedarf selbst nach
     for attempt in range(4):
         try:
             r = client.get(item["url"])
@@ -166,9 +186,14 @@ def fetch_one(client, item: dict, red_dir: Path) -> str:
             tmp = red_dir / f".{item['e']}_{item['n']}.tif"
             tmp.write_bytes(r.content)
             try:
-                arr = reduce_tif(tmp)
+                full = read_tif(tmp)
             finally:
                 tmp.unlink(missing_ok=True)
+            arr = reduce_array(full)
+            if raw_dir is not None:     # dieselben Bytes auch als Rohkachel ablegen: spart den zweiten Download für die Felswände
+                rtmp = raw_dir / f".{item['e']}_{item['n']}.tmp.npz"
+                np.savez_compressed(rtmp, a=raw_u16(full))
+                os.replace(rtmp, raw_dir / f"{item['e']}_{item['n']}.npz")
             np.save(str(dest) + ".tmp.npy", arr)
             os.replace(str(dest) + ".tmp.npy", dest)
             return "ok"
@@ -178,17 +203,20 @@ def fetch_one(client, item: dict, red_dir: Path) -> str:
     return "fail"
 
 
-def stage_reduce(items: list[dict], work: Path, budget_s: float) -> tuple[int, int, bool]:
+def stage_reduce(items: list[dict], work: Path, budget_s: float, keep_raw: bool = False) -> tuple[int, int, bool]:
     import httpx
     red = work / "red"
     red.mkdir(parents=True, exist_ok=True)
+    raw = work / "raw" if keep_raw else None
+    if raw is not None:
+        raw.mkdir(parents=True, exist_ok=True)
     todo = [i for i in items if not (red / f"{i['e']}_{i['n']}.npy").exists()]
     log.info("Stufe 1: %d von %d Kacheln fehlen", len(todo), len(items))
     t0, ok, fail = time.monotonic(), 0, 0
     with httpx.Client(headers={"User-Agent": UA}, timeout=120, follow_redirects=False) as client, ThreadPoolExecutor(4) as pool:
         futs = []
         for it in todo:
-            futs.append(pool.submit(lambda i=it: fetch_one(client, i, red) if not (budget_s and time.monotonic() - t0 > budget_s) else "later"))
+            futs.append(pool.submit(lambda i=it: fetch_one(client, i, red, raw) if not (budget_s and time.monotonic() - t0 > budget_s) else "later"))
         for k, f in enumerate(futs, 1):
             res = f.result()
             ok += res == "ok"
@@ -407,6 +435,7 @@ def main() -> int:
     ap.add_argument("--region", type=Path, default=ROOT / "region.yaml")
     ap.add_argument("--check", action="store_true", help="nur zählen")
     ap.add_argument("--force", action="store_true", help="vorhandene Kacheln neu schreiben")
+    ap.add_argument("--keep-raw", action="store_true", help="1-m-Rohkacheln zusätzlich in <work>/raw/ ablegen (rund 22 GB für RLP), damit build_klippen_dgm.py nicht ein zweites Mal lädt")
     ap.add_argument("--no-fetch", action="store_true", help="nichts laden: nur mit den vorhandenen 4-m-Rasterkacheln in work/red/ arbeiten")
     ap.add_argument("--only-gaps", action="store_true",
                     help="Zoom-14-Kacheln mit reinen Landesdaten unverändert lassen, nur Rand und Außenbereich neu schreiben (mit --force)")
@@ -445,7 +474,7 @@ def main() -> int:
     if a.no_fetch:
         log.info("Stufe 1 übersprungen (--no-fetch)")
     else:
-        ok, fail, more = stage_reduce(items, a.work, a.budget_s)
+        ok, fail, more = stage_reduce(items, a.work, a.budget_s, a.keep_raw)
         log.info("Stufe 1: %d geladen, %d fehlgeschlagen", ok, fail)
         if fail:
             return 1
