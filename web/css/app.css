@@ -720,3 +720,8 @@ body.einrichtung .klein { font-size: .8rem; }
 .lgb-vermerk a { color: inherit; }
 .hq-zeile { margin: var(--space-2) 0 0; display: flex; flex-direction: column; gap: var(--space-1); align-items: flex-start; }
 .hq-zeile button[aria-pressed="true"] { font-weight: 600; }
+
+/* Rechtsklick-Auskunft (js/lage/kontext.js) */
+.ctx-liste { display: grid; grid-template-columns: max-content 1fr; gap: 2px var(--space-3); margin: var(--space-2) 0; font-size: var(--fs-sm); }
+.ctx-liste dt { color: var(--fg-muted); font-size: var(--fs-xs); padding-top: 2px; }
+.ctx-liste dd { margin: 0; overflow-wrap: anywhere; }
