@@ -39,6 +39,17 @@ def _shp(path: Path, polys: list[list[list[tuple[float, float]]]]) -> None:
     path.write_bytes(head + body)
 
 
+def _dbf(path: Path, gfk: list[str]) -> None:
+    """Minimale .dbf mit den Spalten AGS (8), GFK (10), OI (16) – nur zum Prüfen, dass genau GFK gelesen wird."""
+    felder = [("AGS", 8), ("GFK", 10), ("OI", 16)]
+    rlen = 1 + sum(n for _, n in felder)
+    hlen = 32 + 32 * len(felder) + 1
+    kopf = struct.pack("<B3BIHH20x", 3, 126, 1, 1, len(gfk), hlen, rlen)
+    desc = b"".join(n.encode().ljust(11, b"\0") + b"C" + b"\0" * 4 + bytes([ln]) + b"\0" * 15 for n, ln in felder)
+    body = b"".join(b" " + b"07232001".ljust(8) + g.encode().ljust(10) + b"X" * 16 for g in gfk)
+    path.write_bytes(kopf + desc + b"\r" + body)
+
+
 def _quadrat(e0: float, n0: float, s: float, *, uhrzeigersinn: bool = True) -> list[tuple[float, float]]:
     """Quadrat in UTM, geschlossen; Standard Uhrzeigersinn (y nach oben) wie Außenringe im Shapefile."""
     r = [(e0, n0), (e0, n0 + s), (e0 + s, n0 + s), (e0 + s, n0), (e0, n0)]
@@ -204,14 +215,75 @@ def test_ausgabe_traegt_quellenvermerk_und_zoomgrenzen(tmp_path):
     assert m["vector_layers"][0]["id"] == "buildings"
 
 
-def test_nur_die_shp_wird_gelesen(tmp_path):
-    """Keine Sachdaten (dbf): die Datei darf fehlen."""
+def test_ohne_dbf_geht_es_ohne_klassen(tmp_path):
+    """Die .dbf darf fehlen: Umrisse kommen trotzdem, ohne Attribut klasse."""
     e, n = _irrel_utm()
     shp = tmp_path / "hu.shp"
     _shp(shp, [[_quadrat(e, n, 20.0)]])
     assert not (tmp_path / "hu.dbf").exists()
+    assert bg.read_gfk(shp) is None
     (stapel,) = list(bg.read_shp(shp))
     assert len(stapel) == 1
+    out = tmp_path / "geb.pmtiles"
+    bg.main(["--hu", str(shp), "--grenze", str(_grenze(tmp_path / "g.geojson", box(0, 0, 1, 1))), "--out", str(out)])
+    with open(out, "rb") as fh:
+        (g, k), = bg.read_buildings_klasse(Reader(MmapSource(fh)).get(15, TX, TY))[1]
+    assert k is None
+
+
+def test_klassen_aus_gfk_landen_am_richtigen_haus(tmp_path):
+    e, n = _irrel_utm()
+    shp = tmp_path / "hu.shp"
+    _shp(shp, [[_quadrat(e, n, 20.0)], [_quadrat(e + 50, n, 20.0)], [_quadrat(e + 100, n, 20.0)]])
+    _dbf(tmp_path / "hu.dbf", ["31001_1000", "31001_3041", "31001_2463"])
+    out = tmp_path / "geb.pmtiles"
+    bg.main(["--hu", str(shp), "--grenze", str(_grenze(tmp_path / "g.geojson", box(0, 0, 1, 1))), "--out", str(out)])
+    with open(out, "rb") as fh:
+        rd = Reader(MmapSource(fh))
+        merkmale = bg.read_buildings_klasse(rd.get(15, TX, TY))[1]
+        meta = rd.metadata()
+    by_x = {bg.first_ring_points(g)[0][0]: k for g, k in merkmale}
+    assert [by_x[x] for x in sorted(by_x)] == ["wohnen", "religion", "garage"]      # Reihenfolge West nach Ost wie im Shapefile
+    assert meta["vector_layers"][0]["fields"]["klasse"] == "String"
+
+
+def test_klassen_bleiben_bei_ausschnitt_ausgerichtet(tmp_path):
+    """Datensätze außerhalb des Ausschnitts werden übersprungen, die dbf-Zeile bleibt trotzdem die richtige."""
+    e, n = _irrel_utm()
+    shp = tmp_path / "hu.shp"
+    _shp(shp, [[_quadrat(e + 30000, n, 20.0)], [_quadrat(e, n, 20.0)]])
+    _dbf(tmp_path / "hu.dbf", ["31001_1000", "31001_3021"])
+    lon, lat = bg.tile_lonlat(15, TX, TY, 2048, 2048)
+    out = tmp_path / "geb.pmtiles"
+    bg.main(["--hu", str(shp), "--grenze", str(_grenze(tmp_path / "g.geojson", box(0, 0, 1, 1))), "--out", str(out),
+             "--bbox", str(lon - 0.01), str(lat - 0.01), str(lon + 0.01), str(lat + 0.01)])
+    with open(out, "rb") as fh:
+        ((g, k),) = bg.read_buildings_klasse(Reader(MmapSource(fh)).get(15, TX, TY))[1]
+    assert k == "oeffentlich"
+
+
+@pytest.mark.parametrize("gfk,soll", [
+    ("31001_1000", "wohnen"), ("31001_1022", "wohnen"), ("31001_2000", "wirtschaft"), ("31001_2740", "wirtschaft"),
+    ("31001_2463", "garage"), ("31001_2461", "garage"), ("51009_1610", "ueberdachung"), ("31001_2523", "technik"),
+    ("31001_2611", "technik"), ("51001_1001", "technik"), ("31001_3021", "oeffentlich"), ("31001_3072", "oeffentlich"),
+    ("31001_3041", "religion"), ("31001_3081", "religion"), ("31001_3043", "religion"), ("51006_1440", "sonst"),
+    ("", "sonst"), (None, "sonst"), ("müll", "sonst"), ("31001_x", "sonst"),
+])
+def test_klasse_von_gfk(gfk, soll):
+    assert bg.klasse_von_gfk(gfk) == soll
+
+
+def test_alle_klassen_im_mapping_sind_bekannt():
+    assert set(bg.CODE_KLASSE.values()) <= set(bg.KLASSEN)
+
+
+def test_osm_merkmale_tragen_keine_klasse(tmp_path):
+    core = tmp_path / "core.pmtiles"
+    _osm_archiv(core, [(3000, 3000)])
+    tiles = defaultdict(list)
+    bg.add_osm(core, {15}, box(100, 0, 101, 1), tiles)
+    ((g, k),) = bg.read_buildings_klasse(bg.tile_bytes(tiles[(15, TX, TY)]))[1]
+    assert k is None
 
 
 def test_ausschnitt_filtert(tmp_path):

@@ -183,12 +183,12 @@ Bauen (einmal je Datenstand der Hausumringe, rund 5 Minuten, 2 GB Arbeitsspeiche
 
 ```
 curl -fLO https://geobasis-rlp.de/data/hu/current/zip/HAUSUMRINGE_RP.zip     # 334 MB, ganz Rheinland-Pfalz
-unzip -o HAUSUMRINGE_RP.zip gebaeude_hu.shp                                  # die .dbf (Sachdaten) wird nicht gebraucht
+unzip -o HAUSUMRINGE_RP.zip 'gebaeude_hu.*'                                  # .shp und .dbf (aus der .dbf wird nur die Spalte GFK gelesen)
 python tools/build_gebaeude_rlp.py --hu gebaeude_hu.shp --core web/tiles/core.pmtiles --ring web/tiles/ring.pmtiles \
     --grenze web/geo/rlp.geojson --out web/tiles/gebaeude.pmtiles
 ```
 
-Datenschutz: Das Werkzeug liest nur die Umrisse (`.shp`); Gemeindeschlüssel, Objektkennung, Gebäudefunktion und Kachelnummer der Quelle bleiben unberührt, Adressen enthält die Quelle nicht. Fehlt die Datei, zeichnet die Karte wie vorher die OSM-Gebäude aus Kern und Ring. Vermerk steht unter der Karte, auf der Quellenseite und in den Fußzeilen; das Jahr (`GEB_JAHR` in `web/js/lage/zustand.js`) ist das Jahr des Datenbezugs und bei jedem neuen Bezug anzupassen.
+Gebäudefunktion: Aus der `.dbf` liest das Werkzeug nur die Spalte `GFK` (ADV-Codeliste, z. B. `31001_3041` Kirche) und ordnet sie in `klasse_von_gfk()` acht Klassen zu (wohnen, wirtschaft, garage, ueberdachung, technik, oeffentlich, religion, sonst). Das Attribut `klasse` steht im MVT neben `kind`; die Farben stehen in `web/js/gebaeude-farben.js` (ein Test hält beide Listen gleich), die Zeichenerklärung zeigt sie. Gebäude aus OSM außerhalb des Landes haben keine Klasse und bleiben weinrot. Der Code `31001_2000` heißt „Gebäude für Wirtschaft oder Gewerbe“, ist aber nach der Größe (Median 56 m²) überwiegend Schuppen und Scheune; die Karte nennt es deshalb so in der Erklärung. Datenschutz: Gemeindeschlüssel, Objektkennung und Kachelnummer der Quelle bleiben unberührt, Adressen und Eigentümer enthält die Quelle nicht. Fehlt die `.dbf`, entsteht die Datei ohne Klassen; fehlt die Datei, zeichnet die Karte wie vorher die OSM-Gebäude aus Kern und Ring. Vermerk steht unter der Karte, auf der Quellenseite und in den Fußzeilen; das Jahr (`GEB_JAHR` in `web/js/lage/zustand.js`) ist das Jahr des Datenbezugs und bei jedem neuen Bezug anzupassen.
 
 ## Live, Stau, Icons
 

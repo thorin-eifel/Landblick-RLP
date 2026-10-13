@@ -1,5 +1,6 @@
 import { RLP_UMRISS } from './rlp-umriss.js';
 import { map } from './zustand.js';
+import { BUILDING, buildingFill } from '../gebaeude-farben.js';
 
 // Hauptstraßen (Autobahn, Bundes-/Landstraße, Anschlussstellen, auch Brücken und Tunnel) mit 1-px-Kontur in Schwarz:
 // Autobahnen blau, alle anderen Hauptstraßen gelborange. Die Konturen des Stils sind Linien neben der Straße
@@ -44,7 +45,6 @@ export const INK = { light: '#111111', dark: '#f4f4f4' };
 export const WATER_INK = { light: '#0b4f9c', dark: '#8cc4ff' };   // Gewässernamen immer blau
 export const HALO = { light: 'rgba(255,255,255,0.95)', dark: 'rgba(16,16,16,0.95)' };
 export const BUILDING_OPACITY = 0.4; // 60 % Transparenz, damit Relief und Straßen durchscheinen
-export const BUILDING = { light: '#800020', dark: '#9c2a4b' };
 export const GREEN = { light: '#9fc98a', dark: '#2f6a43' };
 // Flächenfarben nach OSM-Klasse (Farbe, Deckkraft); dezent, damit Relief, Straßen und Ereignisse führen
 // Farben nach der Natur: Wald dunkles Blattgrün, Wiese frisches Gelbgrün, Weide/Rasen satteres Grün, Busch olivgrau,
@@ -127,7 +127,7 @@ export function labelsAndBuildings(dark) {
       out = { ...out, layout };
     }
     if (l.id === 'buildings') {
-      out = { ...out, minzoom: 13, paint: { ...out.paint, 'fill-color': BUILDING[k], 'fill-outline-color': dark ? '#5a1830' : '#4d0013',
+      out = { ...out, minzoom: 13, paint: { ...out.paint, 'fill-color': buildingFill(k), 'fill-outline-color': dark ? '#5a1830' : '#4d0013',
         'fill-opacity': BUILDING_OPACITY } };
     } else if (l.id === 'landuse_park') {
       // Wald, Wiese, Acker und Co. zeichnet landUseLayers() nach Klasse; hier bleibt, was der Stil sonst noch kennt

@@ -76,6 +76,7 @@ main { flex: 1; width: 100%; max-width: var(--frame, 1440px); margin: 0 auto; pa
 .controls legend { float: left; margin-right: var(--space-2); color: var(--fg-muted); padding: 0; }
 .controls label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
 .swatch { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.geb-sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; vertical-align: -1px; margin-right: 2px; border: 1px solid var(--border-strong); }
 .map-note { position: absolute; left: var(--space-3); bottom: var(--space-3); font-size: var(--fs-xs); color: var(--fg-muted); background: var(--material-thick); padding: 2px 8px; border-radius: var(--radius-full); max-width: 80%; }
 
 /* Popup */
