@@ -25,6 +25,7 @@ import { pushMapData } from './messnetz.js';
 import { windroseUpdate } from './mittelalter.js';
 import { INFRA_LAYER_IDS } from './orte.js';
 import { showPopup } from './popup.js';
+import { initKontext } from './kontext.js';
 import { initSearch } from './suche-karte.js';
 import { applyWind, fillTempLegend, showFlowWind, trackLegendBottom } from './wetterkarte.js';
 import { CORE_URL, GEB_JAHR, GEB_URL, RING_URL, START_VIEW, SYMBOL_LAYERS, TILES_URL, light, map, gebOk, reduceMotion, reliefOk, ripples, setBasemapOk, setCoreOk, setFlow, setGebOk, setKlippenOk, setLight, setMap, setMapReady, setPopup, setReliefOk, setRingOk, setRipples, setSweep, setWind, setWindLow, state, sweep, wind, windLow } from './zustand.js';
@@ -207,6 +208,7 @@ export async function initMap() {
   setMapReady(true);
   map.on('move', windroseUpdate);
   initSearch();
+  initKontext();
   if (location.hash === '#debug') debugHook(map); // nur für Prüfungen im Browser
   setRipples(createRipples(map, { center: state.meta.center, radiusKm: state.meta.radius_km, fadeKm: VIG_FADE_KM, vig: vig?.faktor, onSizzle: sizzleSound }));
   // Untere Schicht zuerst anlegen, damit die obere (reiner Modellwind) darüber liegt
