@@ -86,3 +86,27 @@ def test_kachel_wird_geschrieben_und_gelesen(tmp_path):
     h = read_png(out / "16" / str(x) / f"{y}.png")
     assert h.shape == (256, 256) and abs(float(h.mean()) - 321.5) < 0.07
     assert H.work((str(raw), str(out), 16, x + 40, y, 16, False, False))[1] == 0      # weit weg: keine Landesdaten, keine Kachel
+
+
+def test_elternfuellung_ohne_stufe_an_elterngrenze(tmp_path):
+    """Kindkacheln unter verschiedenen Eltern müssen an der Grenze nahtlos anschließen (sonst Linie in der Schummerung)."""
+    k, px, py = 0.5, 8500, 5500                       # 0,5 m je Elternpixel in beide Richtungen
+    jj, ii = np.mgrid[0:256, 0:256]
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            h = 300 + k * (dx * 256 + ii + 0.5) + k * (dy * 256 + jj + 0.5)      # lokal gezählt, Terrarium reicht nur bis 32 km
+            H.write_tile(tmp_path / "14" / str(px + dx) / f"{py + dy}.png", h.astype(np.float32))
+    a = H.parent_fill(tmp_path, 15, 2 * px + 1, 2 * py, 256)           # rechts am Rand der Eltern
+    b = H.parent_fill(tmp_path, 15, 2 * px + 2, 2 * py, 256)           # links in der Nachbarelternkachel
+    step = b[:, 0] - a[:, -1]
+    assert np.allclose(step, k / 2, atol=0.02), step[:3]                # ein Kindpixel = halber Elternpixel
+    # absolute Lage: Kindpixel (0, 0) der Kachel a liegt bei Elternkoordinate (px*256 + 128 + 0.25)
+    want = 300 + k * (128 + 0.25) + k * 0.25
+    assert abs(float(a[0, 0]) - want) < 0.02
+
+
+def test_elternfuellung_fehlende_nachbarn_ergibt_keine_nan(tmp_path):
+    H.write_tile(tmp_path / "14" / "100" / "100.png", np.full((256, 256), 200.0, np.float32))
+    f = H.parent_fill(tmp_path, 15, 200, 200, 256)
+    assert f is not None and not np.isnan(f).any() and abs(float(f.mean()) - 200) < 0.05
+    assert H.parent_fill(tmp_path, 15, 2, 2, 256) is None
