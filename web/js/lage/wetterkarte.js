@@ -4,7 +4,7 @@ import { fillLegend as fillMedLegend } from '../medieval.js';
 import { $, fmtTime } from '../util.js';
 import { baseAnchor } from './geometrie.js';
 import { COMPASS, windroseUpdate } from './mittelalter.js';
-import { RADAR_OPACITY, abflussOk, basemapOk, flow, gebOk, map, mapReady, ripples, state, wind, windLow } from './zustand.js';
+import { RADAR_OPACITY, basemapOk, flow, gebOk, map, mapReady, ripples, state, wind, windLow } from './zustand.js';
 
 // Radar: ein Bild vom eigenen Server (radar.png), vom Collector aus dem DWD-WMS geholt; hier wird nur angezeigt
 export function applyRadar() {
@@ -61,7 +61,6 @@ export function applyLegends() {
     radar: state.layers.radar && !!state.radar?.time, wind: (state.layers.wind || state.layers.windlow) && !!state.wind?.grid, windlow: state.layers.windlow && !!state.terrain,
     flow: state.layers.flow && basemapOk, blitz: state.layers.blitz && !!state.blitz?.time, wxst: state.layers.wxst && !!state.env?.stations?.some((x) => x.kind === 'weather'), tank: state.layers.tank && !!state.fuel?.stations?.length, traffic: state.layers.traffic || state.layers.transit, air: state.layers.air, medieval: state.layers.medieval,
     warn: (state.layers.warning || state.layers.flood) && !state.layers.medieval, buildings: state.layers.buildings && gebOk && !state.layers.medieval,
-    abfluss: (state.layers.abfluss || state.layers.senken) && abflussOk && !state.layers.medieval,
     veg: !state.layers.medieval && VEG_SCHALTER.some((n) => state.layers[n]),
   });
   if (state.layers.medieval) fillMedLegend(document.querySelector('#map-legend [data-legend="medieval"]'));

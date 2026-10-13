@@ -12,9 +12,7 @@ import { placeLgb } from './lgb.js';
 import { BUILDING_OPACITY, LABEL_SKIP, LAND, cliffLayers, labelsAndBuildings, ortsnamenUebersicht, landUseLayers, mainRoad, signLayers, waterEdges } from './stil.js';
 import { applyFlow, applyLegends, fillTempLegend, placeRadar } from './wetterkarte.js';
 import { BUILDING_KLASSEN } from '../gebaeude-farben.js';
-import { ABFLUSS_KLASSEN } from '../abfluss-farben.js';
-import { abflussLayers } from './abfluss.js';
-import { abflussOk, basemapOk, coreOk, flow, gebOk, light, klippenOk, map, mapReady, reliefOk, ringOk, state } from './zustand.js';
+import { basemapOk, coreOk, flow, gebOk, light, klippenOk, map, mapReady, reliefOk, ringOk, state } from './zustand.js';
 
 /** Farbfeld mit Text als Zeile der Zeichenerklärung (Farbe per CSSOM, die CSP verbietet Inline-Styles im Markup). */
 function legendZeile(farbe, text, deckkraft = 1) {
@@ -36,7 +34,6 @@ function fillFlaechenLegenden(dark) {
   const k = dark ? 'dark' : 'light';
   $('#legend-geb')?.replaceChildren(...BUILDING_KLASSEN.filter(([id]) => id !== 'sonst').map(([, titel, c]) => legendZeile(c[k], titel, BUILDING_OPACITY + 0.4)));
   $('#legend-veg')?.replaceChildren(...VEG_LEGENDE.map(([id, titel]) => legendZeile(LAND[k][id][0], titel, Math.min(1, LAND[k][id][1] + 0.3))));
-  $('#legend-abfluss')?.replaceChildren(...ABFLUSS_KLASSEN.map(({ farbe, label }) => legendZeile(farbe[k], `Einzugsgebiet ${label}`)));
   const pal = palette();
   $('#legend-warn')?.replaceChildren(...['critical', 'warning', 'notice', 'info'].map((id) => legendZeile(pal[id], SEV[id].label)));
 }
@@ -63,7 +60,6 @@ export function applyBasemap() {
   // Klippen weit oben: über Relief, Höhenlinien, Vegetation, Gewässer und Straßen, unter den Beschriftungen
   const lab0 = styled.findIndex((x) => x.layout?.['text-font'] && !x.id.startsWith('land-'));
   styled.splice(lab0 < 0 ? styled.length : lab0, 0, ...cliffLayers(dark ? 'dark' : 'light', dark, map.hasImage('cliff-tick'), klippenOk));
-  if (abflussOk) styled.splice(lab0 < 0 ? styled.length : lab0, 0, ...abflussLayers(dark));   // Abflussbahnen und Senken: wie die Klippen vor den Beschriftungen
   waterEdges(styled, dark);
   styled.push(...peakLayers(dark, map.hasImage('peak-tri')));   // Gipfel oben auf den Beschriftungen des Stils
   if (med) styled = medievalize(styled);
@@ -206,8 +202,6 @@ export function applyBaseToggles() {
     else if (/^bm-land-military-/.test(l.id)) key = 'protMil';
     else if (/^bm-land-bound-/.test(l.id)) key = BOUND_KEY[l.id.slice('bm-land-bound-'.length).replace(/-(rlp|glow\d)$/, '')];
     else if (l.id.startsWith('bm-land-')) key = LAND_KEY[l.id.slice('bm-land-'.length).replace(/-pat$/, '')];
-    else if (/^bm-abfluss-/.test(l.id)) key = 'abfluss';
-    else if (l.id === 'bm-senken-circle') key = 'senken';
     else if (/^bm-buildings(-line)?(-ring)?$/.test(l.id)) key = 'buildings';
     else if (l.id.startsWith('bm-sign-')) key = 'signs';
     else key = roadKey(l.id);

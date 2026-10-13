@@ -34,7 +34,7 @@ Das Menü *Ebenen* ist nach Themen gegliedert; jede Gruppe lässt sich als Ganze
 |---|---|
 | **Warnungen und Lage** | Warnungen (NINA, DWD), Hochwasser, Brandverdacht (Satellit), Erdbeben, Blitze, erhöhte Strahlung |
 | **Wetter und Luft** | Regenradar mit Tropfen-Animation, Wind in 10 m Höhe, Wind im Gelände (Schätzung für Täler), Wetterstationen (DWD, KMI), Luftqualität |
-| **Gewässer** | Pegel, Wehre und Schleusen, Wasserbewegung, Abflussbahnen und Senken bei Starkregen |
+| **Gewässer** | Pegel, Wehre und Schleusen, Wasserbewegung |
 | **Verkehr** | Straßenverkehr und Baustellen, ÖPNV-Verspätungen, Luftverkehr, Tankstellen mit Preisen |
 | **Straßen und Bahn** | das Straßennetz der Karte nach Art, Bahnstrecken, Haltestellen, Straßenschilder, Brücken und Tunnel |
 | **Gemeinwesen und Infrastruktur** | Notfallpunkte, Schulen und Rathäuser, Ladesäulen, Windräder |
@@ -55,8 +55,6 @@ Einige Ebenen verdienen ein Wort.
 **Luftverkehr** zeigt zivile Flugzeuge, militärische (violett, im Ring) und Hubschrauber, aus dem Community-Netzwerk adsb.lol. Gespeichert wird nur die Klasse, nie Kennzeichen oder Kennung. Die Schweife ziehen sich aus Positionen, die der Browser in dieser Sitzung gesehen hat; sie werden nie gespeichert. Läuft ein Flugzeug, kreist ein Radarstrahl (nicht bei „weniger Bewegung“ im System).
 
 **Wasserbewegung.** Wandernde Striche und Pfeile zeigen die Fließrichtung entlang der Gewässerlinien. Das Tempo ist eine Klasse (Bach, Fluss, gestaut), kein gemessener Abfluss. Mosel und Saar sind staugeregelt und bewegen sich kaum. Auf Seen und Teichen ziehen Wellenzeichen mit dem Wind.
-
-**Starkregen und Abfluss (Geländeschätzung).** Zwei Ebenen im Thema Gewässer. Die *Abflussbahnen* zeigen, wohin das Wasser vom Hang läuft; Breite und Farbe folgen der Größe des Einzugsgebiets, unter 25 Hektar gestrichelt. Die *Senken* zeigen Stellen, an denen sich Wasser sammelt. Beides ist aus dem Gelände gerechnet (Höhenmodell mit rund 6 Metern Auflösung), nicht gemessen, und kein Gefahrenkartenwerk. Durchlässe, Brücken, Gräben und Kanalisation kennt die Rechnung nicht; Teiche, Steinbrüche und Straßendämme erscheinen als Senken. Die Schaltfläche *Amtliche Überflutungsfläche HQextrem (12-2025) dazuschalten* legt die amtliche Karte des Landes daneben. HQextrem beschreibt Hochwasser an Gewässern, die Abflussbahnen den Wasserlauf abseits davon; beides wird nebeneinander gezeigt und nicht verrechnet.
 
 **Gebäude.** Standardmäßig an, ab Kartenstufe 13 große, ab 14 alle. In Rheinland-Pfalz stammen die Umrisse aus den amtlichen Hausumringen, außerhalb aus OpenStreetMap. Die Ebene *Gebäude nach Funktion* färbt die Umrisse nach acht Klassen (wohnen, Wirtschaft, Garage, Überdachung, Technik, öffentlich, Religion, sonstige); die Zeichenerklärung nennt sie. Hausnummern erscheinen ab Stufe 16, aber nur dort, wo OpenStreetMap sie kennt, und es ist keine Adresssuche.
 

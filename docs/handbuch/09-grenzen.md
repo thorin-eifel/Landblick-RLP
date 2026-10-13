@@ -13,7 +13,7 @@ Eine Alpha-Fassung ist ehrlich, wenn sie sagt, was nicht geht. Dieses Kapitel sa
 
 ## 9.2 Bekannte Einschränkungen
 
-- **Kartenarchive nicht im Paket.** Basiskarte, Gebäude, Relief und Abfluss sind mehrere Gigabyte groß und werden nicht mitgeliefert. Ohne sie zeigt die Seite Daten, aber keine Karte. Bau: Kapitel 2 und `docs/betrieb.md`. Der Installer baut auf Wunsch nur den Kartenteil (`--karte voll`) und fragt vorher.
+- **Kartenarchive nicht im Paket.** Basiskarte, Gebäude und Relief sind mehrere Gigabyte groß und werden nicht mitgeliefert. Ohne sie zeigt die Seite Daten, aber keine Karte. Bau: Kapitel 2 und `docs/betrieb.md`. Der Installer baut auf Wunsch nur den Kartenteil (`--karte voll`) und fragt vorher.
 - **Symbole.** Die uxwing-Symbole dürfen nicht weiterverbreitet werden und sind nicht im Paket; `tools/fetch_icons.sh` holt sie.
 - **Keine Bildschirmfotos.** Dieses Handbuch beschreibt die Oberfläche in Worten. Ein Lauf in der Bauumgebung hat weder Kartenarchive noch Echtdaten.
 - **Betriebsanleitung teilweise veraltet.** In `docs/betrieb.md` stehen noch Abschnitte aus der Zeit des 120-Kilometer-Kreises. Maßgeblich ist die Region in `region.yaml` (Rheinland-Pfalz plus 80 km).

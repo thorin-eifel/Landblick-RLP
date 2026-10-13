@@ -49,7 +49,7 @@ Die Karte liest ihre Kacheln per HTTP Range aus einem einzigen Archiv. Das ist d
 
 ## 5.4 Die Kartenbasis
 
-Die Karte nutzt keine Kacheln von Dritten. Die Basiskarte ist ein Ausschnitt der Protomaps-Basiskarte (OpenStreetMap-Daten, ODbL), dazu kommen Archive für Gebäudedetails, ein Höhenrelief, Felswände aus dem DGM1, ein Gewässernetz und die Abflussbahnen aus der Geländeschätzung. Die Archive sind groß (der gesamte Satz liegt bei mehreren Gigabyte), werden nicht im Repository geführt und mit `tools/build_region_tiles.py` und den weiteren `tools/build_*.py` erzeugt. Fehlt eine Datei, bleibt die zugehörige Ebene aus; die Karte läuft trotzdem.
+Die Karte nutzt keine Kacheln von Dritten. Die Basiskarte ist ein Ausschnitt der Protomaps-Basiskarte (OpenStreetMap-Daten, ODbL), dazu kommen Archive für Gebäudedetails, ein Höhenrelief, Felswände aus dem DGM1, ein Gewässernetz. Die Archive sind groß (der gesamte Satz liegt bei mehreren Gigabyte), werden nicht im Repository geführt und mit `tools/build_region_tiles.py` und den weiteren `tools/build_*.py` erzeugt. Fehlt eine Datei, bleibt die zugehörige Ebene aus; die Karte läuft trotzdem.
 
 ## 5.5 Technische Eckdaten
 
