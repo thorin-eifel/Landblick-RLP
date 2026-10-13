@@ -210,3 +210,46 @@ def test_backup_verify_after(settings, storage, tmp_path):
     finally:
         sys.argv = old
     assert len(list(out.glob("osint-*.sqlite.json"))) == 1
+
+
+# --- Aufräumen der Rohdaten am Ende --------------------------------------------------------------------------------------
+def _aufraeum_umgebung(tmp_path, monkeypatch, rcs, antwort):
+    monkeypatch.setattr(install, "ROOT", tmp_path)
+    (tmp_path / "tools").mkdir()
+    (tmp_path / "tools" / "rohdaten_aufraeumen.py").write_text("")
+    (tmp_path / "_scratch" / "dgm1").mkdir(parents=True)
+    aufrufe = []
+
+    def fake_run(cmd, dry=False, check=True, cwd=None, quiet=False):
+        aufrufe.append(cmd)
+        return rcs.pop(0)
+
+    monkeypatch.setattr(install, "run", fake_run)
+    monkeypatch.setattr(install, "frage", lambda text, ja: antwort if not ja else True)
+    return aufrufe
+
+
+def test_aufraeumen_ohne_arbeitsordner_tut_nichts(tmp_path, monkeypatch):
+    monkeypatch.setattr(install, "ROOT", tmp_path)
+    monkeypatch.setattr(install, "run", lambda *a, **k: pytest.fail("darf nichts starten"))
+    install.schritt_aufraeumen(Path("py"), "127.0.0.1", 8080, False, False)
+
+
+def test_aufraeumen_loescht_nur_nach_bestandener_pruefung_und_ja(tmp_path, monkeypatch):
+    aufrufe = _aufraeum_umgebung(tmp_path, monkeypatch, [0, 0], True)
+    install.schritt_aufraeumen(Path("py"), "0.0.0.0", 9090, False, False)
+    assert len(aufrufe) == 2 and "--ja" not in aufrufe[0] and aufrufe[1][-1] == "--ja"
+    assert "http://127.0.0.1:9090/" in aufrufe[0]
+
+
+def test_aufraeumen_antwort_nein_laesst_alles_liegen(tmp_path, monkeypatch):
+    aufrufe = _aufraeum_umgebung(tmp_path, monkeypatch, [0], False)
+    install.schritt_aufraeumen(Path("py"), "127.0.0.1", 8080, False, False)
+    assert len(aufrufe) == 1 and "--ja" not in aufrufe[0]
+
+
+@pytest.mark.parametrize("rc", [1, 2])
+def test_aufraeumen_pruefung_gescheitert_fragt_nicht_und_loescht_nicht(tmp_path, monkeypatch, rc):
+    aufrufe = _aufraeum_umgebung(tmp_path, monkeypatch, [rc], True)
+    install.schritt_aufraeumen(Path("py"), "127.0.0.1", 8080, True, False)
+    assert len(aufrufe) == 1 and "--ja" not in aufrufe[0]
