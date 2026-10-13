@@ -251,10 +251,35 @@ def fall_strokes(poly, gfield, rng, spacing: float = 3.5, step: float = 1.1, n_s
     return [path[i, :c] for i, c in enumerate(cnt) if c >= 3]
 
 
+def _slots(filled: np.ndarray, bad: np.ndarray, depth_min: float, area_min: float) -> np.ndarray:
+    """Maske schmaler Schluchten und Spalten: tief unter der Umgebung und von steilen Wänden gesäumt."""
+    from scipy import ndimage as ndi
+    from skimage import morphology
+    size = 2 * int(round(5.0 / RES)) + 1                      # Fenster 11 m: Spalten bis rund 10 m Breite
+    depth = ndi.grey_closing(filled, size=(size, size)) - filled
+    floor = depth >= depth_min
+    if bad.any():
+        floor &= ~ndi.binary_dilation(bad, iterations=3)
+    if not floor.any():
+        return np.zeros(filled.shape, bool)
+    gy, gx = np.gradient(ndi.gaussian_filter(filled, 0.7 / RES, mode="nearest"), RES)
+    steep = np.degrees(np.arctan(np.hypot(gx, gy))) >= 40.0
+    near = ndi.binary_dilation(floor, structure=morphology.disk(max(1, int(round(2.0 / RES)))))
+    m = floor | (near & steep)
+    m = morphology.binary_closing(m, morphology.disk(max(1, int(round(2.0 / RES)))))
+    m = morphology.remove_small_holes(m, int(30 / RES ** 2))
+    return morphology.remove_small_objects(m, int(area_min / RES ** 2))
+
+
 def derive(h: np.ndarray, slope_hi: float = 55.0, slope_lo: float = 47.0, sigma: float = 1.5, dir_sigma: float = 4.0,
-           min_area: float = 200.0, min_drop: float = 5.0, simplify_m: float = 0.8, spacing: float = 3.5, seed: int = 7) -> list[dict]:
+           min_area: float = 200.0, min_drop: float = 5.0, simplify_m: float = 0.8, spacing: float = 3.5, seed: int = 7,
+           slot_depth: float = 5.0, slot_area: float = 40.0) -> list[dict]:
     """Wandflächen eines Höhenfelds (1-m-Raster, Zeile 0 = Nord). Koordinaten lokal in m: x Ost, y Nord, Ursprung links unten.
-    Je Wand: poly (shapely, mit Löchern), drop, kante (Linienliste), schraffur (Linienliste)."""
+    Je Wand: poly (shapely, mit Löchern), drop, kante (Linienliste), schraffur (Linienliste).
+    Schmale Schluchten und Spalten (2 bis 10 m breit, Teufelsschlucht) gehen im Neigungsfilter unter: σ glättet sie weg, die
+    Öffnung und die Mindestfläche schneiden sie ab. Darum zusätzlich Schlucht-Erkennung (slot_depth > 0): Tiefe unter der
+    Umgebung (Closing 11 x 11 m minus Höhe) ab slot_depth m, dazu die steilen Pixel (ab 40°, σ 0,7 m) in 2 m Umgebung; beides
+    wird verbunden und mit den Steilflächen vereinigt."""
     from scipy import ndimage as ndi
     from shapely.geometry import Polygon
     from skimage import morphology
@@ -271,23 +296,31 @@ def derive(h: np.ndarray, slope_hi: float = 55.0, slope_lo: float = 47.0, sigma:
     del gx, gy
     steep = apply_hysteresis_threshold(slope, slope_lo, slope_hi)
     del slope
+    if steep.any():
+        steep = morphology.remove_small_holes(steep, int(60 / RES ** 2))
+        steep = morphology.binary_opening(steep, morphology.disk(max(1, int(round(1.5 / RES)))))
+        steep = morphology.remove_small_objects(steep, int(min_area / RES ** 2))
+    if slot_depth > 0:
+        steep = steep | _slots(filled, bad, slot_depth, slot_area)
     if not steep.any():
         return []
-    steep = morphology.remove_small_holes(steep, int(60 / RES ** 2))
-    steep = morphology.binary_opening(steep, morphology.disk(max(1, int(round(1.5 / RES)))))
-    steep = morphology.remove_small_objects(steep, int(min_area / RES ** 2))
     lab, n_lab = ndi.label(steep)
     if n_lab == 0:
         return []
     g4 = ndi.gaussian_filter(filled, dir_sigma / RES, mode="nearest")
     g4y, g4x = np.gradient(g4, RES)                         # g4y: je Zeile (nach Süden)
+    g1y, g1x = np.gradient(ndi.gaussian_filter(filled, 1.0 / RES, mode="nearest"), RES)   # für schmale Schluchten: Striche quer zur Spalte
 
     def height(pts: np.ndarray) -> np.ndarray:
         return ndi.map_coordinates(g, [rows - pts[:, 1] / RES - 0.5, pts[:, 0] / RES - 0.5], order=1, mode="nearest")
 
-    def gfield(pts: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-        rc = [rows - pts[:, 1] / RES - 0.5, pts[:, 0] / RES - 0.5]
-        return (ndi.map_coordinates(g4x, rc, order=1, mode="nearest"), -ndi.map_coordinates(g4y, rc, order=1, mode="nearest"))
+    def field(fx, fy):
+        def gfield(pts: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+            rc = [rows - pts[:, 1] / RES - 0.5, pts[:, 0] / RES - 0.5]
+            return (ndi.map_coordinates(fx, rc, order=1, mode="nearest"), -ndi.map_coordinates(fy, rc, order=1, mode="nearest"))
+        return gfield
+
+    gfield, gfield_narrow = field(g4x, g4y), field(g1x, g1y)
 
     rng = np.random.default_rng(seed)
     out = []
@@ -307,7 +340,7 @@ def derive(h: np.ndarray, slope_hi: float = 55.0, slope_lo: float = 47.0, sigma:
             if pg.is_empty or pg.geom_type != "Polygon":
                 continue
             out.append({"poly": pg, "drop": round(drop, 1), "kante": crest_lines(pg, height),
-                        "schraffur": fall_strokes(pg, gfield, rng, spacing=spacing)})
+                        "schraffur": fall_strokes(pg, gfield_narrow if 2 * pg.area / max(pg.length, 1e-9) <= 5.0 else gfield, rng, spacing=spacing)})
     return out
 
 
@@ -432,6 +465,7 @@ def main() -> int:
     ap.add_argument("--sigma", type=float, default=1.5, help="Glättung für die Neigung in m")
     ap.add_argument("--min-area", type=float, default=200.0, help="kleinste Wandfläche in m²")
     ap.add_argument("--min-drop", type=float, default=5.0, help="kleinste Wandhöhe in m")
+    ap.add_argument("--slot-depth", type=float, default=5.0, help="Mindesttiefe schmaler Schluchten in m (0 = Erkennung aus)")
     ap.add_argument("--spacing", type=float, default=3.5, help="Abstand der Schraffurstriche in m")
     ap.add_argument("--simplify", type=float, default=0.8, help="Vereinfachung der Umrisse in m")
     ap.add_argument("--jobs", type=int, default=max(1, min(4, (os.cpu_count() or 2) - 1)))
@@ -488,7 +522,7 @@ def main() -> int:
     if not core_tiles:
         log.error("keine Rohkacheln vorhanden")
         return 1
-    kw = dict(slope_hi=a.slope, slope_lo=a.low, sigma=a.sigma, min_area=a.min_area, min_drop=a.min_drop, simplify_m=a.simplify, spacing=a.spacing)
+    kw = dict(slope_hi=a.slope, slope_lo=a.low, sigma=a.sigma, min_area=a.min_area, min_drop=a.min_drop, simplify_m=a.simplify, spacing=a.spacing, slot_depth=a.slot_depth)
     es, ns = [k[0] for k in core_tiles], [k[1] for k in core_tiles]
     jobs = []
     for e0 in range(min(es) - min(es) % a.chunk, max(es) + 1, a.chunk):
@@ -515,7 +549,7 @@ def main() -> int:
         "attribution": "Wandflächen abgeleitet aus dem DGM1: © GeoBasis-DE / LVermGeoRP, dl-de/by-2-0 [Daten bearbeitet]",
         "zoom": TILE_Z, "layers": ["wand", "kante", "schraffur"], "attributes": {"drop": "Wandhöhe in m (2.–98. Perzentil der Höhen in der Fläche)"},
         "params": {"slope_deg": a.slope, "low_deg": a.low, "sigma_m": a.sigma, "min_area_m2": a.min_area, "min_drop_m": a.min_drop,
-                   "spacing_m": a.spacing, "simplify_m": a.simplify},
+                   "spacing_m": a.spacing, "simplify_m": a.simplify, "slot_depth_m": a.slot_depth},
         "walls": len(items), "strokes": strokes, "tiles": n,
     }
     (a.out / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
