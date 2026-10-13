@@ -11,6 +11,9 @@ export const ABFLUSS_LAYER_IDS = ['bm-abfluss-klein', 'bm-abfluss-gross', 'bm-se
 export function abflussLayers(dark) {
   const m = dark ? 'dark' : 'light';
   const breite = (basis) => ['interpolate', ['linear'], ['zoom'], 9, basis * 0.5, 12, basis, 14, basis * 1.8, 17, basis * 3.5];
+  // Zoom muss außen stehen (MapLibre erlaubt nur eine Zoom-Interpolation je Ausdruck); die Klassenstufe wird je Zoomstufe innen gemischt.
+  const breiteK = (a, b) => ['interpolate', ['linear'], ['zoom'],
+    ...[[9, 0.5], [12, 1], [14, 1.8], [17, 3.5]].flatMap(([z, f]) => [z, ['interpolate', ['linear'], ['get', 'k'], 2, a * f, 6, b * f]])];
   const quelle = { source: 'abfluss', 'source-layer': 'abfluss' };
   return [
     { id: 'abfluss-klein', type: 'line', ...quelle, minzoom: 12, filter: ['<=', ['get', 'k'], 1],
@@ -19,7 +22,7 @@ export function abflussLayers(dark) {
     { id: 'abfluss-gross', type: 'line', ...quelle, filter: ['>=', ['get', 'k'], 2],
       layout: { 'line-cap': 'round', 'line-join': 'round', visibility: 'none' },
       paint: { 'line-color': abflussFarbe(m), 'line-opacity': 0.9,
-        'line-width': ['interpolate', ['linear'], ['get', 'k'], 2, breite(1.5), 6, breite(4.2)] } },
+        'line-width': breiteK(1.5, 4.2) } },
     { id: 'senken-circle', type: 'circle', source: 'abfluss', 'source-layer': 'senken', minzoom: 11,
       layout: { visibility: 'none' },
       paint: { 'circle-color': SENKE_FARBE[m], 'circle-opacity': 0.45, 'circle-stroke-color': SENKE_FARBE[m], 'circle-stroke-width': 1.2,
