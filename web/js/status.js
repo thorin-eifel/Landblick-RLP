@@ -59,3 +59,6 @@ initTheme($('#theme'));
 if ($('#status-body')) { status(); setInterval(status, 30000); }
 if ($('#quellen-body')) quellen();
 setInterval(tickAges, 30000);
+
+// Versionsnummer im Fuß: kommt aus data/meta.json (app.__version__); fehlt die Datei, bleibt die Stelle leer
+getJSON('data/meta.json').then((m) => { const el = $('#version'); if (el && m?.version) el.textContent = `Version ${m.version}`; }).catch(() => {});
