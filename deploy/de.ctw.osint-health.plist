@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- launchd-Job: Gesundheitsprüfung alle 10 Minuten (macOS-Pendant zu osint-health.timer).
+     Installation wie de.ctw.osint-cycle.plist (README, Abschnitt "Sammelstelle auf dem Mac"). Pfade anpassen. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>de.ctw.osint-health</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/thorin/Claude/OSINT/.venv/bin/python</string>
+    <string>tools/gesundheit.py</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/thorin/Claude/OSINT</string>
+  <key>StartInterval</key><integer>600</integer>
+  <key>StandardOutPath</key><string>/Users/thorin/Library/Logs/osint-health.log</string>
+  <key>StandardErrorPath</key><string>/Users/thorin/Library/Logs/osint-health.log</string>
+</dict>
+</plist>

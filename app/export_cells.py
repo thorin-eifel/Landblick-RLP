@@ -438,8 +438,12 @@ def write_atomic(out: Path, rel: str, raw: bytes) -> None:
     target = out / rel
     target.parent.mkdir(parents=True, exist_ok=True)
     tmp = target.with_name(f".{target.name}.tmp")
-    tmp.write_bytes(raw)
-    os.replace(tmp, target)
+    try:
+        tmp.write_bytes(raw)
+        os.replace(tmp, target)
+    except OSError:
+        tmp.unlink(missing_ok=True)   # Platte voll: halbe Temp-Datei nicht liegen lassen, die alte Zieldatei bleibt unberührt
+        raise
 
 
 def remove_stale(out: Path, keep: set[str]) -> int:

@@ -62,7 +62,7 @@ Die ursprüngliche Projektanweisung steht in `docs/projektanweisung.md` (CTW-Bez
 | R3 | Datenpipeline | fertig | [#4](https://github.com/thorin-eifel/maps/pull/4) |
 | R4 | Export und Auslieferung | fertig | [#5](https://github.com/thorin-eifel/maps/pull/5) |
 | R5 | Frontend | fertig | [#11](https://github.com/thorin-eifel/maps/pull/11) |
-| R6 | Betrieb und Härtung | offen |  |
+| R6 | Betrieb und Härtung | Dauerlauf offen |  |
 | R7 | Abnahme | offen |  |
 
 Plan und Begründung: `docs/rlp/plan.md`. Entscheidung: `docs/adr/0001-region-rlp.md`.
@@ -71,7 +71,7 @@ Plan und Begründung: `docs/rlp/plan.md`. Entscheidung: `docs/adr/0001-region-rl
 
 - Quellen im Register: 47, davon aktiv: 43
 - Sammler (Module in `app/collectors/`): 46
-- Tests: 502 Python, 102 JavaScript
+- Tests: 542 Python, 110 JavaScript
 
 ### Quellen und Lizenzen
 

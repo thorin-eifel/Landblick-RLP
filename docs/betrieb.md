@@ -90,7 +90,7 @@ Zeitfenster („Jetzt“, 24 Std., 7 Tage): Der Export liefert die Obermenge fü
 ### Runbook: „Collector kaputt“
 
 1. `https://<domain>/status.html` öffnen: Zustand, letzter Erfolg, Fehler in Folge, Fehlertext, letzte Läufe. Steht dort „Export erzeugt vor … Std.“ in Orange, liegt das Problem bei der Sammelstelle oder beim Upload, nicht bei einer Quelle.
-2. Auf der Sammelstelle: `tail -n 100 /var/log/osint-cycle.log`. Details einer Quelle: `.venv/bin/python -m app.collect --once --only <id> --log-level DEBUG`.
+2. Auf der Sammelstelle: `python tools/gesundheit.py` zeigt, welche Quelle in welcher Region betroffen ist. Dann `tail -n 100 /var/log/osint-cycle.log` (systemd: `journalctl -u osint-cycle -n 100`). Details einer Quelle: `.venv/bin/python -m app.collect --once --only <id> --log-level DEBUG`.
 3. Häufige Ursachen:
    - **HTTP 4xx**: Endpunkt oder Parameter geändert. Doku des Betreibers lesen, Fixture neu aufnehmen, Collector anpassen.
    - **„Schlüssel … fehlt“ / „ohne 'features'“**: Schema geändert. Der Collector rät nicht, er meldet. Fixture ersetzen, Test rot sehen, dann fixen.
@@ -100,13 +100,47 @@ Zeitfenster („Jetzt“, 24 Std., 7 Tage): Der Export liefert die Obermenge fü
 
 Bei Ausfall bleibt die Seite stehen: „Quelle nicht erreichbar seit …“, die letzten guten Daten sind sichtbar und als veraltet markiert (Chaos-Test in `tests/test_payloads_export.py`).
 
+### Gesundheitsprüfung
+
+`python tools/gesundheit.py` fasst den Zustand in einer Zeile pro Region zusammen und endet mit einem Nagios-Exit-Code: 0 ok, 1 Warnung, 2 kritisch, 3 Prüfung selbst kaputt. Die Zustände je Quelle kommen aus derselben Regel wie die Statusseite (`app/payloads.py`, gespiegelt in `web/js/rules.js`). Region ist der `region_tag` der aktiven Ereignisse einer Quelle; Quellen ohne aktive Ereignisse stehen unter „ohne“. Kritisch ist es, wenn die Datenbank oder der Export fehlt, der Export älter als 60 Minuten ist oder mindestens die Hälfte der Quellen ausgefallen ist. `--json` liefert dasselbe maschinenlesbar, die Schwellen stehen im Kopf des Skripts. Das Skript schreibt nichts.
+
+### Zeitplan
+
+Drei Wege, derselbe Inhalt: Cron (`deploy/crontab.example`), launchd auf dem Mac (`deploy/de.ctw.osint-*.plist`), systemd auf Linux (`deploy/systemd/`). Kein Docker.
+
+systemd, einmalig als root, Pfad `/opt/osint` und Benutzer `osint` in den Units anpassen:
+
+```
+cp deploy/systemd/osint-*.{service,timer} /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now osint-cycle.timer osint-backup.timer osint-health.timer
+systemctl list-timers 'osint-*'
+journalctl -u osint-cycle -n 50
+```
+
+Der Zyklus läuft alle fünf Minuten, die Sicherung um 03:15 (mit Rückspielprobe), die Gesundheitsprüfung alle zehn Minuten. Die Units laufen ohne Rechte außer Schreiben in `data/` und `web/data`. Schlägt `osint-health` mit „kritisch“ an, steht die Unit in `systemctl --failed`; eine Benachrichtigung hängt man bei Bedarf per `OnFailure=` an.
+
 ### Backup
 
-`tools/backup.py` sichert die Datenbank der Sammelstelle (Online-Backup, Integritätsprüfung, 14 Stück, Cron 03:15). Wiederherstellen: Cron pausieren, Datei als `data/osint.sqlite` zurückkopieren. Der Webspace braucht kein Backup außer dem Projektordner selbst: alles dort lässt sich mit `publish.sh --site` neu aufspielen. Ein Wiederherstellungstest gehört vor den Livegang in den Ablauf.
+`tools/backup.py` sichert die Datenbank der Sammelstelle (Online-Backup, Integritätsprüfung, 14 Stück, täglich 03:15). Zu jeder Sicherung liegt eine `.sqlite.json` mit SHA-256, Größe und Zeilenzahl je Tabelle.
+
+Wiederherstellungstest: `python tools/backup.py --verify` spielt die neueste Sicherung in einen Wegwerf-Ordner zurück, prüft Prüfsumme, `PRAGMA integrity_check`, die Zeilenzahlen gegen die Prüfsummendatei und ob die Anwendungsschicht die Kopie lesen kann. Der Test läuft nach jeder Sicherung mit und kippt bei jeder Abweichung. Das ersetzt nicht die Probe von Hand vor dem Livegang: einmal wirklich zurückspielen, `python -m app.export` laufen lassen, Seite ansehen.
+
+Wiederherstellen im Ernstfall: Zyklus pausieren (Timer stoppen oder `launchctl bootout`), neueste Sicherung als `data/osint.sqlite` zurückkopieren (alte `-wal`/`-shm`-Dateien daneben löschen), `python tools/backup.py --verify` zur Kontrolle, Zyklus wieder starten. Der Webspace braucht kein Backup außer dem Projektordner selbst: alles dort lässt sich mit `publish.sh --site` neu aufspielen.
+
+### Chaos-Tests
+
+Was automatisch geprüft wird (`tests/test_betrieb.py`, `tests/test_payloads_export.py`, `tests/test_ausfall_alle_quellen.py`): eine Quelle fällt aus, die Hälfte fällt aus, alle fallen aus, das Netz antwortet mit 503, Zeitüberschreitung, HTML statt Daten oder leerem JSON; der Export bleibt lesbar, die Statusseite zeigt „down“, nichts Altes wird gelöscht. Platte voll beim Export: Temp-Dateien werden weggeräumt, Manifest und alte Dateien bleiben unverändert, der nächste Lauf heilt. Zeitumstellung (29.03. und 25.10.2026, jeweils 01:00 UTC): Zeitfenster und Alter rechnen in UTC, Python und JavaScript haben dieselben Tests.
+
+Von Hand, vor jeder Vorführung: eine wichtige Quelle in `sources.yaml` auf `aktiv: false`, Zyklus laufen lassen, Karte ansehen. Erwartet wird die Kachel „Quelle nicht erreichbar seit …“, der Rest bleibt stehen.
 
 ### Updates
 
-Abhängigkeiten sind gepinnt (`requirements.txt`), vor Updates `pip-audit -r requirements.txt`. MapLibre liegt unter `web/vendor/` (Version 6.11.2, BSD-3-Clause, Dateiendung auf `.js` geändert, siehe `README.txt` dort). Seite geändert: `deploy/publish.sh --site`.
+Alle Abhängigkeiten sind gepinnt (`requirements.txt`, `requirements-dev.txt`, ein Test prüft das). CI führt `pip-audit` für beide Dateien und `npm audit --audit-level=high` für `desktop/` aus. Rhythmus: einmal im Monat `pip-audit` lokal, Treffer sofort, sonst gesammelt. Ablauf pro Paket: Pin in der Datei ändern, `pytest` und `node --test tests/js/*.test.mjs` laufen lassen, Branch, Pull Request. Nie mehrere Hauptversionen auf einmal. MapLibre liegt unter `web/vendor/` (Version 6.11.2, BSD-3-Clause, Dateiendung auf `.js` geändert, siehe `README.txt` dort); Updates dort von Hand und mit Blick auf die Layer-Ausdrücke (zoom-Interpolation, siehe `web/js/lage/abfluss.js`). Seite geändert: `deploy/publish.sh --site`.
+
+### Dauerlauf (R6)
+
+Gemessen wird nicht geschätzt: `tools/dauerlauf.py sample` hängt alle zehn Minuten eine Probe (Gesundheitszustand, Problemquellen, Exportalter) an `data/dauerlauf.jsonl` (launchd: `de.ctw.osint-dauerlauf.plist`). Jeder Eingriff von Hand wird mit `tools/dauerlauf.py note "…"` vermerkt, auch ein Neustart. Nach sieben Tagen erzeugt `tools/dauerlauf.py report --out docs/rlp/r6-bericht.md` den Bericht: Laufzeit, Anteile OK/Warnung/kritisch, Pausen, längste Störung je Quelle, Vermerke. Bestanden heißt: mindestens sieben Tage, keine Pause über 30 Minuten, kein Vermerk. Die Vorlage und die Reihenfolge stehen in `docs/rlp/r6-dauerlauf.md`. Schläft der Mac, entsteht eine Pause; für den Dauerlauf Ruhezustand abschalten (`caffeinate -s` oder Energiesparen-Einstellung).
 
 ## Datenschutz und Sicherheit in Kürze
 

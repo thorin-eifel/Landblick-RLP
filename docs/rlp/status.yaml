@@ -8,5 +8,5 @@ phasen:
   - { id: R3, name: Datenpipeline,                  stand: fertig,        pr: 4 }
   - { id: R4, name: Export und Auslieferung,        stand: fertig,        pr: 5 }
   - { id: R5, name: Frontend,                       stand: fertig, pr: 11 }
-  - { id: R6, name: Betrieb und Härtung,            stand: offen }
+  - { id: R6, name: Betrieb und Härtung,            stand: Dauerlauf offen }
   - { id: R7, name: Abnahme,                        stand: offen }
