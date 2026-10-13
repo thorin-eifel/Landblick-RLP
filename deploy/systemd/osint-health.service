@@ -1,0 +1,17 @@
+# Gesundheitsprüfung (tools/gesundheit.py). Exit 0 ok, 1 Warnung, 2 kritisch, 3 Prüfung selbst kaputt.
+# SuccessExitStatus=1 hält die Warnung ruhig (steht im Journal); bei kritisch gilt die Unit als fehlgeschlagen
+# und erscheint in "systemctl --failed". Eine Benachrichtigung hängt man bei Bedarf per OnFailure= an.
+[Unit]
+Description=Landblick RLP: Gesundheitsprüfung
+
+[Service]
+Type=oneshot
+User=osint
+WorkingDirectory=/opt/osint
+ExecStart=/opt/osint/.venv/bin/python tools/gesundheit.py
+SuccessExitStatus=1
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadOnlyPaths=/opt/osint

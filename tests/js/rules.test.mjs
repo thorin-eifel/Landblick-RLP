@@ -93,3 +93,23 @@ test('trafficLevel: ÖPNV nach Verspätung, Ausfall und Störung', () => {
   assert.equal(t({ kind: 'stoerung' }, 'notice'), 'orange');
   assert.equal(iconFor({ type: 'transit' }), 'bahn');
 });
+
+// Zeitumstellung 2026: 29.03. (01:00 UTC) und 25.10. (01:00 UTC). Alles rechnet in UTC-Millisekunden, die Wanduhr spielt keine Rolle.
+for (const jetzt of ['2026-03-29T00:30:00Z', '2026-03-29T01:30:00Z', '2026-10-25T00:30:00Z', '2026-10-25T01:30:00Z']) {
+  test(`Umstellung: 24 Stunden bleiben 24 Stunden (${jetzt})`, () => {
+    const now = Date.parse(jetzt);
+    const at = (h) => new Date(now + h * H).toISOString();
+    const feats = [f('innen', at(23.98), null), f('aussen', at(24.02), null), f('jetzt', at(-1), null)];
+    const ids = (w) => windowFilter(feats, w, now).map((x) => x.properties.id).sort();
+    assert.deepEqual(ids('24h'), ['innen', 'jetzt']);
+    assert.deepEqual(ids('7d'), ['aussen', 'innen', 'jetzt']);
+  });
+  test(`Umstellung: Alter von Export und Quelle (${jetzt})`, () => {
+    const now = Date.parse(jetzt);
+    assert.equal(exportAgeMin(new Date(now - 19 * 60000).toISOString(), now), 19);
+    assert.equal(exportStale(new Date(now - 21 * 60000).toISOString(), now), true);
+    const src = { interval_s: 600, consecutive_failures: 0, last_attempt: null, status: 'ok', last_success: new Date(now - 3 * 3600 * 1000 - 10_000).toISOString() };
+    assert.equal(deriveStatus({ ...src, interval_s: 3600 }, now).status, 'stale');
+    assert.equal(deriveStatus({ ...src, interval_s: 3600, last_success: new Date(now - 3 * 3600 * 1000 + 10_000).toISOString() }, now).status, 'ok');
+  });
+}

@@ -1,0 +1,9 @@
+[Unit]
+Description=Landblick RLP: Gesundheitsprüfung alle 10 Minuten
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=10min
+
+[Install]
+WantedBy=timers.target

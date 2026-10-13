@@ -113,8 +113,12 @@ def write_all(files: dict[str, Any], out: Path) -> dict[str, int]:
         target = out / name
         tmp = out / f".{name}.tmp"
         raw = data if isinstance(data, bytes) else json.dumps(data, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-        tmp.write_bytes(raw)
-        os.replace(tmp, target)
+        try:
+            tmp.write_bytes(raw)
+            os.replace(tmp, target)
+        except OSError:
+            tmp.unlink(missing_ok=True)   # Platte voll: halbe Temp-Datei weg, alte Zieldatei bleibt
+            raise
         sizes[name] = len(raw)
     return sizes
 
