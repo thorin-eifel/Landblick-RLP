@@ -20,6 +20,10 @@ REF="${REF:-HEAD}"
 ROOT="$(git rev-parse --show-toplevel)"
 OUT="${ROOT}/build/release"
 NOTES="${ROOT}/docs/release-${VERSION}.md"
+# Python mit PyYAML: $PYTHON, sonst die Umgebung des Installers (.venv), sonst python3.
+if [ -n "${PYTHON:-}" ]; then PY="${PYTHON}"
+elif [ -x "${ROOT}/.venv/bin/python" ]; then PY="${ROOT}/.venv/bin/python"
+else PY="python3"; fi
 
 log() { printf '%s\n' "$*" >&2; }
 fail() { log "FEHLER: $*"; exit 1; }
@@ -33,13 +37,17 @@ if [ "${MODE}" = "--github" ]; then
   command -v gh >/dev/null || fail "gh (GitHub-CLI) fehlt"
 fi
 
+"${PY}" -c "import yaml" 2>/dev/null || fail "PyYAML fehlt für ${PY}: ${PY} -m pip install pyyaml, oder PYTHON=<Interpreter mit PyYAML> setzen"
+command -v pandoc >/dev/null || fail "pandoc fehlt (brew install pandoc)"
+command -v wkhtmltopdf >/dev/null || fail "wkhtmltopdf fehlt (brew install --cask wkhtmltopdf)"
+
 rm -rf "${OUT}" && mkdir -p "${OUT}"
 cd "${ROOT}"
 git archive --format=zip    --prefix="landblick-${VERSION}/" -o "${OUT}/landblick-${VERSION}-quelltext.zip"    "${REF}"
 git archive --format=tar.gz --prefix="landblick-${VERSION}/" -o "${OUT}/landblick-${VERSION}-quelltext.tar.gz" "${REF}"
 for f in install.ps1 install.sh install.py; do git show "${REF}:${f}" > "${OUT}/${f}"; done
 
-python3 tools/handbuch.py --version "${VERSION}" --out "${OUT}/handbuch"
+"${PY}" tools/handbuch.py --version "${VERSION}" --out "${OUT}/handbuch"
 for ext in pdf html md; do
   [ -f "${OUT}/handbuch/landblick-handbuch.${ext}" ] || fail "Handbuch ${ext} fehlt (pandoc/wkhtmltopdf?)"
   mv "${OUT}/handbuch/landblick-handbuch.${ext}" "${OUT}/landblick-${VERSION}-handbuch.${ext}"
