@@ -7,11 +7,13 @@ Zweck:      build_dem_rlp.py endet bei Zoom 14 (4-m-Raster, rund 6 m je Pixel). 
 Quelle:     Landesamt für Vermessung und Geobasisinformation RLP, DGM1, dl-de/by-2-0 [Daten bearbeitet]
             (Vermerk steht schon in tiles/dem/meta.json).
 Ablauf:     Je Zielkachel die Pixelmitten nach UTM 32 (EPSG:25832) umrechnen, bilinear im 1-m-Gitter abtasten.
-            Pixel ohne Landesdaten (Rand, Lücken) kommen aus der Elternkachel (Zoom 14 bzw. 15), sofern vorhanden.
+            Pixel ohne Landesdaten (Rand, Lücken) kommen aus der Elternkachel (Zoom 14 bzw. 15), sofern vorhanden; dabei wird
+            über die Elternkachel hinaus in die Nachbarn hinein abgetastet, damit an Kachelgrenzen keine Stufe entsteht.
             Kacheln ohne einen einzigen Landespixel werden nicht geschrieben.
 Aufruf:     python tools/build_dem_hires.py --raw dgm1-work/raw --out web/tiles/dem --bbox 7.05 50.10 7.20 50.18
             python tools/build_dem_hires.py ... --zooms 15 --quant 16       # nur Zoom 15, Höhe auf 1/16 m runden
             python tools/build_dem_hires.py ... --measure                  # nichts schreiben, Größe hochrechnen
+            python tools/build_dem_hires.py ... --refill                   # nur Rand- und Lückenkacheln neu (nach einer Änderung an parent_fill)
 Exit:       0 = fertig, 1 = Fehler (z. B. keine Rohkacheln im Ausschnitt)
 """
 from __future__ import annotations
@@ -82,15 +84,79 @@ def sample(raw: Path, lon: np.ndarray, lat: np.ndarray, cache: dict) -> np.ndarr
     return out
 
 
+_PCACHE: dict = {}
+
+
+def _parent_png(out: Path, z: int, x: int, y: int) -> np.ndarray | None:
+    key = (str(out), z, x, y)
+    if key not in _PCACHE:
+        if len(_PCACHE) > 64:
+            _PCACHE.pop(next(iter(_PCACHE)))
+        _PCACHE[key] = read_png(out / str(z) / str(x) / f"{y}.png")
+    return _PCACHE[key]
+
+
 def parent_fill(out: Path, z: int, x: int, y: int, shape: int = 256) -> np.ndarray | None:
-    """Elternkachel hochrechnen (bilinear) auf die Auflösung von (z, x, y); None, wenn es sie nicht gibt."""
-    from scipy.ndimage import zoom
-    p = read_png(out / str(z - 1) / str(x // 2) / f"{y // 2}.png")
-    if p is None:
+    """Elternkachel auf die Auflösung von (z, x, y) umrechnen (bilinear); None, wenn es sie nicht gibt.
+
+    Die Pixelmitten der Kindkachel werden im Pixelraster der Eltern gesucht, und zwar in einem Mosaik aus der Elternkachel
+    und ihren acht Nachbarn. Nur so schließen benachbarte Kindkacheln unter verschiedenen Eltern ohne Stufe aneinander an;
+    ein Hochskalieren der einzelnen Elternkachel allein liefert an deren Rand einen Sprung, den die Schummerung als Linie zeigt."""
+    from scipy.ndimage import distance_transform_edt, map_coordinates
+    px, py = x // 2, y // 2
+    if _parent_png(out, z - 1, px, py) is None:
         return None
-    big = zoom(p, 2, order=1)                             # 512 x 512, davon der Viertelausschnitt dieser Kachel
-    r, c = (y % 2) * shape, (x % 2) * shape
-    return big[r:r + shape, c:c + shape]
+    rows = []
+    for dy in (-1, 0, 1):
+        row = []
+        for dx in (-1, 0, 1):
+            t = _parent_png(out, z - 1, px + dx, py + dy)
+            row.append(t if t is not None else np.full((shape, shape), np.nan, np.float32))
+        rows.append(np.concatenate(row, axis=1))
+    m = np.concatenate(rows, axis=0)
+    bad = np.isnan(m)
+    if bad.any():                                         # Nachbar fehlt (Rand der Abdeckung): nächsten gültigen Wert fortsetzen
+        idx = distance_transform_edt(bad, return_distances=False, return_indices=True)
+        m = m[tuple(idx)]
+    f = (np.arange(shape) + 0.5) / 2 - 0.5                # Pixelmitte der Kindkachel im Raster der Eltern
+    col = shape + (x - 2 * px) * (shape // 2) + f
+    row_ = shape + (y - 2 * py) * (shape // 2) + f
+    rr, cc = np.meshgrid(row_, col, indexing="ij")
+    return map_coordinates(m, [rr, cc], order=1, mode="nearest", prefilter=False).astype(np.float32)
+
+
+_TR = None
+
+
+def cell_range(z: int, x: int, y: int) -> list[tuple[int, int]]:
+    """Alle 1-km-Rohkacheln (e, n), die eine Zielkachel berühren."""
+    global _TR
+    if _TR is None:                                       # Transformer einmal anlegen, from_crs ist langsam
+        from pyproj import Transformer
+        _TR = Transformer.from_crs(4326, 25832, always_xy=True)
+    lon, lat = pixel_lonlat(z, x, y)
+    ix = [0, 64, 128, 192, 255]
+    xs, ys = _TR.transform(lon[np.ix_(ix, ix)], lat[np.ix_(ix, ix)])
+    return [(e, n) for e in range(int(xs.min() // KM), int(xs.max() // KM) + 1) for n in range(int(ys.min() // KM), int(ys.max() // KM) + 1)]
+
+
+def _cell_partial(path: str) -> tuple[str, bool]:
+    f = Path(path)
+    a = np.load(f)["a"] if f.suffix == ".npz" else np.load(f)
+    return f.name, bool((a == 0).any())
+
+
+def scan_cells(raw: Path, jobs: int) -> tuple[set, set]:
+    """(vorhandene Rohkacheln, davon solche mit Lücken) – Grundlage für --refill."""
+    files = sorted([*raw.glob("*.npz"), *raw.glob("*.npy")])
+    present, partial = set(), set()
+    with ProcessPoolExecutor(jobs) as ex:
+        for f, (name, part) in zip(files, ex.map(_cell_partial, map(str, files), chunksize=16)):
+            e, n = (int(v) for v in f.stem.split("_"))
+            present.add((e, n))
+            if part:
+                partial.add((e, n))
+    return present, partial
 
 
 def quantize(h: np.ndarray, quant: int) -> np.ndarray:
@@ -152,6 +218,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--jobs", type=int, default=4)
     ap.add_argument("--cover", action="store_true",
                     help="auch Kacheln ohne Landesdaten schreiben (aus der Elternkachel hochgerechnet), damit relief.js dort nicht ins Leere fragt")
+    ap.add_argument("--refill", action="store_true",
+                    help="nur Kacheln neu schreiben, die Landesdaten-Lücken oder Rand haben (also Pixel aus der Elternkachel brauchen); der Rest bleibt")
     ap.add_argument("--measure", action="store_true", help="nur messen, nichts schreiben")
     ap.add_argument("-v", "--verbose", action="store_true")
     a = ap.parse_args(argv)
@@ -161,12 +229,18 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     w, s, e, n = a.bbox
     t0 = time.time()
+    present = partial = None
+    if a.refill:
+        present, partial = scan_cells(a.raw, a.jobs)
+        log.info("Rohkacheln: %d, davon %d mit Lücken", len(present), len(partial))
     for z in sorted(a.zooms):
         x0, y1 = tile_xy(w, s, z)
         x1, y0 = tile_xy(e, n, z)
         jobs = [(str(a.raw), str(a.out), z, x, y, a.quant, a.measure, a.cover)
                 for x in range(x0, x1 + 1) for y in range(y0, y1 + 1)]
-        log.info("Zoom %d: %d Kacheln im Ausschnitt", z, len(jobs))
+        if a.refill:
+            jobs = [j for j in jobs if any(c not in present or c in partial for c in cell_range(z, j[3], j[4]))]
+        log.info("Zoom %d: %d Kacheln %s", z, len(jobs), "mit Lücken oder Rand" if a.refill else "im Ausschnitt")
         with ProcessPoolExecutor(a.jobs) as ex:
             res = list(ex.map(work, jobs, chunksize=4))
         k = [r for r in res if r[1]]
