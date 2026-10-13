@@ -71,7 +71,7 @@ Plan und Begründung: `docs/rlp/plan.md`. Entscheidung: `docs/adr/0001-region-rl
 
 - Quellen im Register: 47, davon aktiv: 43
 - Sammler (Module in `app/collectors/`): 46
-- Tests: 549 Python, 110 JavaScript
+- Tests: 553 Python, 110 JavaScript
 
 ### Quellen und Lizenzen
 
@@ -134,6 +134,7 @@ Vollständig mit Namensnennung: `sources.yaml` und die Seite „Quellen und Lize
 - `docs/dsfa-entwurf.md`
 - `docs/perf.md`
 - `docs/projektanweisung.md`
+- `docs/release-1.0.0-alpha.1.md`
 - `docs/rlp/` (Plan, Prompt, Status, offene Punkte)
 - `docs/adr/` (Entscheidungen)
 

@@ -117,7 +117,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--db", default=os.environ.get("OSINT_DB_PATH", str(BASE_DIR / "data" / "osint.sqlite")))
     ap.add_argument("--export", default=os.environ.get("OSINT_EXPORT_DIR", str(Path(os.environ.get("OSINT_WEB_DIR", BASE_DIR / "web")) / "data")))
-    ap.add_argument("--sources", default=os.environ.get("OSINT_SOURCES_PATH", str(BASE_DIR / "sources.yaml")))
+    ap.add_argument("--sources", default=os.environ.get("OSINT_SOURCES", str(BASE_DIR / "sources.yaml")))
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--warn-down", type=int, default=1)
     ap.add_argument("--crit-down-pct", type=float, default=50.0)

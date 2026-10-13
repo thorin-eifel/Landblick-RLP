@@ -149,7 +149,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--file", default=os.environ.get("OSINT_DAUERLAUF_FILE", str(BASE_DIR / "data" / "dauerlauf.jsonl")))
     ap.add_argument("--db", default=os.environ.get("OSINT_DB_PATH", str(BASE_DIR / "data" / "osint.sqlite")))
     ap.add_argument("--export", default=os.environ.get("OSINT_EXPORT_DIR", str(Path(os.environ.get("OSINT_WEB_DIR", BASE_DIR / "web")) / "data")))
-    ap.add_argument("--sources", default=os.environ.get("OSINT_SOURCES_PATH", str(BASE_DIR / "sources.yaml")))
+    ap.add_argument("--sources", default=os.environ.get("OSINT_SOURCES", str(BASE_DIR / "sources.yaml")))
     ap.add_argument("--luecke", type=float, default=30)
     ap.add_argument("--out")
     args = ap.parse_args(argv)
