@@ -190,6 +190,21 @@ python tools/build_gebaeude_rlp.py --hu gebaeude_hu.shp --core web/tiles/core.pm
 
 Gebäudefunktion: Aus der `.dbf` liest das Werkzeug nur die Spalte `GFK` (ADV-Codeliste, z. B. `31001_3041` Kirche) und ordnet sie in `klasse_von_gfk()` acht Klassen zu (wohnen, wirtschaft, garage, ueberdachung, technik, oeffentlich, religion, sonst). Das Attribut `klasse` steht im MVT neben `kind`; die Farben stehen in `web/js/gebaeude-farben.js` (ein Test hält beide Listen gleich), die Zeichenerklärung zeigt sie. Gebäude aus OSM außerhalb des Landes haben keine Klasse und bleiben weinrot. Der Code `31001_2000` heißt „Gebäude für Wirtschaft oder Gewerbe“, ist aber nach der Größe (Median 56 m²) überwiegend Schuppen und Scheune; die Karte nennt es deshalb so in der Erklärung. Datenschutz: Gemeindeschlüssel, Objektkennung und Kachelnummer der Quelle bleiben unberührt, Adressen und Eigentümer enthält die Quelle nicht. Fehlt die `.dbf`, entsteht die Datei ohne Klassen; fehlt die Datei, zeichnet die Karte wie vorher die OSM-Gebäude aus Kern und Ring. Vermerk steht unter der Karte, auf der Quellenseite und in den Fußzeilen; das Jahr (`GEB_JAHR` in `web/js/lage/zustand.js`) ist das Jahr des Datenbezugs und bei jedem neuen Bezug anzupassen.
 
+### Rechtsklick-Auskunft
+
+Rechtsklick auf die Karte (auf Touchgeräten: Finger lang halten) öffnet ein kleines Fenster mit Höhe (Geländemodell der Karte), Koordinaten (Dezimalgrad, Grad/Minuten/Sekunden, UTM 32 ETRS89), Ort, Gemeinde mit Verbandsgemeinde und Kreis. Code: `web/js/lage/kontext.js` (Fenster) und `web/js/ortsinfo.js` (Punkt in Fläche, UTM; getestet in `tests/js/ortsinfo.test.mjs`). Die Namen kommen aus `web/geo/verwaltung.json`, die der Browser beim ersten Rechtsklick holt (3,3 MB, gz rund 1,2 MB), und aus `web/geo/kreise.geojson` (Kreise außerhalb von Rheinland-Pfalz). Es gibt keine Anfrage an Dritte.
+
+Bauen (bei neuem Datenstand der Verwaltungseinheiten oder des Wohnplatzverzeichnisses, rund 5 Sekunden):
+
+```
+curl -fLO https://geobasis-rlp.de/data/inspire-annexi/current/xml/dlkm_au.zip                # 34 MB, Verwaltungseinheiten (GML)
+curl -fLO https://geobasis-rlp.de/data/wohnplatz/current/zip/WOHNPLATZVERZEICHNIS_RP.zip     # 0,4 MB, Ortsteile und Wohnplätze
+unzip -o dlkm_au.zip; unzip -o WOHNPLATZVERZEICHNIS_RP.zip
+python tools/build_verwaltung.py --au dlkm_au.gml --wohnplatz WOHNPLATZ_RP_wohnplcsv.CSV --out web/geo/verwaltung.json --stand "Dezember 2025"
+```
+
+Inhalt: 2324 Gemeinden als Flächen (vereinfacht auf rund 5 m, ganzzahlige Deltas), 135 Verbandsgemeinden, 38 Kreise und Städte, 10306 Ortsteile und Wohnplätze (je Gemeinde einsortiert). „Ort“ ist der nächste Ortsteil innerhalb der Gemeinde, Wohnplätze (Höfe, Mühlen) zählen nicht. Das Wohnplatzverzeichnis enthält auch Einwohnerzahlen je Ortsteil; sie werden nicht übernommen. Grenzen: direkt an einer Gemeindegrenze kann der Nachbar treffen (Vereinfachung); außerhalb von Rheinland-Pfalz (Saarland, Luxemburg ...) gibt es keine Gemeinde, nur den Kreis aus `kreise.geojson`. **Gemarkung fehlt**: Der offene Kleindatensatz enthält sie nicht, sie steckt nur in den Flurstückdaten (INSPIRE `dlkm_cp` 1,3 GB, `lb.zip` 1,9 GB).
+
 ## Live, Stau, Icons
 
 **Flüge live.** Ein Webspace ohne Server kann nicht schieben, und der Browser darf keine Drittserver anfragen (CSP, Datenschutz). „Live“ heißt deshalb: Die Live-Schleife (`python -m app.live`, launchd-Job `deploy/de.ctw.osint-live.plist`) holt adsb.lol alle 15 Sekunden (Untergrenze 10 s), schreibt nur `data/aircraft.json` und `data/status.json` und lädt sie hoch, wenn `PUBLISH_ENABLED=1` (höchstens alle `OSINT_LIVE_PUBLISH_S`, Standard 30 s; läuft ein Upload noch, wird übersprungen). Der Browser holt `aircraft.json` alle 15 s, solange die Ebene an und der Tab sichtbar ist, und lässt die Flugzeuge dazwischen auf Kurs und Tempo weiterrücken (`advance()` in `rules.js`, rein optisch, nichts wird gemerkt; bei „weniger Bewegung“ im System aus). Der Fünf-Minuten-Zyklus überspringt Quellen mit `params.live` (`--skip-live`; `OSINT_LIVE=0` in `.env` legt sie zurück in den Zyklus). Steht die Schleife, laufen die Punkte nach 90 s ab und die Quelle zeigt „veraltet“. Ratenlimit von adsb.lol ist unveröffentlicht: vor öffentlichem Start nachfragen.
