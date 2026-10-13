@@ -175,6 +175,21 @@ Die lokale Ansicht auf dem Mac nutzt `deploy/serve-local.py` (versteht Range), n
 
 Offen: Beschriftungen (Straßen, Orte) brauchen Schriftdateien (Glyphen) auf dem Server; Zoom über 13 wird nur hochskaliert; Kartenstand ist der Build vom 29.09.2026, Aktualisierung von Hand.
 
+### Gebäude aus den Hausumringen
+
+Die OSM-Gebäude sind lückenhaft: Um Irrel fehlte beim Abgleich mit dem Liegenschaftskataster gut jedes siebte Gebäude (217 von 1545, meist Garagen und Schuppen, aber auch Wohnhäuser bis 150 m²). Darum gibt es `web/tiles/gebaeude.pmtiles`: in Rheinland-Pfalz die amtlichen Hausumringe (© GeoBasis-DE / LVermGeoRP, dl-de/by-2-0, Daten bearbeitet), außerhalb des Landes (Luxemburg, Saarland, Frankreich, Hessen ...) die OSM-Gebäude aus Kern und Ring, deren Schwerpunkt nicht im Land liegt. Eine Quelle, kein Doppelzeichnen. Zoom 15 trägt alle Umrisse, Zoom 14 nur die ab 120 m² (Umgrenzungsrechteck); darüber zeichnet MapLibre die Zoom-15-Kacheln hochgezoomt. Hausnummern bleiben im Kern (`core.pmtiles`).
+
+Bauen (einmal je Datenstand der Hausumringe, rund 5 Minuten, 2 GB Arbeitsspeicher):
+
+```
+curl -fLO https://geobasis-rlp.de/data/hu/current/zip/HAUSUMRINGE_RP.zip     # 334 MB, ganz Rheinland-Pfalz
+unzip -o HAUSUMRINGE_RP.zip gebaeude_hu.shp                                  # die .dbf (Sachdaten) wird nicht gebraucht
+python tools/build_gebaeude_rlp.py --hu gebaeude_hu.shp --core web/tiles/core.pmtiles --ring web/tiles/ring.pmtiles \
+    --grenze web/geo/rlp.geojson --out web/tiles/gebaeude.pmtiles
+```
+
+Datenschutz: Das Werkzeug liest nur die Umrisse (`.shp`); Gemeindeschlüssel, Objektkennung, Gebäudefunktion und Kachelnummer der Quelle bleiben unberührt, Adressen enthält die Quelle nicht. Fehlt die Datei, zeichnet die Karte wie vorher die OSM-Gebäude aus Kern und Ring. Vermerk steht unter der Karte, auf der Quellenseite und in den Fußzeilen; das Jahr (`GEB_JAHR` in `web/js/lage/zustand.js`) ist das Jahr des Datenbezugs und bei jedem neuen Bezug anzupassen.
+
 ## Live, Stau, Icons
 
 **Flüge live.** Ein Webspace ohne Server kann nicht schieben, und der Browser darf keine Drittserver anfragen (CSP, Datenschutz). „Live“ heißt deshalb: Die Live-Schleife (`python -m app.live`, launchd-Job `deploy/de.ctw.osint-live.plist`) holt adsb.lol alle 15 Sekunden (Untergrenze 10 s), schreibt nur `data/aircraft.json` und `data/status.json` und lädt sie hoch, wenn `PUBLISH_ENABLED=1` (höchstens alle `OSINT_LIVE_PUBLISH_S`, Standard 30 s; läuft ein Upload noch, wird übersprungen). Der Browser holt `aircraft.json` alle 15 s, solange die Ebene an und der Tab sichtbar ist, und lässt die Flugzeuge dazwischen auf Kurs und Tempo weiterrücken (`advance()` in `rules.js`, rein optisch, nichts wird gemerkt; bei „weniger Bewegung“ im System aus). Der Fünf-Minuten-Zyklus überspringt Quellen mit `params.live` (`--skip-live`; `OSINT_LIVE=0` in `.env` legt sie zurück in den Zyklus). Steht die Schleife, laufen die Punkte nach 90 s ab und die Quelle zeigt „veraltet“. Ratenlimit von adsb.lol ist unveröffentlicht: vor öffentlichem Start nachfragen.

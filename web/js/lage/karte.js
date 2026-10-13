@@ -27,7 +27,7 @@ import { INFRA_LAYER_IDS } from './orte.js';
 import { showPopup } from './popup.js';
 import { initSearch } from './suche-karte.js';
 import { applyWind, fillTempLegend, showFlowWind, trackLegendBottom } from './wetterkarte.js';
-import { CORE_URL, RING_URL, START_VIEW, SYMBOL_LAYERS, TILES_URL, light, map, reduceMotion, reliefOk, ripples, setBasemapOk, setCoreOk, setFlow, setKlippenOk, setLight, setMap, setMapReady, setPopup, setReliefOk, setRingOk, setRipples, setSweep, setWind, setWindLow, state, sweep, wind, windLow } from './zustand.js';
+import { CORE_URL, GEB_JAHR, GEB_URL, RING_URL, START_VIEW, SYMBOL_LAYERS, TILES_URL, light, map, gebOk, reduceMotion, reliefOk, ripples, setBasemapOk, setCoreOk, setFlow, setGebOk, setKlippenOk, setLight, setMap, setMapReady, setPopup, setReliefOk, setRingOk, setRipples, setSweep, setWind, setWindLow, state, sweep, wind, windLow } from './zustand.js';
 
 // ------------------------------------------------------------------ Karte
 // Rahmen der Karte: Umriss von Rheinland-Pfalz (web/geo/rlp.geojson: 6,11–8,51 E, 48,97–50,94 N) mit gleichem Rand ringsum, damit der Mittelpunkt
@@ -276,6 +276,14 @@ export async function setupBasemap() {
       map.addSource('basemap-ring', { type: 'vector', url: `pmtiles://${ringUrl}` });
       setRingOk(true);
     } catch (err) { console.warn('Ringkarte (Zoom 14) nicht verfügbar:', err?.message ?? err); }
+    try {   // Gebäudeumrisse aus den Hausumringen (Land) und OSM (außerhalb): ersetzt Gebäude aus Kern und Ring; fehlt die Datei, bleibt es bei Kern und Ring
+      const gebUrl = new URL(GEB_URL, location.href).href;
+      const geb = new PMTiles(gebUrl);
+      await geb.getHeader();
+      protocol.add(geb);
+      map.addSource('basemap-geb', { type: 'vector', url: `pmtiles://${gebUrl}`, tileSize: 256 });   // 256er Kachelmaß wie beim Kern: Zoom-15-Kacheln ab Kartenzoom 14
+      setGebOk(true);
+    } catch (err) { console.warn('Gebäudeebene (Hausumringe) nicht verfügbar:', err?.message ?? err); }
     try {   // Wände aus dem Geländemodell (tools/build_klippen_dgm.py): Vektorkacheln Zoom 13; fehlen sie, zeichnet die Karte nur die OSM-Klippen
       const kb = new URL('tiles/klippen/', location.href).href;
       const km = await fetch(kb + 'meta.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
@@ -285,6 +293,7 @@ export async function setupBasemap() {
       }
     } catch (err) { console.warn('Klippen aus dem Gelaendemodell nicht verfuegbar:', err?.message ?? err); }
     note.replaceChildren('Karte: ', link('https://www.openstreetmap.org/copyright', '© OpenStreetMap-Mitwirkende (ODbL)'), ' · Protomaps');
+    if (gebOk) note.append(' · Gebäude in Rheinland-Pfalz: ', link('https://lvermgeo.rlp.de', `© GeoBasis-DE / LVermGeoRP (${GEB_JAHR}), dl-de/by-2-0 [Daten bearbeitet]`));
     if (globalThis.mlcontour) note.append(' · ', RELIEF_ATTRIBUTION);
   } catch (err) {
     console.warn('Basiskarte nicht verfügbar:', err?.message ?? err);
