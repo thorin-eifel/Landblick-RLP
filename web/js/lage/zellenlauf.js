@@ -91,7 +91,7 @@ export function applyCells(force = false) {
   if (!force && key === lastKey) return;
   lastKey = key;
   const src = statusMap(), now = Date.now();
-  state.warnStubs = warnbandAlsEreignisse(state.start.warnband, src, now, { lat: state.meta?.center?.lat ?? 49.846, lon: state.meta?.center?.lon ?? 6.456 })
+  state.warnStubs = warnbandAlsEreignisse(state.start.warnband, src, now, { lat: state.meta?.reference?.lat ?? 49.846, lon: state.meta?.reference?.lon ?? 6.456 })
     .filter((f) => gebietPasst(f.properties, state.gebiet));
   const held = new Set([...zs.held.keys()].map((rel) => rel.split('/')[2].replace('.json', '')));
   for (const kind of Object.keys(KIND_KEY)) {

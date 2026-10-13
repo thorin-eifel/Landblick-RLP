@@ -1,4 +1,4 @@
-// Radar-Sweep um Irrel (120-km-Kreis als Linie, der Strahl selbst reicht bis zum Bildschirmrand): ein Strahl läuft im Uhrzeigersinn um Irrel, überstreicht er ein Flugzeug, sendet es einen Ping.
+// Radar-Sweep um die Mitte des Gebiets (umschließender Kreis, meta.center; der Strahl reicht bis zum Bildschirmrand): ein Strahl läuft im Uhrzeigersinn um diese Mitte, überstreicht er ein Flugzeug, sendet es einen Ping.
 // Läuft nur, solange die Luftverkehr-Ebene an ist, mindestens ein Flugzeug aktiv (nicht abgelaufen) ist, der Tab sichtbar ist
 // und das System keine reduzierte Bewegung verlangt. Sonst steht alles still und die Zeichenfläche ist leer.
 // Dazu die Schweife: 200 px lang, hinter dem Flugzeug entlang der beobachteten Bahn, nach hinten schwächer werdend. Die Bahn
@@ -112,7 +112,7 @@ export function createSweep(map, { center, radiusKm, mil = '#8e44ad', reducedMot
     clear();
     drawTrails();
     if (active()) {
-      // Ping, sobald der Strahl den Peilwinkel eines Flugzeugs (von Irrel aus, im Uhrzeigersinn ab Norden) erreicht
+      // Ping, sobald der Strahl den Peilwinkel eines Flugzeugs (von der Gebietsmitte aus, im Uhrzeigersinn ab Norden) erreicht
       for (const p of planes) {
         const q = map.project([p.lng, p.lat]);
         const a = (Math.atan2(q.x - c.x, -(q.y - c.y)) + TAU) % TAU;
