@@ -20,7 +20,10 @@ def ev(i, valid_from=None, valid_to=None, sev="info", typ="traffic"):
 
 def test_meta_and_sources(storage, registry):
     m = payloads.meta_payload(storage)
-    assert m["radius_km"] == 120 and m["center"]["name"] == "Irrel" and "Kein amtliches" in m["disclaimer"]
+    assert m["radius_km"] == 120 and m["reference"]["name"] == "Irrel" and "Kein amtliches" in m["disclaimer"]
+    # Mitte für Radar, Ringe, Wind und Vignette ist der umschließende Kreis des Gebiets, der Bezugspunkt steht getrennt
+    assert (m["center"]["lat"], m["center"]["lon"]) == (payloads.REGION.query_lat, payloads.REGION.query_lon)
+    assert set(m["reference"]) == {"lat", "lon", "name"}
     s = payloads.sources_payload(registry)["sources"]
     assert len(s) == 47 and all("params" not in x and x["namensnennung"] for x in s)
 

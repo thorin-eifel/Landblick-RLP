@@ -75,7 +75,10 @@ def statuses(storage: Storage, registry: Registry) -> dict[str, dict[str, Any]]:
 def meta_payload(storage: Storage) -> dict[str, Any]:
     return {
         "name": "Landblick - RLP", "version": __version__,
-        "center": {"lat": config.CENTER_LAT, "lon": config.CENTER_LON, "name": REGION.ref_name},
+        # center/radius_km: umschließender Kreis des Gebiets, Mitte für Radar, Ringe, Wind, Vignette und Startansicht.
+        # reference: Bezugspunkt (Irrel) nur für angezeigte Entfernungen; er liegt am Rand und ist nicht die Mitte.
+        "center": {"lat": REGION.query_lat, "lon": REGION.query_lon, "name": REGION.name},
+        "reference": {"lat": REGION.ref_lat, "lon": REGION.ref_lon, "name": REGION.ref_name},
         "radius_km": REGION.radius_km if REGION.radius_km is not None else REGION.query_radius_km,  # Polygon: umschließender Kreis
         "region": REGION.meta(),
         "bbox": {"lat_min": config.BBOX[0], "lon_min": config.BBOX[1], "lat_max": config.BBOX[2], "lon_max": config.BBOX[3]},
