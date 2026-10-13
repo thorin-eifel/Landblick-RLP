@@ -148,7 +148,7 @@ sources:
     intervall: 15
     ratenlimit: nicht veröffentlicht; ein Abruf alle 15 Sekunden (Live-Schleife), Mindestabstand 10 Sekunden. Bei Fehlern greift der Circuit Breaker.
     auth: keine
-    geo_bezug: Abfrage 47 NM um Irrel, danach Feinfilter auf die Region am Rand; nur Flugzeuge in der Luft
+    geo_bezug: Abfrage um die Landesmitte (umschließender Kreis der Region, rund 113 NM), danach Feinfilter auf die Region am Rand; nur Flugzeuge in der Luft
     datenschutz_risiko: mittel
     aktiv: true
     zuletzt_geprüft: "2026-09-29"

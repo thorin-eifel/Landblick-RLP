@@ -19,7 +19,9 @@ Parameter:  --kontakt MAIL      Absender im User-Agent der Abrufe (Pflicht beim 
                                 Windows: als Administrator starten, Linux: mit sudo)
             --ruhezustand-aus   Windows: Energiesparen (Standby) im Netzbetrieb abschalten. Sonst steht der Zyklus, wenn der Rechner schläft
             --ohne-dienste      nur einrichten, nichts im Zeitplaner anlegen
-            --ja                Rückfragen (Download) mit Ja beantworten
+            --ja                Rückfragen (Download) mit Ja beantworten (löscht nie Rohdaten, dafür gibt es --rohdaten-loeschen)
+            --rohdaten-loeschen Am Ende die Rohdaten der Kartenwerkzeuge (_scratch/dgm1) ohne Rückfrage löschen, aber nur, wenn
+                                tools/rohdaten_aufraeumen.py alle Prüfungen besteht. Ohne die Option fragt der Installer im Terminal nach
             --status            Zustand der Jobs und Gesundheitsprüfung anzeigen
             --deinstall         Jobs entfernen (Daten, .env und .venv bleiben)
             --dry-run           nur anzeigen, was getan würde
@@ -317,6 +319,33 @@ def schritt_karte(py: Path, ja: bool, dry: bool) -> None:
     raise Fehler("Karte nach 60 Läufen nicht vollständig; erneut starten macht dort weiter")
 
 
+def schritt_aufraeumen(py: Path, bind: str, port: int, loeschen: bool, dry: bool) -> None:
+    """Rohdaten der Kartenwerkzeuge anbieten zu löschen, erst nach bestandener Prüfung und nur mit Zustimmung.
+
+    Ohne Arbeitsordner passiert nichts. Der Probelauf von tools/rohdaten_aufraeumen.py prüft Relief, Felswände,
+    Basiskarte und die laufende App; erst wenn er mit 0 endet, kommt die Rückfrage. Ohne Terminal und ohne
+    --rohdaten-loeschen bleibt alles liegen und der Installer nennt den Befehl.
+    """
+    work = ROOT / "_scratch" / "dgm1"
+    tool = ROOT / "tools" / "rohdaten_aufraeumen.py"
+    if not work.exists() or not tool.exists():
+        return
+    host = "127.0.0.1" if bind in ("0.0.0.0", "::") else bind
+    args = [str(py), str(tool), "--work", str(work), "--web", str(ROOT / "web"), "--url", f"http://{host}:{port}/"]
+    ausgabe("Rohdaten der Kartenwerkzeuge gefunden. Prüfe, ob sie gelöscht werden können (Relief, Felswände, Basiskarte, App).")
+    if dry:
+        run(args, dry)
+        return
+    rc = run(args, check=False, cwd=ROOT)
+    if rc != 0:
+        ausgabe("Rohdaten bleiben liegen (Grund oben). Später: python tools/rohdaten_aufraeumen.py --ja")
+        return
+    if frage("Rohdaten jetzt löschen? Sie werden für den Betrieb nicht gebraucht, nur zum Neubau der Karten.", loeschen):
+        run(args + ["--ja"], check=False, cwd=ROOT)
+    else:
+        ausgabe("Rohdaten bleiben liegen. Löschen später: python tools/rohdaten_aufraeumen.py --ja")
+
+
 def schritt_erstlauf(py: Path, dry: bool) -> None:
     ausgabe("Erste Datensammlung und Export (jede Quelle einmal, die langsamen kommen mit dem Zeitplan)")
     run([str(py), str(ROOT / "tools" / "zyklus.py"), "--erst"], dry, check=False, cwd=ROOT)
@@ -456,6 +485,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--ruhezustand-aus", action="store_true")
     ap.add_argument("--ohne-dienste", action="store_true")
     ap.add_argument("--ja", action="store_true")
+    ap.add_argument("--rohdaten-loeschen", action="store_true")
     ap.add_argument("--status", action="store_true")
     ap.add_argument("--deinstall", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
@@ -486,6 +516,8 @@ def main(argv: list[str] | None = None) -> int:
                 ausgabe("Webserver antwortet noch nicht; python install.py --status zeigt den Zustand, data/logs/web.log den Grund.")
         else:
             ausgabe("Fertig (ohne Dienste). Start von Hand: python deploy/serve-local.py --dir web")
+        if not a.ohne_dienste and not a.dry_run and pruefe_web(a.bind, a.port, warte_s=5):
+            schritt_aufraeumen(py, a.bind, a.port, a.rohdaten_loeschen, a.dry_run)
         ausgabe("Gesundheit prüfen: python tools/gesundheit.py · Betrieb: docs/betrieb.md, Abschnitt Installation auf einem Dauerläufer")
         return 0
     except Fehler as exc:

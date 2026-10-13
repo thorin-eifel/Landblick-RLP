@@ -6,6 +6,7 @@ import httpx
 import pytest
 
 from app import config
+from app.collectors import adsblol
 from app.collectors import load_collector_class
 from conftest import fixture, make_client
 
@@ -283,7 +284,7 @@ def adsb_handler(req: httpx.Request):
 async def test_adsblol_filters_and_maps(registry, storage, settings):
     ok, router, _ = await run("adsblol", registry, storage, settings, adsb_handler)
     assert ok and len(router.calls) == 1
-    assert router.calls[0].url.path.endswith(f"/v2/point/{config.CENTER_LAT}/{config.CENTER_LON}/70")
+    assert router.calls[0].url.path.endswith(f"/v2/point/{config.QUERY_LAT:.5f}/{config.QUERY_LON:.5f}/{adsblol.fetch_radius_nm()}")
     evs = storage.active_events()
     assert evs and all(e["type"] == "aircraft" and e["distance_km"] <= 120 for e in evs)
     titles = [e["title"] for e in evs]
@@ -292,6 +293,13 @@ async def test_adsblol_filters_and_maps(registry, storage, settings):
     # drin: aaaa01-03, aaaa05, bbbb02-04. Fehlen: aaaa04 und aaaa06 (81 und 84 km, außerhalb),
     # bbbb01 (am Boden), bbbb05 (ohne Position)
     assert len(evs) == 9
+
+
+def test_adsblol_abfragekreis_ist_umschliessender_kreis_der_region(monkeypatch):
+    monkeypatch.setattr(config, "QUERY_RADIUS_KM", 209.0)
+    assert adsblol.fetch_radius_nm() == 113          # 209 km / 1,852 aufgerundet
+    monkeypatch.setattr(config, "QUERY_RADIUS_KM", 1000.0)
+    assert adsblol.fetch_radius_nm() == 250          # Obergrenze der API
 
 
 async def test_adsblol_attrs_only_course_and_speed_and_short_validity(registry, storage, settings):

@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import math
 import secrets
 from datetime import timedelta
 from typing import Any
@@ -38,7 +39,8 @@ from ..sanitize import clean_text
 from .base import Collector, CollectResult, SourceError
 
 KM_PER_NM = 1.852
-FETCH_RADIUS_NM = 70  # ≈ 130 km; Feinfilter danach auf 120 km
+MAX_RADIUS_NM = 250  # Obergrenze der adsb.lol-Punktabfrage
+
 MIN_VALID_S = 90
 SALT_KEY = "adsblol:salt"
 
@@ -52,6 +54,11 @@ EMERGENCY_SQUAWK = {
     "7600": "Transpondercode 7600 (Funkausfall)",
     "7700": "Transpondercode 7700 (Allgemeiner Notfall)",
 }
+
+
+def fetch_radius_nm() -> int:
+    """Abfrageradius in Seemeilen: der umschließende Kreis der Region (Landesmitte), aufgerundet, höchstens 250 NM."""
+    return min(MAX_RADIUS_NM, math.ceil(config.QUERY_RADIUS_KM / KM_PER_NM))
 
 
 def _num(v: Any) -> float | None:
@@ -84,7 +91,7 @@ class AdsbLolCollector(Collector):
 
     async def collect(self) -> CollectResult:
         base = self.entry.url.rstrip("/")
-        url = f"{base}/v2/point/{config.CENTER_LAT}/{config.CENTER_LON}/{FETCH_RADIUS_NM}"
+        url = f"{base}/v2/point/{config.QUERY_LAT:.5f}/{config.QUERY_LON:.5f}/{fetch_radius_nm()}"
         data = await self.fetch_json(url)
         aircraft = data.get("ac") if isinstance(data, dict) else None
         if not isinstance(aircraft, list):
