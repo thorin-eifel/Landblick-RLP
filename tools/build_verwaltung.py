@@ -25,7 +25,6 @@ import argparse
 import csv
 import json
 import logging
-import re
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -92,7 +91,9 @@ def read_wohnplatz(path: Path) -> list[dict]:
                 continue
             nr = (r.get("WpNr") or "").strip()
             lon, lat = tr.transform(e, n)
-            name = re.sub(r",\s*(Kreisfreie Stadt|Stadt|Gemeinde)\b.*$", "", r["Gemeinde_Gemeindeteile"].split("(")[0].strip())
+            name = r["Gemeinde_Gemeindeteile"].split("(")[0].strip()
+            if nr == "":      # Zeile der Gemeinde: der Zusatz nach dem Komma ist die Verwaltungsart ("Kreisfreie Stadt", "große kreisangehörige Stadt" ...)
+                name = name.split(",")[0]
             out.append({"name": " ".join(name.split()), "lon": lon, "lat": lat, "ortsteil": nr == "" or nr.endswith("00")})
     return out
 
