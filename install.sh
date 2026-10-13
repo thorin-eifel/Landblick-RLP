@@ -4,11 +4,14 @@
 #
 # Zweck:     Sucht ein Python ab 3.11 und ruft install.py auf. Alle Parameter gehen unverändert durch.
 # Aufruf:    ./install.sh --kontakt name@example.org [--karte voll] [--dauerlauf] [--system] [--status] [--deinstall]
-# Hinweis:   Der Installer lädt nichts ohne Rückfrage nach (Karte: --karte voll, mit Bestätigung oder --ja).
+# Hinweis:   PYTHON=/pfad/zu/python3 ./install.sh … wählt den Interpreter selbst.
+#            Der Installer lädt nichts ohne Rückfrage nach (Karte: --karte voll, mit Bestätigung oder --ja).
 # Exit:      wie install.py
 # =============================================================================
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
+# PYTHON=<Interpreter> erzwingt einen bestimmten Python (z. B. wenn ein Werkzeug ein eigenes python3 in den PATH legt).
+if [ -n "${PYTHON:-}" ]; then exec "${PYTHON}" install.py "$@"; fi
 for c in python3.13 python3.12 python3.11 python3 python; do
   if command -v "${c}" >/dev/null 2>&1 && "${c}" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' 2>/dev/null; then
     exec "${c}" install.py "$@"
