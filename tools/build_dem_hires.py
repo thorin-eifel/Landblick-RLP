@@ -125,12 +125,18 @@ def parent_fill(out: Path, z: int, x: int, y: int, shape: int = 256) -> np.ndarr
     return map_coordinates(m, [rr, cc], order=1, mode="nearest", prefilter=False).astype(np.float32)
 
 
+_TR = None
+
+
 def cell_range(z: int, x: int, y: int) -> list[tuple[int, int]]:
     """Alle 1-km-Rohkacheln (e, n), die eine Zielkachel berühren."""
-    from pyproj import Transformer
+    global _TR
+    if _TR is None:                                       # Transformer einmal anlegen, from_crs ist langsam
+        from pyproj import Transformer
+        _TR = Transformer.from_crs(4326, 25832, always_xy=True)
     lon, lat = pixel_lonlat(z, x, y)
     ix = [0, 64, 128, 192, 255]
-    xs, ys = Transformer.from_crs(4326, 25832, always_xy=True).transform(lon[np.ix_(ix, ix)], lat[np.ix_(ix, ix)])
+    xs, ys = _TR.transform(lon[np.ix_(ix, ix)], lat[np.ix_(ix, ix)])
     return [(e, n) for e in range(int(xs.min() // KM), int(xs.max() // KM) + 1) for n in range(int(ys.min() // KM), int(ys.max() // KM) + 1)]
 
 
