@@ -27,7 +27,9 @@ fail() { log "FEHLER: $*"; exit 1; }
 [ -f "${NOTES}" ] || fail "Notizen fehlen: ${NOTES}"
 grep -q "^## \[${VERSION}\]" "${ROOT}/CHANGELOG.md" || fail "CHANGELOG.md hat keinen Abschnitt für ${VERSION}"
 if [ "${MODE}" = "--github" ]; then
-  [ -z "$(git status --porcelain)" ] || fail "Arbeitsbaum nicht sauber (git status)"
+  # Unversionierte Dateien (data/, build/, Symbole) stören nicht: ins Archiv kommt nur, was in ${REF} versioniert ist.
+  [ -z "$(git status --porcelain --untracked-files=no)" ] || { git status --short --untracked-files=no >&2; fail "versionierte Dateien geändert (git status); erst committen oder git stash"; }
+  [ "$(git rev-parse "${REF}")" = "$(git rev-parse origin/main)" ] || log "Hinweis: ${REF} ist nicht origin/main"
   command -v gh >/dev/null || fail "gh (GitHub-CLI) fehlt"
 fi
 
