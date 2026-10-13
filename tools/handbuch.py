@@ -9,13 +9,14 @@ Parameter:  --out DIR     Ausgabeordner (Standard build/handbuch)
             --check       nur prüfen, ob die Tabelle zum Register passt (Exit 1 bei Abweichung)
             --nur-md      nur die zusammengesetzte Markdown-Datei, ohne pandoc
 Beispiel:   python tools/handbuch.py --update && python tools/handbuch.py
-Benötigt:   pandoc; für PDF zusätzlich wkhtmltopdf. Fehlt eines, wird das Format übersprungen und das gesagt.
+Benötigt:   pandoc; für PDF zusätzlich wkhtmltopdf oder Chrome/Chromium/Edge (Ersatz). Fehlt beides, wird das PDF übersprungen und das gesagt.
 Exit:       0 = gut, 1 = Tabelle weicht ab (--check) oder Bau fehlgeschlagen
 """
 from __future__ import annotations
 
 import argparse
 import logging
+import os
 import re
 import shutil
 import subprocess
@@ -83,6 +84,19 @@ def pandoc(quelle: Path, ziel: Path, extra: list[str]) -> bool:
     return r.returncode == 0
 
 
+def chrome() -> str | None:
+    """Chrome oder Chromium für den PDF-Druck (Pfad oder Befehl), sonst None."""
+    kandidaten = ["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "/Applications/Chromium.app/Contents/MacOS/Chromium",
+                  "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"]
+    for k in kandidaten:
+        if Path(k).exists():
+            return k
+    for n in ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser", "microsoft-edge", "chrome"):
+        if (w := shutil.which(n)):
+            return w
+    return None
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--out", default=str(ROOT / "build" / "handbuch"))
@@ -121,16 +135,27 @@ def main(argv: list[str] | None = None) -> int:
     html = out / "landblick-handbuch.html"
     ok = pandoc(md, html, ["--standalone", "--toc", "--toc-depth=2", "--embed-resources", f"--css={css}", "--metadata", "pagetitle=Landblick - RLP, Handbuch"])
     log.info("HTML: %s", html) if ok else log.error("HTML fehlgeschlagen")
+    pdf = out / "landblick-handbuch.pdf"
     if shutil.which("wkhtmltopdf"):
-        pdf = out / "landblick-handbuch.pdf"
         ok2 = pandoc(md, pdf, ["--standalone", "--toc", "--toc-depth=2", "--pdf-engine=wkhtmltopdf", f"--css={css}",
-                               "--pdf-engine-opt=--enable-local-file-access", "--pdf-engine-opt=--page-size", "--pdf-engine-opt=A4", "--pdf-engine-opt=--zoom", "--pdf-engine-opt=1.3",
+                               "--pdf-engine-opt=--enable-local-file-access", "--pdf-engine-opt=--page-size", "--pdf-engine-opt=A4",
+                               "--pdf-engine-opt=--zoom", "--pdf-engine-opt=1.3",
                                "-V", "margin-left=20mm", "-V", "margin-right=20mm", "-V", "margin-top=20mm", "-V", "margin-bottom=20mm",
                                "--metadata", "pagetitle=Landblick - RLP, Handbuch"])
+    elif (browser := chrome()) and ok:
+        # Ersatz, wenn wkhtmltopdf fehlt (Homebrew führt es nicht mehr): Chrome/Chromium druckt das fertige HTML.
+        root = ["--no-sandbox"] if hasattr(os, "geteuid") and os.geteuid() == 0 else []   # nur in Containern als root
+        r = subprocess.run([browser, "--headless=new", "--disable-gpu", "--no-pdf-header-footer", *root, f"--print-to-pdf={pdf}", html.as_uri()],
+                           capture_output=True, text=True, timeout=180)
+        ok2 = r.returncode == 0 and pdf.exists()
+        if not ok2:
+            log.error("Chrome: %s", r.stderr.strip()[-300:])
+    else:
+        log.warning("Weder wkhtmltopdf noch Chrome/Chromium gefunden: PDF übersprungen.")
+        ok2 = None
+    if ok2 is not None:
         log.info("PDF: %s", pdf) if ok2 else log.error("PDF fehlgeschlagen")
         ok = ok and ok2
-    else:
-        log.warning("wkhtmltopdf fehlt: PDF übersprungen.")
     return 0 if ok else 1
 
 
