@@ -26,7 +26,7 @@ from pathlib import Path
 
 import httpx
 
-from .collect import build_collectors
+from .collect import _on_signal, build_collectors
 from .config import Settings
 from .db import Storage
 from .export import build_live, write_all
@@ -69,7 +69,7 @@ async def run(settings: Settings, interval: float | None, once: bool) -> int:
     if not once:
         loop = asyncio.get_running_loop()
         for sig in (signal.SIGINT, signal.SIGTERM):
-            loop.add_signal_handler(sig, stop.set)
+            _on_signal(loop, sig, stop)
     uploading: asyncio.Task | None = None
     last_upload = 0.0
     async with httpx.AsyncClient(follow_redirects=False) as client:

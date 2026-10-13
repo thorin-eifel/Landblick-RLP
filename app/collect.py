@@ -158,11 +158,19 @@ async def _maintenance(storage: Storage, settings: Settings, stop: asyncio.Event
         await _sleep(stop, 6 * 3600)
 
 
+def _on_signal(loop: asyncio.AbstractEventLoop, sig: int, stop: asyncio.Event) -> None:
+    """Beenden bei SIGINT/SIGTERM. Windows kennt add_signal_handler im asyncio-Loop nicht: dort der klassische Weg."""
+    try:
+        loop.add_signal_handler(sig, stop.set)
+    except NotImplementedError:
+        signal.signal(sig, lambda *_: loop.call_soon_threadsafe(stop.set))
+
+
 async def run_forever(settings: Settings, storage: Storage, collectors) -> None:
     stop = asyncio.Event()
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(sig, stop.set)
+        _on_signal(loop, sig, stop)
     tasks = [asyncio.create_task(_loop(c, stop)) for c in collectors]
     tasks.append(asyncio.create_task(_maintenance(storage, settings, stop)))
     log.info("Dauerlauf mit %d Collectorn gestartet", len(collectors))
