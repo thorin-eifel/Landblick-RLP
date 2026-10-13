@@ -28,6 +28,7 @@ import { showPopup } from './popup.js';
 import { initSearch } from './suche-karte.js';
 import { applyWind, fillTempLegend, showFlowWind, trackLegendBottom } from './wetterkarte.js';
 import { ABFLUSS_URL, CORE_URL, GEB_JAHR, GEB_URL, RING_URL, START_VIEW, SYMBOL_LAYERS, TILES_URL, light, map, gebOk, reduceMotion, reliefOk, ripples, setAbflussOk, setBasemapOk, setCoreOk, setFlow, setGebOk, setKlippenOk, setLight, setMap, setMapReady, setPopup, setReliefOk, setRingOk, setRipples, setSweep, setWind, setWindLow, state, sweep, wind, windLow } from './zustand.js';
+import { ABFLUSS_LAYER_IDS } from './abfluss.js';
 
 // ------------------------------------------------------------------ Karte
 // Rahmen der Karte: Umriss von Rheinland-Pfalz (web/geo/rlp.geojson: 6,11–8,51 E, 48,97–50,94 N) mit gleichem Rand ringsum, damit der Mittelpunkt
@@ -196,7 +197,7 @@ export async function initMap() {
     const hit = map.queryRenderedFeatures(e.point, { layers: order.filter((l) => map.getLayer(l)) })[0];
     if (!hit) {   // dünne Linien: Treffer in einem kleinen Kasten um den Zeiger; Senken vor Linien
       const kasten = [[e.point.x - 6, e.point.y - 6], [e.point.x + 6, e.point.y + 6]];
-      const ab = map.queryRenderedFeatures(kasten, { layers: ['bm-senken-circle', 'bm-abfluss-gross', 'bm-abfluss-klein'].filter((l) => map.getLayer(l) && map.getLayoutProperty(l, 'visibility') !== 'none') })
+      const ab = map.queryRenderedFeatures(kasten, { layers: ABFLUSS_LAYER_IDS.filter((l) => map.getLayer(l) && map.getLayoutProperty(l, 'visibility') !== 'none') })
         .sort((a, b) => (a.layer.id === 'bm-senken-circle' ? -1 : 0) - (b.layer.id === 'bm-senken-circle' ? -1 : 0))[0];
       if (ab) showPopup(ab.properties, ab.layer.id === 'bm-senken-circle' ? 'senke' : 'abfluss', e.lngLat);
       return;
