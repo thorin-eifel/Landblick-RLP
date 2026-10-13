@@ -309,6 +309,7 @@ Zwei Schritte, beide einmalig und wiederaufnehmbar:
     .venv/bin/python tools/build_dem_rlp.py --check              # zählt: rund 21 000 Landeskacheln, 32 GB Download
     .venv/bin/python tools/build_dem_rlp.py                      # lädt, mittelt auf 4 m (Arbeitsordner _scratch/dgm1, ca. 3 GB), schreibt web/tiles/dem/ Zoom 6 bis 14 (ca. 1,5 GB)
     .venv/bin/python tools/build_dem_rlp.py --budget-s 900       # in Portionen, Exit 2 = Befehl wiederholen
+    .venv/bin/python tools/build_dem_rlp.py --keep-raw           # wie oben, legt die 1-m-Rohkacheln zusätzlich in <work>/raw/ ab (rund 22 GB); die Felswände laden dann nicht ein zweites Mal
 
 Die Landesdaten kommen von `geobasis-rlp.de/data/dgm1/` (Dateiliste `meta4/dgm1_tif_07.meta4`, Prüfsummen werden verglichen). Das Werkzeug legt `tiles/dem/meta.json` mit dem Namensnennungstext an (Jahre der Befliegung); die Karte zeigt ihn unten rechts. Außerhalb von RLP sind die Kacheln ab Zoom 13 nur aus Mapzen hochgerechnet (kein Gewinn an Genauigkeit, aber lückenlos). Für Luxemburg, Saarland, NRW, Hessen, Baden-Württemberg gibt es eigene offene Geländemodelle, die sich im selben Schema einbauen ließen (noch nicht geprüft, Lizenzen offen).
 Die Kacheln liegen nicht im Repository (`.gitignore`) und müssen mit auf den Webspace (`web/tiles/dem/`, inkl. `README.txt` als Prüfdatei und `meta.json`). `dem-base/` und `_scratch/` bleiben lokal.
@@ -327,7 +328,7 @@ Je Zielkachel wird bilinear im 1-m-Gitter abgetastet (Zoom 15 ca. 3,1 m, Zoom 16
 
 In RLP stammen Felswände nicht aus OSM, sondern aus dem 1-m-DGM1: `tools/build_klippen_dgm.py` findet die Steilzone (Hysterese 55/47 Grad auf dem um 1,5 m geglätteten Gelände), macht daraus Flächen und leitet je Wand drei Ebenen ab: `wand` (Polygon mit Löchern), `kante` (Oberkante, Wand rechts der Laufrichtung) und `schraffur` (kurze Striche in Fallrichtung, von oben nach unten). `drop` ist die Wandhöhe in m (mindestens 5 m). Ausgabe sind Vektorkacheln Zoom 13 in `tiles/klippen/` (mit `meta.json`, Namensnennung „Daten bearbeitet").
 
-Der Lauf braucht die 1-m-Rohkacheln. Standardmäßig lädt er nur Kilometerkacheln mit Steilhängen im 4-m-Raster samt Nachbarn, mit `--all-tiles` das ganze Land. Rohkacheln liegen komprimiert in `<work>/raw/` (rund 22 GB für RLP), ein Abbruch setzt beim nächsten Aufruf fort.
+Der Lauf braucht die 1-m-Rohkacheln. Standardmäßig lädt er nur Kilometerkacheln mit Steilhängen im 4-m-Raster samt Nachbarn, mit `--all-tiles` das ganze Land. Rohkacheln liegen komprimiert in `<work>/raw/` (rund 22 GB für RLP), ein Abbruch setzt beim nächsten Aufruf fort. Lief vorher `build_dem_rlp.py --keep-raw` mit demselben Arbeitsordner, sind sie schon da und es wird nichts mehr geladen (Kacheln, die ohne `--keep-raw` entstanden, holt der Lauf nach).
 
     .venv-dem/bin/python tools/build_klippen_dgm.py --work ~/Claude/OSINT/dgm1-work --out web/tiles/klippen --all-tiles   # RLP: ca. 21 000 Wände, 0,9 Mio. Striche, 24 MB; Download 33 GB, Gesamtlauf rund 3 Stunden
     .venv-dem/bin/python tools/build_klippen_dgm.py --work ... --out ... --bbox 7.70 50.10 7.76 50.14                     # Ausschnitt (Loreley), 20 Sekunden

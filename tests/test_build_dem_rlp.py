@@ -167,3 +167,46 @@ def test_upsample_base_ohne_nachbarn_und_ohne_basis(tmp_path):
     f = B.upsample_base(tmp_path, 13, 20, 20)
     assert f is not None and not np.isnan(f).any() and abs(float(f.mean()) - 150) < 0.05
     assert B.upsample_base(tmp_path, 13, 2, 2) is None
+
+
+def test_fetch_one_legt_rohkachel_im_klippen_format_ab(tmp_path):
+    """--keep-raw: eine Datei laden, 4-m-Kachel und 1-m-Rohkachel (uint16, Maßstab 50) schreiben; ohne raw_dir keine Rohkachel."""
+    import hashlib
+    import io
+
+    import tifffile
+    h = np.full((1000, 1000), 300.0, np.float32)
+    h[0, 0] = -9999.0
+    buf = io.BytesIO()
+    tifffile.imwrite(buf, h)
+    content = buf.getvalue()
+
+    class Antwort:
+        status_code = 200
+
+    Antwort.content = content
+
+    class Client:
+        def get(self, url):
+            return Antwort()
+
+    item = {"e": 337, "n": 5553, "url": "https://geobasis-rlp.de/x.tif", "sha": hashlib.sha256(content).hexdigest(), "name": "x.tif"}
+    red, raw = tmp_path / "red", tmp_path / "raw"
+    red.mkdir()
+    raw.mkdir()
+    assert B.fetch_one(Client(), item, red, raw) == "ok"
+    r = np.load(raw / "337_5553.npz")["a"]
+    assert r.shape == (1000, 1000) and r.dtype == np.uint16
+    assert r[500, 500] == round((300.0 + B.OFFSET) * B.RAW_SCALE) and r[0, 0] == 0
+    assert np.load(red / "337_5553.npy").shape == (250, 250)
+    red2 = tmp_path / "red2"
+    red2.mkdir()
+    assert B.fetch_one(Client(), item, red2) == "ok" and not list(raw.glob(".*")) and len(list(raw.glob("*.npz"))) == 1
+
+
+def test_rohkachel_format_gleich_klippen():
+    """RAW_SCALE und OFFSET müssen mit tools/build_klippen_dgm.py übereinstimmen (sonst lesen die Felswände falsche Höhen)."""
+    import re
+    src = (ROOT / "tools" / "build_klippen_dgm.py").read_text()
+    m = re.search(r"^OFFSET, SCALE = ([\d.]+), ([\d.]+)", src, re.M)
+    assert (float(m.group(1)), float(m.group(2))) == (B.OFFSET, B.RAW_SCALE)
