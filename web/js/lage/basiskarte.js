@@ -1,7 +1,7 @@
 import { layers as basemapLayers, namedFlavor } from '../../vendor/protomaps-basemaps/basemaps.js';
 import { registerIcons, registerMedieval, setIconStyle } from '../icons.js';
 import { buildRelief, elevationAt, fillLegend, hillStrength } from '../relief.js';
-import { $ } from '../util.js';
+import { $, SEV } from '../util.js';
 import { fillWindLegend } from '../wind.js';
 import { palette, sevColor } from './farben.js';
 import { baseAnchor } from './geometrie.js';
@@ -9,9 +9,34 @@ import { MED, MED_COLORS, MED_ICON_STYLE, medFlavor, medievalize } from './mitte
 import { HER_LAYERS, NAT_LAYERS, applyNatureVisibility, paintNature, peakLayers } from './natur.js';
 import { INFRA_LAYER_IDS, paintStops } from './orte.js';
 import { placeLgb } from './lgb.js';
-import { LABEL_SKIP, cliffLayers, labelsAndBuildings, ortsnamenUebersicht, landUseLayers, mainRoad, signLayers, waterEdges } from './stil.js';
-import { applyFlow, fillTempLegend, placeRadar } from './wetterkarte.js';
+import { BUILDING_OPACITY, LABEL_SKIP, LAND, cliffLayers, labelsAndBuildings, ortsnamenUebersicht, landUseLayers, mainRoad, signLayers, waterEdges } from './stil.js';
+import { applyFlow, applyLegends, fillTempLegend, placeRadar } from './wetterkarte.js';
+import { BUILDING_KLASSEN } from '../gebaeude-farben.js';
 import { basemapOk, coreOk, flow, gebOk, light, klippenOk, map, mapReady, reliefOk, ringOk, state } from './zustand.js';
+
+/** Farbfeld mit Text als Zeile der Zeichenerklärung (Farbe per CSSOM, die CSP verbietet Inline-Styles im Markup). */
+function legendZeile(farbe, text, deckkraft = 1) {
+  const z = document.createElement('div'), sw = document.createElement('span');
+  z.className = 'legend-row';
+  sw.className = 'geb-sw';
+  sw.style.background = farbe;
+  sw.style.opacity = String(deckkraft);
+  sw.setAttribute('aria-hidden', 'true');
+  z.append(sw, ` ${text}`);
+  return z;
+}
+
+const VEG_LEGENDE = [['forest', 'Wald'], ['meadow', 'Wiese, Weide'], ['grass', 'Park, Rasen, Garten'], ['scrub', 'Busch'], ['heath', 'Heide'], ['farmland', 'Acker'],
+  ['orchard', 'Obst'], ['vineyard', 'Wein'], ['wetland', 'Feuchtgebiet'], ['rock', 'Fels'], ['sand', 'Sand, Strand'], ['cemetery', 'Friedhof']];
+
+/** Zeichenerklärung der Flächen: Gebäudefunktion, Bewuchs, Meldungsstufen. Farben folgen dem Farbschema (hell/dunkel). */
+function fillFlaechenLegenden(dark) {
+  const k = dark ? 'dark' : 'light';
+  $('#legend-geb')?.replaceChildren(...BUILDING_KLASSEN.filter(([id]) => id !== 'sonst').map(([, titel, c]) => legendZeile(c[k], titel, BUILDING_OPACITY + 0.4)));
+  $('#legend-veg')?.replaceChildren(...VEG_LEGENDE.map(([id, titel]) => legendZeile(LAND[k][id][0], titel, Math.min(1, LAND[k][id][1] + 0.3))));
+  const pal = palette();
+  $('#legend-warn')?.replaceChildren(...['critical', 'warning', 'notice', 'info'].map((id) => legendZeile(pal[id], SEV[id].label)));
+}
 
 // Stil-Layer der Basiskarte unter den eigenen Ebenen; beim Wechsel Hell/Dunkel neu aufgebaut
 export function applyBasemap() {
@@ -57,6 +82,8 @@ export function applyBasemap() {
   paintStops();
   paintNature();
   applyNatureVisibility();
+  fillFlaechenLegenden(dark);
+  applyLegends();
   applyBaseToggles();
   applyFlow();
   flow?.refresh();

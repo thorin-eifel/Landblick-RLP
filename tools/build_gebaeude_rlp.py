@@ -8,11 +8,13 @@ Zweck:      Die Gebäude der Basiskarte stammen aus OpenStreetMap und sind lück
 Quelle:     Hausumringe RP, © GeoBasis-DE / LVermGeoRP, dl-de/by-2-0 [Daten bearbeitet],
             https://geobasis-rlp.de/data/hu/current/zip/HAUSUMRINGE_RP.zip (Shapefile, EPSG:25832, rund 330 MB, ganz Rheinland-Pfalz).
             OSM-Gebäude: Protomaps-Build, © OpenStreetMap-Mitwirkende (ODbL).
-Datenschutz: Übernommen werden nur die Umrisse. Gemeindeschlüssel (AGS), Objektkennung (OI), Gebäudefunktion (GFK) und
-            Kachelnummer der Quelle werden nicht gelesen, Adressen und Hausnummern enthält die Quelle nicht.
+Datenschutz: Übernommen werden die Umrisse und die Gebäudefunktion (GFK, Spalte der .dbf), gröber zusammengefasst zu acht Klassen
+            (wohnen, wirtschaft, garage, ueberdachung, technik, oeffentlich, religion, sonst). Gemeindeschlüssel (AGS), Objektkennung (OI)
+            und Kachelnummer der Quelle werden nicht gelesen, Adressen und Eigentümer enthält die Quelle nicht. Fehlt die .dbf, entsteht
+            die Datei ohne Klassen (alles in der Standardfarbe).
 Ablauf:     1. Hausumringe lesen, nach Web-Mercator umrechnen, je Kachel Zoom 15 (alle) und Zoom 14 (nur größere) als MVT-Merkmal ablegen
             2. OSM-Gebäude aus core (Zoom 14/15) und ring (Zoom 14) übernehmen, deren Schwerpunkt außerhalb der Landesgrenze liegt
-            3. Kacheln zu <out> (PMTiles, Ebene `buildings`, Attribut kind=building wie im Stil der Basiskarte) schreiben
+            3. Kacheln zu <out> (PMTiles, Ebene `buildings`, Attribute kind=building wie im Stil der Basiskarte und klasse=<Klasse> bei Hausumringen) schreiben
 Aufruf:     python tools/build_gebaeude_rlp.py --hu hu/gebaeude_hu.shp --core perf-rlp/tiles/core.pmtiles \\
                 --ring perf-rlp/tiles/ring.pmtiles --grenze web/geo/rlp.geojson --out perf-rlp/tiles/gebaeude.pmtiles
             python tools/build_gebaeude_rlp.py ... --bbox 6.35 49.80 6.55 49.92        Ausschnitt (Probe, in Sekunden)
@@ -41,8 +43,38 @@ EXTENT = 4096
 ZMAX, ZMIN = 15, 14
 MERC = 20037508.342789244
 KEEP_KINDS = {"building", "building_part"}
+KLASSEN = ("wohnen", "wirtschaft", "garage", "ueberdachung", "technik", "oeffentlich", "religion", "sonst")
+CODE_KLASSE = {   # Gebäudefunktion (ADV-Codeliste BuildingFunctionTypeAdV) → Klasse; Rest nach klasse_von_gfk()
+    "31001_1000": "wohnen", "31001_2000": "wirtschaft", "31001_2461": "garage", "31001_2462": "garage", "31001_2463": "garage",
+    "31001_2464": "garage", "31001_2465": "garage", "51009_1610": "ueberdachung", "51001_1001": "technik",
+}
 ATTRIBUTION = ("Gebäude in Rheinland-Pfalz: © GeoBasis-DE / LVermGeoRP, dl-de/by-2-0 [Daten bearbeitet]; "
                "sonst © OpenStreetMap-Mitwirkende (ODbL)")
+
+
+def klasse_von_gfk(gfk: str | None) -> str:
+    """Gebäudefunktionskennung (z. B. "31001_3041") → eine von KLASSEN. Unbekannt oder leer: "sonst"."""
+    g = (gfk or "").strip()
+    if g in CODE_KLASSE:
+        return CODE_KLASSE[g]
+    try:
+        kopf, num = g.split("_")
+        n = int(num)
+    except ValueError:
+        return "sonst"
+    if kopf != "31001":
+        return "sonst"
+    if 1000 <= n < 2000:
+        return "wohnen"
+    if n in (2213, 2513, 2523, 2527, 2611):      # Schöpfwerk, Wasserbehälter, Umformer, Reaktorgebäude, Kläranlage
+        return "technik"
+    if 2000 <= n < 3000:
+        return "wirtschaft"
+    if 3040 <= n < 3050 or 3080 <= n < 3090:     # religiöse Zwecke, Friedhofsgebäude, Trauerhalle, Krematorium
+        return "religion"
+    if 3000 <= n < 4000:
+        return "oeffentlich"
+    return "sonst"
 
 
 # ------------------------------------------------------------------ MVT schreiben
@@ -102,9 +134,9 @@ def geometry_ints(rings: list[tuple[list[int], list[int], bool]]) -> list[int]:
     return out
 
 
-def feature_bytes(geom: list[int]) -> bytes:
-    """Ein Polygon-Merkmal mit dem Attribut kind=building (Schlüssel 0, Wert 0 der Ebene)."""
-    tags = packed([0, 0])
+def feature_bytes(geom: list[int], klasse: str | None = None) -> bytes:
+    """Ein Polygon-Merkmal mit kind=building (Schlüssel 0, Wert 0 der Ebene) und, wenn gegeben, klasse=<Klasse> (Schlüssel 1, Wert 1 + Index)."""
+    tags = packed([0, 0] if klasse is None else [0, 0, 1, 1 + KLASSEN.index(klasse)])
     g = packed(geom)
     return b"\x12" + varint(len(tags)) + tags + b"\x18\x03" + b"\x22" + varint(len(g)) + g
 
@@ -113,7 +145,10 @@ def layer_bytes(features: list[bytes]) -> bytes:
     body = b"\x0a\x09buildings"
     for f in features:
         body += b"\x12" + varint(len(f)) + f
-    body += b"\x1a\x04kind" + b"\x22\x0a\x0a\x08building"      # Schlüssel kind, Wert "building"
+    body += b"\x1a\x04kind" + b"\x1a\x06klasse"                # Schlüssel 0 = kind, 1 = klasse
+    for v in ("building",) + KLASSEN:                            # Werte: 0 = "building", 1.. = Klassen
+        vb = v.encode()
+        body += b"\x22" + varint(len(vb) + 2) + b"\x0a" + varint(len(vb)) + vb
     body += b"\x28" + varint(EXTENT) + b"\x78\x02"              # extent, version 2
     return b"\x1a" + varint(len(body)) + body
 
@@ -158,6 +193,12 @@ def _fields(b: bytes) -> Iterator[tuple[int, int, int | bytes]]:
 
 def read_buildings(raw: bytes) -> tuple[int, list[list[int]]]:
     """Polygone der Ebene `buildings` mit kind in KEEP_KINDS: (extent, [Befehlsliste, ...])."""
+    extent, out = read_buildings_klasse(raw)
+    return extent, [g for g, _ in out]
+
+
+def read_buildings_klasse(raw: bytes) -> tuple[int, list[tuple[list[int], str | None]]]:
+    """Wie read_buildings, dazu das Attribut `klasse` je Polygon (None, wenn es keines trägt): (extent, [(Befehlsliste, klasse), ...])."""
     if raw[:2] == b"\x1f\x8b":
         raw = gzip.decompress(raw)
     extent, out = 4096, []
@@ -180,6 +221,7 @@ def read_buildings(raw: bytes) -> tuple[int, list[list[int]]]:
         if name != "buildings":
             continue
         kind_i = keys.index("kind") if "kind" in keys else -1
+        kl_i = keys.index("klasse") if "klasse" in keys else -1
         for ft in feats:
             typ, tags, geom = 0, [], []
             for ff, fw, fv in _fields(ft):
@@ -198,8 +240,9 @@ def read_buildings(raw: bytes) -> tuple[int, list[list[int]]]:
             if typ != 3:
                 continue
             kind = next((vals[tags[i + 1]] for i in range(0, len(tags) - 1, 2) if tags[i] == kind_i and tags[i + 1] < len(vals)), None)
+            klasse = next((vals[tags[i + 1]] for i in range(0, len(tags) - 1, 2) if tags[i] == kl_i and tags[i + 1] < len(vals)), None)
             if kind in KEEP_KINDS:
-                out.append(geom)
+                out.append((geom, klasse))
     return extent, out
 
 
@@ -244,18 +287,20 @@ def load_grenze(path: Path):
 
 # ------------------------------------------------------------------ Hausumringe lesen
 def read_shp(path: Path, bbox_utm: tuple[float, float, float, float] | None = None, batch: int = 40000):
-    """Liest Polygone aus dem Shapefile. Liefert je Merkmal (teile, xs, ys) als numpy-Felder, in Stapeln.
-    Es wird nur die .shp gelesen, nicht die .dbf (keine Sachdaten)."""
+    """Liest Polygone aus dem Shapefile. Liefert je Merkmal (teile, punkte, nr) als numpy-Felder, in Stapeln; `nr` ist die laufende
+    Nummer des Datensatzes in der Datei (null-basiert, zählt auch übersprungene), damit die .dbf-Zeile danebenliegt."""
     skipped = 0
+    nr = -1
     with open(path, "rb") as f:
         head = f.read(100)
         if struct.unpack(">i", head[:4])[0] != 9994:
             raise ValueError("keine Shapefile-Datei")
-        buf: list[tuple[np.ndarray, np.ndarray]] = []
+        buf: list[tuple[np.ndarray, np.ndarray, int]] = []
         while True:
             h = f.read(8)
             if len(h) < 8:
                 break
+            nr += 1
             ln = struct.unpack(">i", h[4:])[0] * 2
             rec = f.read(ln)
             if struct.unpack("<i", rec[:4])[0] != 5:
@@ -267,7 +312,7 @@ def read_shp(path: Path, bbox_utm: tuple[float, float, float, float] | None = No
             nparts, npts = struct.unpack("<2i", rec[36:44])
             parts = np.frombuffer(rec, dtype="<i4", count=nparts, offset=44)
             pts = np.frombuffer(rec, dtype="<f8", count=npts * 2, offset=44 + 4 * nparts).reshape(npts, 2)
-            buf.append((parts, pts))
+            buf.append((parts, pts, nr))
             if len(buf) >= batch:
                 yield buf
                 buf = []
@@ -275,6 +320,37 @@ def read_shp(path: Path, bbox_utm: tuple[float, float, float, float] | None = No
             yield buf
     if skipped:
         log.warning("%d Merkmale ohne Polygon übersprungen", skipped)
+
+
+def read_gfk(shp: Path) -> np.ndarray | None:
+    """Spalte GFK der zugehörigen .dbf als Feld von Klassen-Nummern (Index in KLASSEN), eine je Datensatz in Reihenfolge der .shp.
+    Alle anderen Spalten (AGS, OI, KACHEL ...) werden nicht angefasst. Ohne .dbf oder ohne Spalte GFK: None."""
+    dbf = shp.with_suffix(".dbf")
+    if not dbf.exists():
+        log.warning("%s fehlt: Hausumringe ohne Gebäudefunktion", dbf.name)
+        return None
+    with open(dbf, "rb") as f:
+        head = f.read(32)
+        n, hlen, rlen = struct.unpack("<Ihh", head[4:12])
+        off = 1                                                  # erstes Byte jedes Datensatzes: Löschmarke
+        spalte = None
+        while True:
+            d = f.read(32)
+            if len(d) < 32 or d[0] == 0x0D:
+                break
+            name, ln = d[:11].split(b"\0")[0].decode("ascii", "replace"), d[16]
+            if name.upper() == "GFK":
+                spalte = (off, ln)
+            off += ln
+    if spalte is None:
+        log.warning("Spalte GFK fehlt in %s", dbf.name)
+        return None
+    a = np.memmap(dbf, dtype=np.uint8, mode="r", offset=hlen, shape=(n, rlen))
+    roh = np.ascontiguousarray(a[:, spalte[0]:spalte[0] + spalte[1]]).view(f"S{spalte[1]}").ravel()
+    codes, inv = np.unique(roh, return_inverse=True)
+    num = np.array([KLASSEN.index(klasse_von_gfk(c.decode("ascii", "replace"))) for c in codes], dtype=np.uint8)
+    log.info("GFK: %d Datensätze, %d Codes", n, len(codes))
+    return num[inv.ravel()]
 
 
 def to_tile_space(x: np.ndarray, y: np.ndarray, tr, z: int) -> tuple[np.ndarray, np.ndarray]:
@@ -300,6 +376,7 @@ def encode_rings(fx: np.ndarray, fy: np.ndarray, parts: np.ndarray, tx: int, ty:
 
 def add_hausumringe(shp: Path, tiles: dict, min_z14: float, bbox: tuple[float, float, float, float] | None) -> int:
     from pyproj import Transformer
+    gfk = read_gfk(shp)
     tr = Transformer.from_crs(25832, 3857, always_xy=True)
     bbox_utm = None
     if bbox:
@@ -310,11 +387,12 @@ def add_hausumringe(shp: Path, tiles: dict, min_z14: float, bbox: tuple[float, f
     n = 0
     t0 = time.time()
     for stapel in read_shp(shp, bbox_utm):
-        sizes = [len(p) for _, p in stapel]
-        allp = np.concatenate([p for _, p in stapel])
+        sizes = [len(p) for _, p, _ in stapel]
+        allp = np.concatenate([p for _, p, _ in stapel])
         fx, fy = to_tile_space(allp[:, 0], allp[:, 1], tr, ZMAX)
         off = 0
-        for (parts, pts), sz in zip(stapel, sizes):
+        for (parts, pts, nr), sz in zip(stapel, sizes):
+            klasse = None if gfk is None or nr >= len(gfk) else KLASSEN[gfk[nr]]
             ux, uy = fx[off:off + sz], fy[off:off + sz]
             raw_x, raw_y = pts[:, 0], pts[:, 1]
             off += sz
@@ -325,13 +403,13 @@ def add_hausumringe(shp: Path, tiles: dict, min_z14: float, bbox: tuple[float, f
                 for ty in range(ty0, ty1 + 1):
                     g = encode_rings(ux, uy, parts, tx, ty)
                     if g:
-                        tiles[(ZMAX, tx, ty)].append(feature_bytes(g))
+                        tiles[(ZMAX, tx, ty)].append(feature_bytes(g, klasse))
             if flaeche >= min_z14:
                 for tx in range(tx0 >> 1, (tx1 >> 1) + 1):
                     for ty in range(ty0 >> 1, (ty1 >> 1) + 1):
                         g = encode_rings(ux, uy, parts, tx, ty, scale=0.5)
                         if g:
-                            tiles[(ZMIN, tx, ty)].append(feature_bytes(g))
+                            tiles[(ZMIN, tx, ty)].append(feature_bytes(g, klasse))
             n += 1
         log.info("%d Hausumringe, %.0f s", n, time.time() - t0)
     return n
@@ -395,7 +473,7 @@ def write_pmtiles(tiles: dict, out: Path, stand: str) -> dict:
         "center_zoom": ZMIN, "center_lon_e7": int((lon0 + lon1) / 2 * 1e7), "center_lat_e7": int((lat0 + lat1) / 2 * 1e7),
     }
     meta = {"name": "gebaeude", "format": "pbf", "type": "overlay", "minzoom": ZMIN, "maxzoom": ZMAX, "attribution": ATTRIBUTION,
-            "description": f"Gebäudeumrisse, Stand Hausumringe {stand}", "vector_layers": [{"id": "buildings", "fields": {"kind": "String"}}]}
+            "description": f"Gebäudeumrisse, Stand Hausumringe {stand}", "vector_layers": [{"id": "buildings", "fields": {"kind": "String", "klasse": "String"}}]}
     tmp = out.with_suffix(".tmp")
     with open(tmp, "wb") as fh:
         w = Writer(fh)
