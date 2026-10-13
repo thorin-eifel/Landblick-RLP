@@ -206,8 +206,30 @@ function baueMenue(cfg) {
   return inst;
 }
 
+/** Schaltfläche an eine Katalog-Ebene koppeln (z. B. HQextrem bei der Abfluss-Ebene). Sie schaltet das Kontrollkästchen im Menü, also gilt derselbe
+ *  Hinweis vor dem ersten Abruf; fehlt der Katalog oder die Ebene, bleibt die Schaltfläche verborgen. */
+export function koppleKatalogEbene(knopfId, cbSelektor, textId) {
+  const knopf = document.getElementById(knopfId), cb = document.querySelector(cbSelektor);
+  if (!knopf || !cb) return;
+  const text = textId ? document.getElementById(textId) : null;
+  const sync = () => { knopf.setAttribute('aria-pressed', String(cb.checked)); };
+  knopf.hidden = false;
+  if (text) text.hidden = false;
+  knopf.addEventListener('click', () => {
+    const war = cb.checked;
+    cb.checked = !war;
+    cb.dispatchEvent(new Event('change'));
+    sync();
+    if (war) return;
+    for (let d = cb.closest('details'); d; d = d.parentElement?.closest('details')) d.open = true;   // der Hinweis sitzt im Menü: aufklappen, sonst sieht man ihn nicht
+    cb.scrollIntoView({ block: 'nearest' });
+  });
+  cb.addEventListener('change', sync);
+}
+
 /** Einmal beim Start: beide Menüs aufbauen. */
 export async function initLgb() {
   for (const cfg of MENUES) instanzen.push(baueMenue(cfg));
   await Promise.all(instanzen.map((m) => m.init()));
+  koppleKatalogEbene('abfluss-hq', 'input[data-lgb="lad-gp3812-Ueberflutungsflaechen_HQ_extrem"]', 'abfluss-hq-text');
 }

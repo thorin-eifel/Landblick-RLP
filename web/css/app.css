@@ -718,3 +718,5 @@ body.einrichtung .klein { font-size: .8rem; }
 .lgb-vermerk { margin: 0; padding: 2px 6px; background: color-mix(in srgb, var(--bg-elevated) 85%, transparent); color: var(--fg); border-radius: 4px; }
 .lgb-vermerk[hidden] { display: none; }
 .lgb-vermerk a { color: inherit; }
+.hq-zeile { margin: var(--space-2) 0 0; display: flex; flex-direction: column; gap: var(--space-1); align-items: flex-start; }
+.hq-zeile button[aria-pressed="true"] { font-weight: 600; }
