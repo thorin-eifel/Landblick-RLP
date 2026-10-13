@@ -13,7 +13,7 @@ Datenschutz: Flächen und Ortsnamen; keine Personen, keine Adressen, keine Flurs
             je Ortsteil (Zahlen, keine Personen); sie werden nicht übernommen.
 Ablauf:     1. Verwaltungseinheiten lesen (Stufe 4 Kreis/Stadt, 5 Verbandsgemeinde, 6 Gemeinde), Hierarchie über upperLevelUnit
             2. Gemeindeflächen vereinfachen (Toleranz --tol Grad) und als ganzzahlige Deltas (1e-5 Grad) ablegen
-            3. Ortsteile (Wohnplatznummer endet auf 00) und Wohnplätze nach Gemeinde einsortieren (Punkt in Fläche)
+            3. Ortsteile (Zeile der Gemeinde selbst und Wohnplatznummer auf 00) und Wohnplätze nach Gemeinde einsortieren (Punkt in Fläche)
 Ausgabe:    web/geo/verwaltung.json (siehe docs/betrieb.md, Abschnitt Rechtsklick)
 Aufruf:     python tools/build_verwaltung.py --au dlkm_au.gml --wohnplatz WOHNPLATZ_RP_wohnplcsv.CSV --out web/geo/verwaltung.json
 Parameter:  --tol 0.00005   Vereinfachung in Grad (rund 5 m); --stand "Dezember 2025" für den Vermerk
@@ -90,11 +90,9 @@ def read_wohnplatz(path: Path) -> list[dict]:
             except (KeyError, ValueError):
                 continue
             nr = (r.get("WpNr") or "").strip()
-            if not nr:        # Zeile der Gemeinde selbst, kein Ortsteil
-                continue
             lon, lat = tr.transform(e, n)
             name = r["Gemeinde_Gemeindeteile"].split("(")[0].strip()
-            out.append({"name": " ".join(name.split()), "lon": lon, "lat": lat, "ortsteil": nr.endswith("00")})
+            out.append({"name": " ".join(name.split()), "lon": lon, "lat": lat, "ortsteil": nr == "" or nr.endswith("00")})
     return out
 
 
