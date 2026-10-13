@@ -28,7 +28,8 @@ import { showPopup } from './popup.js';
 import { initKontext } from './kontext.js';
 import { initSearch } from './suche-karte.js';
 import { applyWind, fillTempLegend, showFlowWind, trackLegendBottom } from './wetterkarte.js';
-import { CORE_URL, GEB_JAHR, GEB_URL, RING_URL, START_VIEW, SYMBOL_LAYERS, TILES_URL, light, map, gebOk, reduceMotion, reliefOk, ripples, setBasemapOk, setCoreOk, setFlow, setGebOk, setKlippenOk, setLight, setMap, setMapReady, setPopup, setReliefOk, setRingOk, setRipples, setSweep, setWind, setWindLow, state, sweep, wind, windLow } from './zustand.js';
+import { ABFLUSS_URL, CORE_URL, GEB_JAHR, GEB_URL, RING_URL, START_VIEW, SYMBOL_LAYERS, TILES_URL, light, map, gebOk, reduceMotion, reliefOk, ripples, setAbflussOk, setBasemapOk, setCoreOk, setFlow, setGebOk, setKlippenOk, setLight, setMap, setMapReady, setPopup, setReliefOk, setRingOk, setRipples, setSweep, setWind, setWindLow, state, sweep, wind, windLow } from './zustand.js';
+import { ABFLUSS_LAYER_IDS } from './abfluss.js';
 
 // ------------------------------------------------------------------ Karte
 // Rahmen der Karte: Umriss von Rheinland-Pfalz (web/geo/rlp.geojson: 6,11–8,51 E, 48,97–50,94 N) mit gleichem Rand ringsum, damit der Mittelpunkt
@@ -195,7 +196,13 @@ export async function initMap() {
   map.on('click', (e) => {
     const order = ['air-sym', 'air-circle', ...SYMBOL_LAYERS, ...INFRA_LAYER_IDS, 'routes-hit', 'ev-point', 'env-sym', 'env-circle', 'tank-sym', 'tank-circle', 'st-sym', 'st-circle', 'ev-line', 'ev-fill'];
     const hit = map.queryRenderedFeatures(e.point, { layers: order.filter((l) => map.getLayer(l)) })[0];
-    if (!hit) return;
+    if (!hit) {   // dünne Linien: Treffer in einem kleinen Kasten um den Zeiger; Senken vor Linien
+      const kasten = [[e.point.x - 6, e.point.y - 6], [e.point.x + 6, e.point.y + 6]];
+      const ab = map.queryRenderedFeatures(kasten, { layers: ABFLUSS_LAYER_IDS.filter((l) => map.getLayer(l) && map.getLayoutProperty(l, 'visibility') !== 'none') })
+        .sort((a, b) => (a.layer.id === 'bm-senken-circle' ? -1 : 0) - (b.layer.id === 'bm-senken-circle' ? -1 : 0))[0];
+      if (ab) showPopup(ab.properties, ab.layer.id === 'bm-senken-circle' ? 'senke' : 'abfluss', e.lngLat);
+      return;
+    }
     showPopup(hit.properties, hit.layer.id === 'routes-hit' ? 'route' : hit.layer.id.startsWith('inf-') ? 'infra' : hit.layer.id.startsWith('tank-') ? 'tank' : hit.layer.id.startsWith('st-') ? 'station' : hit.layer.id.startsWith('env-') ? 'env' : 'event', e.lngLat);
   });
 
@@ -286,6 +293,14 @@ export async function setupBasemap() {
       map.addSource('basemap-geb', { type: 'vector', url: `pmtiles://${gebUrl}` });   // Zoom 14 gilt ab Kartenzoom 14, Zoom 15 ab 15 (darüber hochgezoomt)
       setGebOk(true);
     } catch (err) { console.warn('Gebäudeebene (Hausumringe) nicht verfügbar:', err?.message ?? err); }
+    try {   // Abflussbahnen und Senken aus dem Gelände (tools/build_abfluss.py); fehlt die Datei, bleiben die Schalter ohne Wirkung
+      const abUrl = new URL(ABFLUSS_URL, location.href).href;
+      const ab = new PMTiles(abUrl);
+      await ab.getHeader();
+      protocol.add(ab);
+      map.addSource('abfluss', { type: 'vector', url: `pmtiles://${abUrl}` });
+      setAbflussOk(true);
+    } catch (err) { console.warn('Abflussebene nicht verfügbar:', err?.message ?? err); }
     try {   // Wände aus dem Geländemodell (tools/build_klippen_dgm.py): Vektorkacheln Zoom 13; fehlen sie, zeichnet die Karte nur die OSM-Klippen
       const kb = new URL('tiles/klippen/', location.href).href;
       const km = await fetch(kb + 'meta.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);

@@ -365,6 +365,19 @@ Die Karte im Stil des 15. Jahrhunderts hat keine Papiertextur mehr (Foto und Üb
 
 **Wasserbewegung** (Ebene „Wasserbewegung“, standardmäßig aus, `web/js/fluss.js`): Striche und Pfeile entlang der Gewässerlinien zeigen die Fließrichtung (Digitalisierungsrichtung der OSM-Linien, geprüft an Mosel, Saar, Our, Sûre, Kyll, Prüm, Nims, Alzette, Lieser, Ruwer). Tempo ist eine Klasse (Bach, Fluss, gestaut), kein gemessener Abfluss. `IMPOUNDED` (Mosel, Saar) bewegt sich kaum: staugeregelt. Seen, Teiche und Becken zeigen Wellenzeichen, die mit dem Modellwind (ICON-D2, Kartenmitte) ziehen; bei Flaute oder ohne Windmodell bleibt das Wasser glatt. Flächen ohne Gewässerart gelten als Stillgewässer. Bei `prefers-reduced-motion` stehen die Zeichen still. Tests: `node tests/js/fluss.test.mjs`. Prüfhilfe: `#debug` schreibt Seitenfehler nach `data-debug-err` am `<html>`.
 
+## Starkregen und Abfluss (Geländeschätzung)
+
+Zwei Ebenen im Thema Gewässer: Abflussbahnen (Linien, Breite und Farbe nach Größe des Einzugsgebiets, gestrichelt unter 25 ha) und Senken im Gelände (Kreise nach Fassungsvolumen). Gerechnet aus den Höhenkacheln Zoom 14 (rund 6 m, in RLP aus dem DGM1), nicht gemessen und kein Gefahrenkartenwerk. Durchlässe, Brücken, Gräben, Kanalisation, Boden und Bewuchs kennt die Rechnung nicht; Teiche, Steinbrüche und Straßendämme erscheinen als Senken. Das steht in der Zeichenerklärung und im Popup.
+
+```
+python tools/build_abfluss.py --dem-dir perf-rlp/tiles/dem --bbox 6.15 49.55 6.85 50.15 --grenze web/geo/rlp.geojson \
+    --out perf-rlp/tiles/abfluss.pmtiles --work /tmp/abfluss-work
+```
+
+Der Rechenkern ist C (`tools/abfluss_kern.c`, wird beim ersten Lauf mit `cc` gebaut): Senken füllen (Priority-Flood), Richtung D8, Fläche stromab summieren. Speicher rund 30 Byte je Zelle, 87 Millionen Zellen etwa 2,6 GB. Am Rand des Rechengebiets fehlt der Zufluss von außen, dort sind Einzugsgebiete zu klein; Gebiete deshalb überlappend wählen. Ausgabe `tiles/abfluss.pmtiles`; fehlt die Datei, gibt es die Ebenen nicht.
+
+Die Schaltfläche bei den Ebenen schaltet die amtliche Überflutungsfläche HQextrem (Datenstand 12-2025, WMS der Wasserverwaltung RLP, CC BY 4.0) aus dem Menü Landesdaten dazu. Sie läuft über denselben Hinweis vor dem ersten Abruf wie alle Fremdserver-Ebenen. HQextrem beschreibt Hochwasser an Gewässern, die Abflussbahnen den Wasserlauf abseits davon bei Starkregen; beides wird nebeneinander gezeigt, nicht verrechnet.
+
 ## Lichtquelle am Zeiger
 
 Ebene „Lichtquelle am Zeiger“ (aus, unter Kartengrundlage; braucht Höhenrelief). `web/js/licht.js` rechnet im Fragment-Shader (WebGL2): Höhenmosaik aus den sichtbaren Terrarium-Kacheln (höchstens 48, Zoom 6 bis 12), Hangneigung per Sobel, Punktlicht über dem Zeiger (Höhe einstellbar), Schatten durch Strahlverfolgung mit weichem Rand (48 Schritte). Ohne Maus gilt die Bildmitte bzw. der letzte Tippunkt. Gilt nur bei Nordausrichtung ohne Neigung. Prüfzugang: `licht:{on,lon,lat,hoehe}` im `#debug`-Auftrag.
