@@ -1,3 +1,4 @@
+import { abflussPopup, HINWEIS, senkePopup } from '../abfluss-farben.js';
 import { infraText } from '../infra.js';
 import { deriveStatus } from '../rules.js';
 import { TYPE_LABEL, ageEl, fmtDateTime, h, link, sevBadge } from '../util.js';
@@ -24,6 +25,9 @@ export function showPopup(p, kind, lngLat) {
     box.append(isLu
       ? h('p', { class: 'k' }, `Preise: ${state.fuel?.lu?.max_source?.attribution ?? 'STATEC / LUSTAT, CC0'} · Standort: ${state.fuel?.lu?.stations_source?.attribution ?? '© OpenStreetMap-Mitwirkende (ODbL)'}`)
       : h('p', { class: 'k' }, `${state.fuel?.source?.attribution ?? 'Tankerkönig (CC BY 4.0)'} · Preise ohne Gewähr, Abruf `, ageEl(state.fuel?.source?.last_success)));
+  } else if (kind === 'abfluss' || kind === 'senke') {
+    const t = kind === 'abfluss' ? abflussPopup(p) : senkePopup(p);
+    box.append(h('h3', {}, t.titel), ...t.zeilen.map((z) => h('p', {}, z)), h('p', { class: 'k' }, HINWEIS));
   } else if (kind === 'route') {
     box.append(h('h3', {}, p.name), h('p', {}, p.kind === 'bike' ? 'Radroute' : 'Wanderroute', p.ref ? ` ${p.ref}` : '', p.network ? ` · ${({ iwn: 'international', nwn: 'national', rwn: 'regional', icn: 'international', ncn: 'national', rcn: 'regional' })[p.network] ?? p.network}` : ''),
       h('p', { class: 'k' }, `${state.routen?.source?.attribution ?? '© OpenStreetMap-Mitwirkende (ODbL)'} · Stand `, ageEl(state.routen?.source?.last_success)),

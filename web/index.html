@@ -76,6 +76,8 @@
               <label><input type="checkbox" data-layer="gew" checked> <span class="ico ico-pegel" aria-hidden="true"></span>Pegel</label>
               <label><input type="checkbox" data-layer="wehr"> <span class="ico ico-pegel" aria-hidden="true"></span>Wehre, Schleusen, Fähranleger</label>
               <label><input type="checkbox" data-layer="flow"> <span class="ico ico-wind" aria-hidden="true"></span>Wasserbewegung (Fließrichtung, Stau, Wellen im Wind)</label>
+              <label><input type="checkbox" data-layer="abfluss"> <span class="ico ico-pegel" aria-hidden="true"></span>Abflussbahnen bei Starkregen (Geländeschätzung)</label>
+              <label><input type="checkbox" data-layer="senken"> <span class="ico ico-pegel" aria-hidden="true"></span>Senken im Gelände, wo sich Wasser sammelt (Geländeschätzung)</label>
             </div>
           </details>
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Verkehr ganz ein- oder ausblenden"> <span>Verkehr</span></label></summary>
@@ -266,6 +268,11 @@
             <div class="relief-title">Meldungen, Stufe</div>
             <div class="legend-list" id="legend-warn"></div>
             <div class="relief-elev">Farbe der Markierung und der Fläche. Die Stufe stammt von der meldenden Stelle (NINA, DWD, Hochwasserzentrale), nicht von dieser Seite.</div>
+          </section>
+          <section data-legend="abfluss" hidden>
+            <div class="relief-title">Starkregen und Abfluss (Geländeschätzung)</div>
+            <div class="legend-list" id="legend-abfluss"></div>
+            <div class="relief-elev">Linie: wohin Wasser vom Hang läuft, Breite und Farbe nach der Fläche oberhalb; gestrichelt = nur bei Starkregen. Orange Kreise: Senken, Größe nach Fassungsvolumen. Rechnung aus dem Geländemodell (Raster rund 6 m): Durchlässe, Brücken, Gräben, Kanalisation, Boden und Bewuchs kennt sie nicht. Keine Gefahrenkarte; wo amtliche Starkregen- oder Hochwassergefahrenkarten vorliegen, gelten diese.</div>
           </section>
           <section data-legend="veg" hidden>
             <div class="relief-title">Bewuchs und Flächen</div>
