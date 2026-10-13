@@ -1,4 +1,5 @@
 /* Handbuch: ruhig, gut lesbar, druckbar. Keine externen Schriften. */
+@page { size: A4; margin: 18mm; }
 :root { color-scheme: light; }
 body { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 11pt; line-height: 1.55; color: #1c2024; max-width: 46rem; margin: 0 auto; padding: 1.5rem 1rem; }
 h1 { font-size: 1.7rem; margin-top: 2.6rem; padding-bottom: .3rem; border-bottom: 2px solid #2d6a4f; page-break-before: always; }

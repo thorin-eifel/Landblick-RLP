@@ -7,7 +7,7 @@
 # Aufruf:    tools/release.sh 1.0.0-alpha.1            nur bauen (aus HEAD)
 #            tools/release.sh 1.0.0-alpha.1 --github   bauen, Tag v<Version> auf HEAD setzen und Release anlegen
 #            REF=main tools/release.sh 1.0.0-alpha.1   anderen Git-Stand nehmen
-# Braucht:   git, python3, pandoc, wkhtmltopdf (Handbuch); für --github die GitHub-CLI `gh`, angemeldet.
+# Braucht:   git, python3 mit PyYAML, pandoc, wkhtmltopdf oder Chrome/Chromium/Edge (Handbuch-PDF); für --github die GitHub-CLI `gh`, angemeldet.
 # Regeln:    Nur versionierte Dateien kommen ins Archiv; die uxwing-Symbole (nicht versioniert) sind damit nie dabei.
 #            Notizen aus docs/release-<Version>.md; Versionen mit "-" gelten als Vorabversion.
 # Exit:      0 = gut, 1 = Fehler
@@ -39,7 +39,9 @@ fi
 
 "${PY}" -c "import yaml" 2>/dev/null || fail "PyYAML fehlt für ${PY}: ${PY} -m pip install pyyaml, oder PYTHON=<Interpreter mit PyYAML> setzen"
 command -v pandoc >/dev/null || fail "pandoc fehlt (brew install pandoc)"
-command -v wkhtmltopdf >/dev/null || fail "wkhtmltopdf fehlt (brew install --cask wkhtmltopdf)"
+if ! command -v wkhtmltopdf >/dev/null && ! "${PY}" -c "import sys; sys.path.insert(0,'tools'); import handbuch; sys.exit(0 if handbuch.chrome() else 1)"; then
+  fail "kein PDF-Weg: wkhtmltopdf oder Chrome/Chromium/Edge installieren"
+fi
 
 rm -rf "${OUT}" && mkdir -p "${OUT}"
 cd "${ROOT}"
