@@ -222,7 +222,7 @@ Der Lauf braucht die 1-m-Rohkacheln. Standardmäßig lädt er nur Kilometerkache
     .venv-dem/bin/python tools/build_klippen_dgm.py --work ~/Claude/OSINT/dgm1-work --out web/tiles/klippen --all-tiles   # RLP: ca. 21 000 Wände, 0,9 Mio. Striche, 24 MB; Download 33 GB, Gesamtlauf rund 3 Stunden
     .venv-dem/bin/python tools/build_klippen_dgm.py --work ... --out ... --bbox 7.70 50.10 7.76 50.14                     # Ausschnitt (Loreley), 20 Sekunden
 
-Fehlt `tiles/klippen/meta.json`, zeigt die Karte wie bisher die OSM-Klippen. Mit Kacheln werden OSM-Klippen innerhalb von RLP ausgeblendet, außerhalb bleiben sie. Die Flächen sind abgeleitet, keine Vermessung; künstliche Böschungen (Steinbrüche, Einschnitte) erscheinen ebenfalls, wenn sie höher als 5 m und steiler als 55 Grad sind.
+Fehlt `tiles/klippen/meta.json`, zeigt die Karte wie bisher die OSM-Klippen. Mit Kacheln werden OSM-Klippen innerhalb von RLP ausgeblendet, außerhalb bleiben sie. Schmale Schluchten (Teufelsschlucht, Felsspalten) fallen durch die Glättung aus der Hysterese heraus. Deshalb sucht `_slots` zusätzlich Spalten: mindestens `--slot-depth` m (Standard 5) tiefer als die Umgebung, Flanken steiler als 40 Grad, Mindestfläche 40 m². Flachere Gräben und Hohlwege bleiben draußen; `--slot-depth 0` schaltet die Suche ab. Das Ergebnis steht in `meta.json` (`slot_depth_m`). Nach einer Änderung der Schwelle muss das ganze Land neu gebaut werden, in ein neues Verzeichnis, dann tauschen. Die Flächen sind abgeleitet, keine Vermessung; künstliche Böschungen (Steinbrüche, Einschnitte) erscheinen ebenfalls, wenn sie höher als 5 m und steiler als 55 Grad sind.
 
 ## Weitere Quellen (Umwelt)
 
