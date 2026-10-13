@@ -1,7 +1,6 @@
 // Karten-Symbole aus den uxwing-SVGs (web/icons, siehe README dort). MapLibre bekommt sie als Bitmaps:
 // Meldungen als runde Plakette in der Stufenfarbe mit hellem oder dunklem Zeichen, Flugzeuge als Zeichen
 // mit Umriss, das sich nach dem Kurs dreht. Pro Stufe ein Bild; beim Wechsel Hell/Dunkel neu gezeichnet.
-import { registerLandPatterns } from './vegetation.js';
 export const iconStatus = { missing: [], errors: [] }; // für den Kartenhinweis, wenn Icons fehlen
 export const CHIP_ICONS = ['stau', 'baustelle', 'sperrung', 'warnung', 'hochwasser', 'pegel', 'strahlung', 'luft', 'temperatur', 'beben', 'feuer', 'bahn', 'natur'];
 const TRAFFIC_ICONS = ['stau', 'baustelle', 'sperrung', 'bahn'];
@@ -303,8 +302,55 @@ export async function registerIcons(map, colors) {
   return Boolean(loaded.warnung && loaded.stau);
 }
 
-// Vegetationsmuster (Luftbild-Optik) liegen in vegetation.js
-export { registerLandPatterns };
+// Signaturen für Vegetation (Kacheln 24 x 24, pixelRatio 2 = 12 px auf dem Schirm), je Klasse hell und dunkel.
+// Fein und halbtransparent, damit die Farbfläche trägt und Straßen, Höhenlinien und Beschriftung darüber lesbar bleiben.
+// Die Zeichnung wiederholt sich nahtlos (Formen liegen innerhalb der Kachel, Furchen laufen bis zum Rand).
+const LAND_INK = {
+  light: { forest: '#2a5e33', meadow: '#6f9a3a', grass: '#4f8a38', scrub: '#5d6b36', heath: '#7a4f78', farmland: '#a8923f', orchard: '#4f7a2c',
+    vineyard: '#7a6a24', allotment: '#5f8a3a', wetland: '#2f7a78', rock: '#6f665a', sand: '#b29a54', cemetery: '#4c6e47' },
+  dark: { forest: '#8fd09a', meadow: '#a8d070', grass: '#8cd08a', scrub: '#c0cc88', heath: '#d6a8d0', farmland: '#d9c27a', orchard: '#b8e08a',
+    vineyard: '#e0d083', allotment: '#a8d890', wetland: '#7fd0c8', rock: '#bdb4a6', sand: '#e6d08c', cemetery: '#a8cca4' },
+};
+const LAND_DRAW = {
+  // Baumkronen: zwei Kreise mit Mittelpunkt, versetzt
+  forest: (x) => { for (const [cx, cy, r] of [[7, 7, 4], [18, 17, 4.5]]) { x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.stroke(); x.beginPath(); x.arc(cx, cy, 0.9, 0, Math.PI * 2); x.fill(); } },
+  // Wiese: Grasbüschel (drei Halme)
+  meadow: (x) => { for (const [cx, cy] of [[6, 9], [17, 19]]) { x.beginPath(); x.moveTo(cx - 2.5, cy); x.lineTo(cx - 3.5, cy - 4); x.moveTo(cx, cy); x.lineTo(cx, cy - 5); x.moveTo(cx + 2.5, cy); x.lineTo(cx + 3.5, cy - 4); x.stroke(); } },
+  // Rasen, Park: feine Punkte
+  grass: (x) => { for (const [cx, cy] of [[4, 5], [14, 4], [9, 12], [20, 11], [5, 19], [16, 20]]) { x.beginPath(); x.arc(cx, cy, 0.9, 0, Math.PI * 2); x.fill(); } },
+  // Busch: kleine Ringe in Gruppen
+  scrub: (x) => { for (const [cx, cy, r] of [[6, 7, 2.2], [11, 10, 1.8], [18, 6, 2], [8, 18, 2], [18, 18, 2.4]]) { x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.stroke(); } },
+  // Heide: Heidekrautzweige, kurze Y
+  heath: (x) => { for (const [cx, cy] of [[6, 10], [17, 8], [12, 20]]) { x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx, cy - 4); x.moveTo(cx, cy - 2); x.lineTo(cx - 2, cy - 5); x.moveTo(cx, cy - 2); x.lineTo(cx + 2, cy - 5); x.stroke(); } },
+  // Acker: Furchen
+  farmland: (x) => { x.beginPath(); for (const y of [4, 10, 16, 22]) { x.moveTo(0, y); x.lineTo(24, y); } x.stroke(); },
+  // Obstwiese: Baumpunkte im Raster mit Ring
+  orchard: (x) => { for (const [cx, cy] of [[6, 6], [18, 6], [6, 18], [18, 18]]) { x.beginPath(); x.arc(cx, cy, 2.4, 0, Math.PI * 2); x.stroke(); x.beginPath(); x.arc(cx, cy, 0.7, 0, Math.PI * 2); x.fill(); } },
+  // Weinberg: senkrechte Rebzeilen, gestrichelt
+  vineyard: (x) => { x.setLineDash([3, 2]); x.beginPath(); for (const px of [3, 9, 15, 21]) { x.moveTo(px, 0); x.lineTo(px, 24); } x.stroke(); x.setLineDash([]); },
+  // Kleingarten: Raster
+  allotment: (x) => { x.beginPath(); x.moveTo(0, 12); x.lineTo(24, 12); x.moveTo(12, 0); x.lineTo(12, 24); x.stroke(); },
+  // Moor: Schilfbüschel auf Wasserstrich
+  wetland: (x) => { for (const [cx, cy] of [[6, 8], [17, 18]]) { x.beginPath(); x.moveTo(cx - 5, cy); x.lineTo(cx + 5, cy); x.moveTo(cx - 3, cy); x.lineTo(cx - 3, cy - 3); x.moveTo(cx, cy); x.lineTo(cx, cy - 4); x.moveTo(cx + 3, cy); x.lineTo(cx + 3, cy - 3); x.stroke(); } },
+  // Fels: eckige Splitter
+  rock: (x) => { for (const pts of [[[4, 8], [9, 5], [11, 10], [6, 12]], [[15, 17], [20, 15], [22, 21], [16, 22]]]) { x.beginPath(); pts.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); x.closePath(); x.stroke(); } },
+  // Sand: Körner
+  sand: (x) => { for (const [cx, cy] of [[3, 4], [12, 7], [20, 3], [7, 15], [17, 14], [4, 21], [21, 21]]) { x.fillRect(cx, cy, 1.4, 1.4); } },
+  // Friedhof: Kreuze
+  cemetery: (x) => { for (const [cx, cy] of [[6, 7], [17, 17]]) { x.beginPath(); x.moveTo(cx, cy - 3); x.lineTo(cx, cy + 3); x.moveTo(cx - 2, cy - 1); x.lineTo(cx + 2, cy - 1); x.stroke(); } },
+};
+export function registerLandPatterns(map) {
+  for (const [lv, inks] of Object.entries(LAND_INK)) {
+    for (const [cls, draw] of Object.entries(LAND_DRAW)) {
+      const c = document.createElement('canvas'); c.width = 24; c.height = 24;
+      const x = c.getContext('2d', { willReadFrequently: true });
+      x.strokeStyle = inks[cls]; x.fillStyle = inks[cls]; x.lineWidth = 1; x.lineCap = 'round'; x.lineJoin = 'round'; x.globalAlpha = lv === 'dark' ? 0.6 : 0.65;
+      draw(x);
+      const id = `lp-${cls}-${lv}`, data = x.getImageData(0, 0, 24, 24);
+      if (map.hasImage(id)) map.updateImage(id, data); else map.addImage(id, data, { pixelRatio: 2 });
+    }
+  }
+}
 
 // Straßenschilder als dehnbare Hintergrundbilder (icon-text-fit): Rahmen und Füllung, der Text kommt von der Karte.
 // A = Autobahn (blau, weiße Schrift), B = Bundesstraße (gelb), L/K = Landes- und Kreisstraße (weiß, schwarzer Rand).
