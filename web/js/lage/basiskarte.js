@@ -58,12 +58,14 @@ export function applyBasemap() {
     });
   // eigene Flächen- und Geländeebenen gleich hinter dem Landnutzungs-Layer des Stils (unter Wasser, Straßen und Relief-Linien)
   const at = styled.findIndex((x) => x.id === 'landuse_park');
-  // Reihenfolge von unten: Hangneigung, Vegetation (Landnutzung), Klippen (weiter unten im Code, über allem Gelände)
-  styled.splice(at >= 0 ? at + 1 : 0, 0, ...hangLayers(dark, hangOk, state.layers.hang), ...landUseLayers(dark, !!map.getSource('rlp-grenze')));
+  // Reihenfolge von unten: Vegetation (Landnutzung), Schummerung, Hangneigung, Klippen (weiter unten im Code, über allem Gelände)
+  styled.splice(at >= 0 ? at + 1 : 0, 0, ...landUseLayers(dark, !!map.getSource('rlp-grenze')));
   // Klippen weit oben: über Hangneigung, Relief, Höhenlinien, Vegetation, Gewässer und Straßen, unter den Beschriftungen
   const lab0 = styled.findIndex((x) => x.layout?.['text-font'] && !x.id.startsWith('land-'));
   styled.splice(lab0 < 0 ? styled.length : lab0, 0, ...cliffLayers(med ? 'med' : dark ? 'dark' : 'light', dark, map.hasImage('cliff-stroke'), klippenOk));
   waterEdges(styled, dark);
+  // Hangneigung ergänzt die Schummerung: über Höhenfärbung, Schummerung (relief.js legt sie davor) und Vegetation, unter Wasser, Gebäuden und Straßen
+  { const wi = styled.findIndex((x) => x.id === 'water'); styled.splice(wi < 0 ? styled.length : wi, 0, ...hangLayers(dark, hangOk, state.layers.hang)); }
   styled.push(...peakLayers(dark, map.hasImage('peak-tri')));   // Gipfel oben auf den Beschriftungen des Stils
   const tint = tintOf(state.skin, dark);
   if (tint) styled = skinize(styled, tint, { patterns: wantsPatterns(state.skin) });

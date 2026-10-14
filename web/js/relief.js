@@ -83,9 +83,10 @@ export function buildRelief(map, dark, shade, contours, med = false) {
   const colorUnder = map.getLayer('bm-land-forest') ? 'bm-land-forest' : under;
   map.addLayer({ id: 'relief-color', type: 'color-relief', source: ELEV_SRC, layout: { visibility: vis },
     paint: { 'color-relief-color': ramp, 'color-relief-opacity': s.opacity } }, colorUnder);
+  const hillBefore = map.getLayer('bm-land-hang-ab15') ? 'bm-land-hang-ab15' : under;   // Hangneigung liegt über der Schummerung und ergänzt sie
   map.addLayer({ id: 'relief-hill', type: 'hillshade', source: ELEV_SRC, layout: { visibility: vis },
     paint: { 'hillshade-exaggeration': s.hill, 'hillshade-shadow-color': s.shadow, 'hillshade-highlight-color': s.high,
-      'hillshade-accent-color': s.accent, 'hillshade-illumination-direction': 315 } }, under);
+      'hillshade-accent-color': s.accent, 'hillshade-illumination-direction': 315 } }, hillBefore);
   const level = ['coalesce', ['get', 'level'], 0];
   map.addLayer({ id: 'relief-contour', type: 'line', source: CONTOUR_SRC, 'source-layer': 'contours', minzoom: 7, layout: { visibility: visLines, 'line-join': 'round' },
     paint: { 'line-color': ['case', ['>=', level, 1], s.contourMajor, s.contour],
