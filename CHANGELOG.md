@@ -6,6 +6,9 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 Erste Version unter der Nummer 1. Vorher gab es keine gezählten Versionen; der Stand davor ist als Git-Tag `archiv/vor-1.0.0-alpha.1` (Commit c9e0875) und als Archiv auf dem Arbeitsrechner gesichert.
 
+### Relief: Naht an der Abdeckungskante
+- Zwischen Landes-DGM1 und Mapzen lag an der Kante der Abdeckung (Kilometerraster, z. B. bei Vianden) ein Höhenversatz von rund 10 bis 14 m, sichtbar als gerade Linie in Schummerung und Höhenlinien. `tools/build_dem_rlp.py` gleicht den Versatz jetzt weich aus (`blend_bias`, `FADE_PX`), mit Test für Kantenstufe und Kachelanschluss. Bestehende Reliefkacheln und Pakete müssen neu gebaut werden.
+
 ### Karte (Zusatz): Hangneigung und Kachelpakete
 - Neue Ebene „Hangneigung“ aus dem 1-m-DGM1: Flächen ab 15, 25 und 35 Grad als Vektorkacheln Zoom 14 (`tools/build_hang_rlp.py`, Probe `tools/build_hang_probe.py`). Durchscheinend, Klippenfläche ebenfalls heller (20 %), Wandstriche und Oberkante deckend.
 - `tools/pack_tiles.py` packt Kachelordner (Relief, Felswände, Hangneigung) zu PMTiles und zerlegt sie in Teile unter 2 GB mit Manifest und SHA-256. `app/tilepack.py` liest solche Pakete; der Desktop-Server liefert daraus die Ordner-URLs `tiles/dem/…`, `tiles/klippen/…` und `tiles/hang/…` aus (ein vorhandener Ordner hat Vorrang).
