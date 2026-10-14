@@ -216,6 +216,7 @@ def ua() -> str:
 
 _PACK_URL = re.compile(r"^/tiles/(dem|klippen|hang)/(README\.txt|meta\.json|(\d{1,2})/(\d{1,8})/(\d{1,8})\.(png|pbf))$")
 _PACK_TYPES = {"png": "image/png", "pbf": "application/x-protobuf"}
+_PACK_MORE = {"dem": ("dem-hoch",)}   # Zusatzpakete: gleiche Kacheln, höhere Zoomstufen (Nachladepaket); die erste Datei mit der Kachel gewinnt
 
 
 def make_handler(app: App, port_box: list[int]):
@@ -285,7 +286,13 @@ def make_handler(app: App, port_box: list[int]):
                 got, gz = body, False
             else:
                 try:
-                    hit = pk.get(int(m.group(3)), int(m.group(4)), int(m.group(5)))
+                    z, x, y = int(m.group(3)), int(m.group(4)), int(m.group(5))
+                    hit = pk.get(z, x, y)
+                    for more in _PACK_MORE.get(m.group(1), ()):
+                        if hit is not None:
+                            break
+                        extra = app.pack(more)
+                        hit = extra.get(z, x, y) if extra else None
                 except (OSError, ValueError):
                     log.exception("Kachelpaket %s: Lesefehler", pk.path)
                     self.send_error(500)

@@ -142,3 +142,14 @@ def test_pack_rejects_odd_paths_and_broken_files(srv):
     assert call(port, "/tiles/dem/12/1/1.png")[0] == 404
     assert call(port, "/tiles/dem/../../etc/passwd")[0] in (400, 403, 404)
     assert call(port, "/tiles/other/1/1/1.png")[0] == 404
+
+
+def test_pack_more_serves_higher_zoom_from_second_file(srv, tmp_path):
+    app, port, _ = srv
+    base = _make_pack(tmp_path, "dem", "png", {(12, 1, 1): b"niedrig"})
+    more = _make_pack(tmp_path, "dem-hoch", "png", {(13, 2, 2): b"hoch"})
+    (app.data_dir / "tiles" / "dem.pmtiles").write_bytes(base.read_bytes())
+    (app.data_dir / "tiles" / "dem-hoch.pmtiles").write_bytes(more.read_bytes())
+    assert call(port, "/tiles/dem/12/1/1.png")[1] == b"niedrig"
+    assert call(port, "/tiles/dem/13/2/2.png")[1] == b"hoch"
+    assert call(port, "/tiles/dem/13/9/9.png")[0] == 404

@@ -6,11 +6,14 @@ Zweck:      Relief (web/tiles/dem, Terrarium-PNG) und Felswände (web/tiles/klip
             sich prüfen (SHA-256), in Teilen laden und von der Karte per Bereichsabruf lesen (Protokoll pmtiles://).
 Aufruf:     python tools/pack_tiles.py --src web/tiles/dem --out dist/pakete/dem.pmtiles --split-mb 1500
             python tools/pack_tiles.py --src web/tiles/klippen --out dist/pakete/klippen.pmtiles
+            python tools/pack_tiles.py --src web/tiles/dem --out dist/pakete/dem.pmtiles --max-zoom 12          Basis (Installer)
+            python tools/pack_tiles.py --src web/tiles/dem --out dist/pakete/dem-hoch.pmtiles --min-zoom 13 --split-mb 1500   Nachladepaket
 Parameter:  --src DIR         Kachelordner mit <z>/<x>/<y>.png oder .pbf (Endung bestimmt den Kacheltyp)
             --out FILE        Zieldatei (.pmtiles); Eltern­ordner wird angelegt
             --meta FILE       JSON (z. B. meta.json des Ordners), wandert in die Metadaten der Datei (Namensnennung!)
             --split-mb N      zusätzlich in Teile von höchstens N MB zerlegen (<out>.part01 …) und <out>.manifest.json schreiben
             --keep-whole      bei --split-mb die ganze Datei behalten (sonst wird sie nach dem Zerlegen entfernt)
+            --min-zoom N, --max-zoom N   nur diese Zoomstufen packen (Standard alle); so entstehen Basis- und Nachlade-Paket
             --verify N        nach dem Packen N zufällige Kacheln zurücklesen und Byte für Byte vergleichen (Standard 200)
 Ergebnis:   <out>; mit --split-mb: <out>.partNN und <out>.manifest.json {name, bytes, sha256, parts:[{file, bytes, sha256}]}
 Nebenwirkung: schreibt nur nach --out; --src wird nur gelesen. Läuft in einem Durchgang, Speicher: eine Liste der Kachelpfade.
@@ -45,11 +48,11 @@ def tile_to_lonlat(z: int, x: int, y: int) -> tuple[float, float]:
     return lon, lat
 
 
-def scan(src: Path) -> tuple[list[tuple[int, Path, tuple[int, int, int]]], str]:
+def scan(src: Path, min_zoom: int = 0, max_zoom: int = 26) -> tuple[list[tuple[int, Path, tuple[int, int, int]]], str]:
     """Alle Kacheln unter src: Liste (Kachelnummer, Pfad, (z, x, y)) sortiert nach Kachelnummer, dazu die Endung.
 
     Dateien, deren Pfad nicht <z>/<x>/<y>.<ext> entspricht (README.txt, meta.json), werden übersprungen.
-    Gemischte Endungen sind ein Fehler.
+    Gemischte Endungen sind ein Fehler. Nur Zoomstufen min_zoom bis max_zoom (einschließlich) werden aufgenommen.
     """
     found: list[tuple[int, Path, tuple[int, int, int]]] = []
     exts: set[str] = set()
@@ -60,21 +63,21 @@ def scan(src: Path) -> tuple[list[tuple[int, Path, tuple[int, int, int]]], str]:
             z, x, y = int(p.parent.parent.name), int(p.parent.name), int(p.stem)
         except ValueError:
             continue
-        if z < 0 or z > 26 or not (0 <= x < 2 ** z and 0 <= y < 2 ** z):
+        if z < max(0, min_zoom) or z > min(26, max_zoom) or not (0 <= x < 2 ** z and 0 <= y < 2 ** z):
             continue
         exts.add(p.suffix.lower())
         found.append((zxy_to_tileid(z, x, y), p, (z, x, y)))
     if not found:
-        raise SystemExit(f"Keine Kacheln unter {src} (erwartet <z>/<x>/<y>.png oder .pbf)")
+        raise SystemExit(f"Keine Kacheln unter {src} im Zoombereich {min_zoom}–{max_zoom} (erwartet <z>/<x>/<y>.png oder .pbf)")
     if len(exts) > 1:
         raise SystemExit(f"Gemischte Kachelendungen unter {src}: {sorted(exts)}")
     found.sort(key=lambda t: t[0])
     return found, exts.pop()
 
 
-def pack(src: Path, out: Path, meta: dict | None = None) -> dict:
+def pack(src: Path, out: Path, meta: dict | None = None, min_zoom: int = 0, max_zoom: int = 26) -> dict:
     """Packt src nach out (PMTiles v3). Gibt Kennzahlen zurück: tiles, bytes, min_zoom, max_zoom, bbox."""
-    tiles, ext = scan(src)
+    tiles, ext = scan(src, min_zoom, max_zoom)
     ttype = TYPES[ext]
     out.parent.mkdir(parents=True, exist_ok=True)
     tmp = out.with_suffix(out.suffix + ".tmp")
@@ -122,9 +125,9 @@ def pack(src: Path, out: Path, meta: dict | None = None) -> dict:
             "bbox": [round(west, 5), round(south, 5), round(east, 5), round(north, 5)]}
 
 
-def verify(src: Path, pm: Path, n: int, seed: int = 1) -> int:
+def verify(src: Path, pm: Path, n: int, seed: int = 1, min_zoom: int = 0, max_zoom: int = 26) -> int:
     """Liest n zufällige Kacheln aus der PMTiles-Datei und vergleicht sie mit den Quelldateien. Gibt die Zahl der Abweichungen zurück."""
-    tiles, _ = scan(src)
+    tiles, _ = scan(src, min_zoom, max_zoom)
     rnd = random.Random(seed)
     sample = tiles if n >= len(tiles) else rnd.sample(tiles, n)
     bad = 0
@@ -207,15 +210,17 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--split-mb", type=int, default=0)
     ap.add_argument("--keep-whole", action="store_true")
     ap.add_argument("--verify", type=int, default=200)
+    ap.add_argument("--min-zoom", type=int, default=0)
+    ap.add_argument("--max-zoom", type=int, default=26)
     a = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     meta = json.loads(a.meta.read_text(encoding="utf-8")) if a.meta else {}
     if not a.src.is_dir():
         log.error("Quellordner fehlt: %s", a.src)
         return 1
-    info = pack(a.src, a.out, meta)
+    info = pack(a.src, a.out, meta, a.min_zoom, a.max_zoom)
     log.info("Gepackt: %d Kacheln, Zoom %d–%d, %.1f MB", info["tiles"], info["min_zoom"], info["max_zoom"], info["bytes"] / 1e6)
-    bad = verify(a.src, a.out, a.verify) if a.verify else 0
+    bad = verify(a.src, a.out, a.verify, 1, a.min_zoom, a.max_zoom) if a.verify else 0
     if bad:
         log.error("%d Kacheln weichen ab", bad)
         return 1

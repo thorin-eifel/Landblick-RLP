@@ -89,3 +89,17 @@ def test_cli_ende_zu_ende(tmp_path):
     assert rc == 0
     man = json.loads((tmp_path / "p" / "dem.pmtiles.manifest.json").read_text())
     assert len(man["parts"]) == 1 and not (tmp_path / "p" / "dem.pmtiles").exists()
+
+
+def test_zoom_range_splits_into_base_and_more(tmp_path):
+    from pmtiles.reader import MmapSource, Reader
+    src = tmp_path / "s"
+    for z, x, y in [(6, 33, 21), (12, 2145, 1380), (13, 4290, 2760), (14, 8580, 5520)]:
+        p = src / str(z) / str(x) / f"{y}.png"; p.parent.mkdir(parents=True, exist_ok=True); p.write_bytes(b"\x89PNG" + bytes([z]) * 8)
+    base = pack_tiles.pack(src, tmp_path / "base.pmtiles", {}, 0, 12)
+    more = pack_tiles.pack(src, tmp_path / "more.pmtiles", {}, 13, 26)
+    assert (base["min_zoom"], base["max_zoom"], base["tiles"]) == (6, 12, 2)
+    assert (more["min_zoom"], more["max_zoom"], more["tiles"]) == (13, 14, 2)
+    assert pack_tiles.verify(src, tmp_path / "more.pmtiles", 10, 1, 13, 26) == 0
+    with (tmp_path / "base.pmtiles").open("rb") as fh:
+        assert Reader(MmapSource(fh)).get(13, 4290, 2760) is None
