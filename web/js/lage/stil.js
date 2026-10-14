@@ -189,19 +189,19 @@ export function cliffLayers(k, dark, ticks, dgm) {
   // Wandband rechts der Linie (dort liegt die Abbruchseite), Oberkante, Fallstriche. Breite, Strichlänge und -abstand wachsen mit dem Zoom
   // (Meter, nicht Pixel), wie bei den Kacheln aus dem Geländemodell. Einsatz bei Zoom 13, Striche ab 14.
   const wallColor = k === 'med' ? '#b39d73' : dark ? '#625c52' : '#c7bca4';
-  const bandW = ['interpolate', ['linear'], ['zoom'], 13, 2, 15, 3.5, 16, 6.5, 17, 13, 18, 26];
-  const bandOff = ['interpolate', ['linear'], ['zoom'], 13, 1, 15, 1.75, 16, 3.25, 17, 6.5, 18, 13];
+  const bandW = ['interpolate', ['linear'], ['zoom'], 13, 3, 14, 5, 15, 8, 16, 12, 17, 20, 18, 34];
+  const bandOff = ['interpolate', ['linear'], ['zoom'], 13, 1.5, 14, 2.5, 15, 4, 16, 6, 17, 10, 18, 17];
   const out = [
     { id: 'land-cliff-band', type: 'line', ...osm, minzoom: 13, filter: osmFilter, layout: round,
-      paint: { 'line-color': wallColor, 'line-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.2], 'line-blur': 0.5, 'line-offset': bandOff, 'line-width': bandW } },
+      paint: { 'line-color': wallColor, 'line-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.35], 'line-blur': 0.5, 'line-offset': bandOff, 'line-width': bandW } },
     { id: 'land-cliff', type: 'line', ...osm, minzoom: 13, filter: osmFilter, layout: round,
       paint: { 'line-color': CLIFF[k], 'line-opacity': 1, 'line-width': ['interpolate', ['linear'], ['zoom'], 13, 0.92, 16, 1.6, 18, 2.28] } },
     ...(ticks ? [{ id: 'land-cliff-teeth', type: 'symbol', ...osm, minzoom: 14, filter: osmFilter,
-      layout: { 'symbol-placement': 'line', 'symbol-spacing': ['interpolate', ['linear'], ['zoom'], 14, 3.5, 17, 4.6, 18, 9.2],
+      layout: { 'symbol-placement': 'line', 'symbol-spacing': ['interpolate', ['linear'], ['zoom'], 14, 2.5, 16, 3, 17, 4, 18, 8],
         'icon-image': 'cliff-stroke', 'icon-anchor': 'top', 'icon-offset': [0, 0],
         'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true,
-        'icon-size': ['interpolate', ['linear'], ['zoom'], 14, 0.35, 16, 1.1, 17, 1.8, 18, 3] },
-      paint: { 'icon-color': CLIFF[k], 'icon-opacity': 0.9 } }] : []),
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 14, 0.8, 15, 1.1, 16, 1.6, 17, 2.4, 18, 3.6] },
+      paint: { 'icon-color': CLIFF[k], 'icon-opacity': 1 } }] : []),
   ];
   if (!dgm) return out;
   // Aus dem DGM1 (1 m) gezeichnete Felswand: helle Wandfläche (Polygon, 60 % Deckkraft), Striche in Fallrichtung (von oben nach
