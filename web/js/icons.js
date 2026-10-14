@@ -379,6 +379,13 @@ export function registerSigns(map) {
     tx.beginPath(); tx.moveTo(11, 0); tx.lineTo(13, 0); tx.lineTo(12.4, 6); tx.lineTo(11.6, 6); tx.closePath(); tx.fill();    // kurz
     const tick = tx.getImageData(0, 0, 16, 10);
     if (map.hasImage('cliff-tick')) map.updateImage('cliff-tick', tick); else map.addImage('cliff-tick', tick, { pixelRatio: 2, sdf: true });
+    // Einzelner Fallstrich für OSM-Klippen: so zeichnet die Karte auch die Wände aus dem Geländemodell (dünne Striche von der Kante nach unten).
+    // Bild 4 x 12, bei pixelRatio 2 also 2 x 6 px; Länge und Abstand skaliert der Stil mit dem Zoom (Meter statt Pixel).
+    const f = document.createElement('canvas'); f.width = 4; f.height = 12;
+    const fx = f.getContext('2d', { willReadFrequently: true });
+    fx.fillStyle = '#000000'; fx.beginPath(); fx.moveTo(1, 0); fx.lineTo(3, 0); fx.lineTo(2.4, 12); fx.lineTo(1.6, 12); fx.closePath(); fx.fill();
+    const stroke = fx.getImageData(0, 0, 4, 12);
+    if (map.hasImage('cliff-stroke')) map.updateImage('cliff-stroke', stroke); else map.addImage('cliff-stroke', stroke, { pixelRatio: 2, sdf: true });
     // Gipfeldreieck (Spitze nach oben), SDF wie der Klippenzahn
     const g = document.createElement('canvas'); g.width = 18; g.height = 14;
     const gx = g.getContext('2d', { willReadFrequently: true });

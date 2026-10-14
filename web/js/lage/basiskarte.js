@@ -60,7 +60,7 @@ export function applyBasemap() {
   styled.splice(at >= 0 ? at + 1 : 0, 0, ...hangLayers(dark, hangOk, state.layers.hang), ...landUseLayers(dark, !!map.getSource('rlp-grenze')));
   // Klippen weit oben: über Hangneigung, Relief, Höhenlinien, Vegetation, Gewässer und Straßen, unter den Beschriftungen
   const lab0 = styled.findIndex((x) => x.layout?.['text-font'] && !x.id.startsWith('land-'));
-  styled.splice(lab0 < 0 ? styled.length : lab0, 0, ...cliffLayers(med ? 'med' : dark ? 'dark' : 'light', dark, map.hasImage('cliff-tick'), klippenOk));
+  styled.splice(lab0 < 0 ? styled.length : lab0, 0, ...cliffLayers(med ? 'med' : dark ? 'dark' : 'light', dark, map.hasImage('cliff-stroke'), klippenOk));
   waterEdges(styled, dark);
   styled.push(...peakLayers(dark, map.hasImage('peak-tri')));   // Gipfel oben auf den Beschriftungen des Stils
   if (med) styled = medievalize(styled);

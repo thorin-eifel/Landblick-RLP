@@ -165,7 +165,7 @@ export function labelsAndBuildings(dark) {
 }
 
 // Klippe in drei Lagen: weiches Geröllband auf der Abbruchseite (rechts der Linienrichtung), heller Saum für Lesbarkeit im Wald,
-// dünne Wandlinie mit Schraffen (lange und kurze Striche im Wechsel, Bild cliff-tick).
+// dünne Wandlinie mit Schraffen (lange und kurze Striche im Wechsel, Bild cliff-tick, für die Klippenebene der Karte jetzt cliff-stroke).
 // Mit `dgm` kommen die Wände in Rheinland-Pfalz aus dem Geländemodell (Quelle klippen, Ebenen wand, kante, schraffur, Attribut drop = Wandhöhe in m);
 // die OpenStreetMap-Klippen der Basiskarte gelten dann nur noch außerhalb des Landes.
 // Hangneigung aus dem DGM1: drei ineinander liegende Flächen (ab 15, 25, 35 Grad), je steiler desto dunkler. Liegt unter der Vegetation (Wald, Wiese …), darüber nur die Klippen; deshalb
@@ -185,19 +185,22 @@ export function cliffLayers(k, dark, ticks, dgm) {
   const byDrop = (lo, hi) => ['interpolate', ['linear'], ['get', 'drop'], 5, lo, 30, hi];
   const round = { 'line-cap': 'round', 'line-join': 'round' };
   const osm = { source: 'basemap', 'source-layer': 'earth' };
-  // Gleiche Zeichnung für beide Quellen: OSM-Linien (außerhalb von RLP, z. B. Luxemburg) setzen wie die DGM-Wände erst ab Zoom 13 ein,
-  // mit derselben Oberkante (Breite wie eine 10-m-Wand), einem zarten Wandband statt der Fläche und Strichen ab Zoom 14.
+  // Gleiche Zeichnung für beide Quellen. Die OSM-Linie kennt weder Wandfläche noch Wandhöhe; sie wird deshalb wie eine 10-m-Wand gezeichnet:
+  // Wandband rechts der Linie (dort liegt die Abbruchseite), Oberkante, Fallstriche. Breite, Strichlänge und -abstand wachsen mit dem Zoom
+  // (Meter, nicht Pixel), wie bei den Kacheln aus dem Geländemodell. Einsatz bei Zoom 13, Striche ab 14.
   const wallColor = k === 'med' ? '#b39d73' : dark ? '#625c52' : '#c7bca4';
+  const bandW = ['interpolate', ['linear'], ['zoom'], 13, 2, 15, 3.5, 16, 6.5, 17, 13, 18, 26];
+  const bandOff = ['interpolate', ['linear'], ['zoom'], 13, 1, 15, 1.75, 16, 3.25, 17, 6.5, 18, 13];
   const out = [
     { id: 'land-cliff-band', type: 'line', ...osm, minzoom: 13, filter: osmFilter, layout: round,
-      paint: { 'line-color': wallColor, 'line-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.2], 'line-blur': 2.5, 'line-offset': ['interpolate', ['linear'], ['zoom'], 13, 3, 17, 6],
-        'line-width': ['interpolate', ['linear'], ['zoom'], 13, 6, 17, 12] } },
+      paint: { 'line-color': wallColor, 'line-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.2], 'line-blur': 0.5, 'line-offset': bandOff, 'line-width': bandW } },
     { id: 'land-cliff', type: 'line', ...osm, minzoom: 13, filter: osmFilter, layout: round,
       paint: { 'line-color': CLIFF[k], 'line-opacity': 1, 'line-width': ['interpolate', ['linear'], ['zoom'], 13, 0.92, 16, 1.6, 18, 2.28] } },
     ...(ticks ? [{ id: 'land-cliff-teeth', type: 'symbol', ...osm, minzoom: 14, filter: osmFilter,
-      layout: { 'symbol-placement': 'line', 'symbol-spacing': 8, 'icon-image': 'cliff-tick', 'icon-anchor': 'top', 'icon-offset': [0, 0.5],
+      layout: { 'symbol-placement': 'line', 'symbol-spacing': ['interpolate', ['linear'], ['zoom'], 14, 3.5, 17, 4.6, 18, 9.2],
+        'icon-image': 'cliff-stroke', 'icon-anchor': 'top', 'icon-offset': [0, 0],
         'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true,
-        'icon-size': ['interpolate', ['linear'], ['zoom'], 14, 0.85, 17, 1.25] },
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 14, 0.35, 16, 1.1, 17, 1.8, 18, 3] },
       paint: { 'icon-color': CLIFF[k], 'icon-opacity': 0.9 } }] : []),
   ];
   if (!dgm) return out;
