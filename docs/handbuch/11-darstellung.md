@@ -1,12 +1,12 @@
-# Darstellung: wie Landblick zeichnet
+# 11 Darstellung und Skins: wie Landblick zeichnet
 
-Grundlage für Themen und Skins (Landblick, Alte Karte, weitere folgen). Beschreibt, wo Farben, Formen, Schriften und Zeichen herkommen, in welcher Reihenfolge die Karte aufgebaut wird und an welchen Stellen die „Alte Karte“ heute eingreift. Stand: `feat/kartenpakete`, nach Commit a8de707.
+Grundlage für Themen und Skins (Landblick, Alte Karte, weitere folgen). Beschreibt, wo Farben, Formen, Schriften und Zeichen herkommen, in welcher Reihenfolge die Karte aufgebaut wird und an welchen Stellen die „Alte Karte“ heute eingreift. Stand: Version 1.0.0-alpha.2 plus Änderungen auf `feat/kartenpakete`.
 
-Vorweg zur Frage nach dem XML: Es gibt keine Stildatei. Weder `style.json` noch XML. Der MapLibre-Stil wird zur Laufzeit in JavaScript zusammengesetzt. XML im weiteren Sinn sind nur die SVG-Glyphen unter `web/icons/` (Abschnitt 6). Alles, was sonst „Darstellung“ ist, steht in JS-Konstanten und in drei CSS-Dateien.
+Vorweg: Es gibt keine Stildatei, weder `style.json` noch XML. Der MapLibre-Stil wird zur Laufzeit in JavaScript zusammengesetzt. XML im weiteren Sinn sind nur die SVG-Glyphen unter `web/icons/` (Abschnitt 11.6). Alles, was sonst „Darstellung“ ist, steht in JS-Konstanten und in drei CSS-Dateien.
 
 ---
 
-## 1. Beispiele zuerst
+## 11.1 Beispiele zuerst
 
 **Wald dunkler machen (beide Ansichten getrennt).** `web/js/lage/stil.js`, Konstante `LAND`:
 
@@ -23,7 +23,7 @@ Die Zeichenerklärung (`fillFlaechenLegenden` in `basiskarte.js`) liest dieselbe
 
 **Bedienoberfläche umfärben.** Nur Tokens in `web/css/tokens.css`. Hell steht in `:root`, Dunkel überschreibt in `:root[data-ansicht="dunkel"]`. Beide Blöcke zusammen ändern, sonst kippt eine Ansicht.
 
-**Zeichnung der Klippen ändern.** `stil.js`, `cliffLayers()`. Eine Funktion zeichnet beide Quellen (Wandkacheln aus dem Gelände und OSM-Linien), siehe 3.4.
+**Zeichnung der Klippen ändern.** `stil.js`, `cliffLayers()`. Eine Funktion zeichnet beide Quellen (Wandkacheln aus dem Gelände und OSM-Linien), siehe 11.3.4.
 
 **Ansicht prüfen, ohne zu raten.** Im Browser `#debug` an die Adresse, Seite neu laden. Dann liefert der Prüfzugang (`web/js/lage/debug.js`) die tatsächliche Layer-Reihenfolge und Paint-Werte:
 
@@ -35,7 +35,7 @@ JSON.parse(document.documentElement.dataset.debugOut);
 
 ---
 
-## 2. Zwei Schalter, zwei Achsen
+## 11.2 Zwei Schalter, zwei Achsen
 
 | Achse | Wert | Wo gespeichert | Wirkung |
 |---|---|---|---|
@@ -49,15 +49,15 @@ Die beiden sind nicht unabhängig: Die Alte Karte kennt kein Dunkel. In `applyBa
 1. Die Ansicht: Knopf „Dunkel“ → `html.dataset.ansicht` → Ereignis `ansicht` → `recolor()` (`basiskarte.js`).
 2. Der Skin: Radio `input[name="skin"]` (Menü „Darstellung“, `index.html`) → `state.layers.medieval` → `applyLayerFilters(); render(); syncGroups(); syncMedieval()` (`lage/ebenen.js`). `syncMedieval` schaltet die Landmarken-Ebenen mit um und ruft `recolor()`.
 3. `recolor()`: registriert die Zeichen neu (`registerIcons`, bei Alter Karte zusätzlich `registerMedieval`), setzt Hintergrund und Ereignisfarben, ruft `applyBasemap()`.
-4. `applyBasemap()` entfernt alle Layer mit Präfix `bm-` und baut sie neu, siehe 3.
+4. `applyBasemap()` entfernt alle Layer mit Präfix `bm-` und baut sie neu, siehe 11.3.
 
 Der Kartenstil wird also bei jedem Wechsel komplett neu aufgebaut. Daten-Quellen (`basemap`, `klippen`, `hang`, `dem`, `contours`, `anbau` …) bleiben stehen, nur die Layer darauf wechseln.
 
 ---
 
-## 3. Der Kartenstil
+## 11.3 Der Kartenstil
 
-### 3.1 Aufbau in `applyBasemap()` (`web/js/lage/basiskarte.js`)
+### 11.3.1 Aufbau in `applyBasemap()` (`web/js/lage/basiskarte.js`)
 
 ```
 protomaps layers('basemap', flavor, {lang:'de'})      69 Layer aus vendor/protomaps-basemaps
@@ -81,7 +81,7 @@ paintWater / paintStops / paintNature / applyBaseToggles / applyRelief / placeLg
 
 Alle Basis-Layer heißen `bm-<id>`. `applyBaseToggles()` schaltet sie über Namensmuster mit den Schaltern der Ebenenliste (`state.layers.*`) sichtbar oder unsichtbar. Wer einen Layer neu anlegt, muss sein Muster dort eintragen, sonst bleibt er immer an.
 
-### 3.2 Reihenfolge von unten nach oben (gemessen am laufenden Stand)
+### 11.3.2 Reihenfolge von unten nach oben (gemessen am laufenden Stand)
 
 | Gruppe | Layer (Auswahl) | Gebaut in |
 |---|---|---|
@@ -104,7 +104,7 @@ Alle Basis-Layer heißen `bm-<id>`. `applyBaseToggles()` schaltet sie über Name
 
 Regel dahinter: Gelände und Fläche unten, Linien (Wasser, Straßen) in der Mitte, Klippen über allem Gelände, Text oben, Fachdaten über der Basiskarte. Hangneigung liegt bewusst unter der Vegetation, Klippen über beiden.
 
-### 3.3 Farbquellen: wo steht was
+### 11.3.3 Farbquellen: wo steht was
 
 Alle Werte sind feste Hex-/rgba-Strings in JS. Es gibt keine gemeinsame Palette, die Skin-Wechsel zentral steuert. Jede Datei hat ihre eigene Tabelle mit den Schlüsseln `light` / `dark` (und teils `med`).
 
@@ -129,7 +129,7 @@ Alle Werte sind feste Hex-/rgba-Strings in JS. Es gibt keine gemeinsame Palette,
 
 Einzige Brücke zwischen CSS und Karte ist `palette()` in `lage/farben.js`: Es liest `--surface`, `--border-strong`, `--fg`, `--brand-red-600`, `--sys-yellow`, `--sys-blue`, `--accent`, `--bg-elevated` aus dem laufenden CSS. Meldungsfarben (Ereignisse) folgen damit den Tokens, Flächenfarben der Karte nicht.
 
-### 3.4 Klippen als Beispiel für „eine Zeichnung, zwei Quellen“
+### 11.3.4 Klippen als Beispiel für „eine Zeichnung, zwei Quellen“
 
 `cliffLayers(k, dark, ticks, dgm)` in `stil.js`. `k` ist `light`, `dark` oder `med`.
 
@@ -137,7 +137,7 @@ Einzige Brücke zwischen CSS und Karte ist `palette()` in `lage/farben.js`: Es l
 * OSM-Klippen (Quelle `basemap`, Ebene `earth`, `kind=cliff`): Wandband rechts der Linie, Oberkante wie eine 10-m-Wand, Fallstriche aus dem Bild `cliff-stroke`. Breite, Strichlänge und -abstand wachsen mit dem Zoom (Meter statt Pixel).
 * Wo die Kacheln liegen, entfallen die OSM-Linien. Grundlage ist die Kachelabdeckung (`web/js/lage/klippen-umriss.js`, erzeugt von `tools/build_klippen_umriss.py`), nicht die Landesgrenze. Nach jedem Neubau der Kacheln neu erzeugen.
 
-### 3.5 Die Alte Karte: wie der Skin heute eingreift
+### 11.3.5 Die Alte Karte: wie der Skin heute eingreift
 
 `medievalize(styled)` (`lage/mittelalter.js`) arbeitet als Nachbearbeitung auf der fertigen Layer-Liste:
 
@@ -155,7 +155,7 @@ Zusätzlich verzweigt Code an anderen Stellen auf `state.layers.medieval`: `reli
 
 ---
 
-## 4. Zeichen und Bilder
+## 11.4 Zeichen und Bilder
 
 Die Karte benutzt zwei Arten von Zeichen. Beide werden zur Laufzeit als Bild in MapLibre registriert (`map.addImage`), nichts davon liegt als fertiges Sprite vor.
 
@@ -176,7 +176,7 @@ SDF-Bilder (`sdf: true`) nehmen ihre Farbe aus dem Layer (`icon-color`). Für Sk
 
 ---
 
-## 5. Schrift
+## 11.5 Schrift
 
 * Karte: „Noto Sans Regular“ (Glyph-PBF unter `web/fonts/`, OFL). Der Stil hat eine einzige Schrift; `labelsAndBuildings()` ersetzt jede `text-font` darauf.
 * Alte Karte: „Grenze Gotisch Regular“ (nur Glyph-PBF für die Karte, `grenze-gotisch.woff` für die Oberfläche, OFL).
@@ -187,9 +187,9 @@ Ortsnamen: Größe nach Siedlungsrang (`population_rank` der Kacheln, 1 bis 9) v
 
 ---
 
-## 6. CSS und SVG der Oberfläche
+## 11.6 CSS und SVG der Oberfläche
 
-### 6.1 Dateien
+### 11.6.1 Dateien
 
 | Datei | Inhalt |
 |---|---|
@@ -200,21 +200,21 @@ Ortsnamen: Größe nach Siedlungsrang (`population_rank` der Kacheln, 1 bis 9) v
 
 Das Handbuch (`docs/handbuch/handbuch.css`) ist ein eigenes Blatt und gehört nicht zur App.
 
-### 6.2 Bausteine
+### 11.6.2 Bausteine
 
 * Tokens: Farben folgen Rollen (`--bg`, `--surface`, `--fg`, `--fg-muted`, `--accent`, `--danger`, `--border`), nicht Farbnamen. Neue Oberflächenfarben gehören als Rolle in `tokens.css`, nicht als Hex in `app.css`.
 * Materialien: `--glass-*`, `--material-*` für schwebende Flächen über der Karte (Ebenenmenü, Detailfeld, Legenden).
 * Skin-Schalter im CSS: `html[data-karte="mittelalter"] …` in `app.css`. 32 Selektoren, 59 feste Hex-Werte (Pergament `#efe0b0`, Tinte `#3a2614`, Linien `#7a5530`). Sie überschreiben Zoomknöpfe, Maßstab, Popups, Legenden, Ebenenmenü, Detailfeld, Reiter.
 * Hell/Dunkel im CSS: `html[data-ansicht="dunkel"]` überschreibt Token und einzelne Selektoren (Logo, Stufenfarben).
 
-### 6.3 SVG
+### 11.6.3 SVG
 
 * `web/icons/*.svg`: Symbole der Oberfläche und Karte (uxwing, freie Nutzung ohne Namensnennung, aber nicht weiterverbreiten; Lizenz und Ausnahmen in `web/icons/README.txt`; `tanken.svg` ist eine eigene Zeichnung). Diese Dateien liegen nicht im Repository, sie holt `tools/fetch_icons.sh`.
 * Dieselben Dateien dienen zweimal: in der Oberfläche als CSS-Maske (`icons.css`), in der Karte als Quelle für die Canvas-Bilder (`registerIcons`). Eine Änderung an einem SVG wirkt in beiden.
 * Per DOM-Code gebaute SVG: nur die Windrose der Alten Karte (`lage/mittelalter.js`).
 * Das Logo (`web/brand/`) kommt als PNG in hell und dunkel; die Umschaltung läuft über `.logo-hell` / `.logo-dunkel` in `app.css`.
 
-### 6.4 Grenzen durch die Content-Security-Policy (`index.html`)
+### 11.6.4 Grenzen durch die Content-Security-Policy (`index.html`)
 
 `default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'`. Daraus folgt für jedes Thema:
 
@@ -225,12 +225,12 @@ Das Handbuch (`docs/handbuch/handbuch.css`) ist ein eigenes Blatt und gehört ni
 
 ---
 
-## 7. Befund für den Skin-Support
+## 11.7 Befund für den Skin-Support
 
 Das ist die Ist-Beschreibung, daraus abgeleitet die Stellen, die ein Skin-System anfassen muss. Entschieden ist noch nichts.
 
 1. **Skin ist ein Boolean.** `state.layers.medieval` ist die einzige Unterscheidung. Mit drei Darstellungen braucht es einen Namen (`state.skin`), aus dem `medieval` abgeleitet wird oder ganz entfällt.
-2. **Farben liegen verteilt.** 13 Dateien mit eigenen `light`/`dark`-Tabellen (Abschnitt 3.3). Ein Skin müsste in jeder einen dritten Schlüssel bekommen. Besser wäre eine Palette je Skin, die diese Tabellen füllt.
+2. **Farben liegen verteilt.** 13 Dateien mit eigenen `light`/`dark`-Tabellen (Abschnitt 11.3.3). Ein Skin müsste in jeder einen dritten Schlüssel bekommen. Besser wäre eine Palette je Skin, die diese Tabellen füllt.
 3. **Der Skin greift als Nachbearbeitung ein** (`medievalize`), nicht als Palette. Das funktioniert für eine radikal andere Karte (Pergament, andere Zeichen), ist aber für „gleiche Karte, andere Farben“ (zum Beispiel Hochkontrast oder Nacht) zu schwer.
 4. **Oberfläche und Karte schalten getrennt:** Karte über `data-karte`, Farbschema über `data-ansicht`. Ein neues Thema braucht beides, mindestens ein weiteres Attribut und CSS-Blöcke wie die der Alten Karte (die heute feste Hex-Werte tragen statt Tokens).
 5. **Bilder tragen Farbe fest** (außer SDF). Jedes Thema, das Farben ändert, muss `registerIcons` und die Signaturen neu zeichnen. Der Weg steht in `recolor()`.
@@ -240,7 +240,7 @@ Vorschlag in einem Satz: eine Skin-Beschreibung als Objekt (`id`, `name`, `flavo
 
 ---
 
-## 8. Rezepte
+## 11.8 Rezepte
 
 **Neuen Layer in die Basiskarte.** In der passenden Funktion in `stil.js` mit `id` ohne Präfix anlegen. Reihenfolge entscheidet der `splice` in `applyBasemap()`. Muster in `applyBaseToggles()` ergänzen. Für die Alte Karte entscheiden: weglassen (`MED_DROP`), umfärben (in `medievalize`) oder unverändert lassen.
 

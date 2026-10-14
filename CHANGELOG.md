@@ -4,6 +4,9 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unreleased]
 
+### Dokumentation
+- Handbuch: neues Kapitel 11 „Darstellung und Skins“ (Aufbau des Kartenstils, Farbquellen, Zeichen, CSS und SVG, Befund für Themen).
+
 ### Geändert
 - Karte: Klippen aus OpenStreetMap (dort, wo keine Wände aus dem Geländemodell vorliegen, z. B. Luxemburg) werden wie diese gezeichnet: Wandband rechts der Linie, Oberkante wie bei einer 10-m-Wand, feine Fallstriche (Bild `cliff-stroke`) ab Zoom 14; Breite, Strichlänge und -abstand wachsen mit dem Zoom wie bei den Kacheln.
 - Karte: OSM-Klippen erscheinen nicht mehr zusätzlich dort, wo es Wandkacheln gibt (bisher lagen im Grenzstreifen zu Luxemburg beide Zeichnungen übereinander). Grundlage ist die tatsächliche Kachelabdeckung (`web/js/lage/klippen-umriss.js`, erzeugt mit `tools/build_klippen_umriss.py`), nicht mehr die Landesgrenze.
