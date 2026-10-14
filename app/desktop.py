@@ -48,8 +48,8 @@ def use_certifi() -> str | None:
 use_certifi()
 _RANGE = re.compile(r"^bytes=(\d*)-(\d*)$")
 CYCLE_S = 300
-# Manifest des Nachladepakets (Relief Zoom 13/14). Leer, bis die Veröffentlichung steht; OSINT_PAKETE_MANIFEST überschreibt, "aus" schaltet ab.
-PAKETE_MANIFEST = ""
+# Manifest des Nachladepakets (Relief Zoom 13/14), hängt am GitHub-Release. OSINT_PAKETE_MANIFEST überschreibt, "aus" schaltet ab.
+PAKETE_MANIFEST = "https://github.com/thorin-eifel/Landblick-RLP/releases/download/v1.0.0-alpha.2/dem-hoch.pmtiles.manifest.json"
 
 
 class Job:

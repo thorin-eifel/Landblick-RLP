@@ -12,7 +12,7 @@ Voraussetzung für A und C ist Python 3.11 oder neuer (getestet mit 3.11; unter 
 
 ## 2.1 Weg A: Installer für einen Dauerläufer
 
-Quelltext entpacken (Release-Datei `landblick-1.0.0-alpha.1-quelltext.zip` oder `.tar.gz`), in den Ordner wechseln und den Installer starten.
+Quelltext entpacken (Release-Datei `landblick-1.0.0-alpha.2-quelltext.zip` oder `.tar.gz`), in den Ordner wechseln und den Installer starten.
 
 **Windows (PowerShell):**
 

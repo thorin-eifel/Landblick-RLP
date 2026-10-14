@@ -158,6 +158,7 @@ def test_pack_more_serves_higher_zoom_from_second_file(srv, tmp_path):
 def test_nachladen_aus_ohne_manifest(srv, monkeypatch):
     app, port, _ = srv
     monkeypatch.delenv("OSINT_PAKETE_MANIFEST", raising=False)
+    monkeypatch.setattr("app.desktop.PAKETE_MANIFEST", "")
     assert app.start_nachladen() is False
     assert json.loads(call(port, "/api/state")[1])["nachladen"]["phase"] == "idle"
 

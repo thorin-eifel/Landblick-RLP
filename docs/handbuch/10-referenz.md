@@ -84,4 +84,4 @@ Sie stehen in `.env` im Projektordner (nicht im Repository, Vorlage `.env.exampl
 
 ## 10.7 Versionen und Lizenz
 
-Version 1.0.0-alpha.1. Lizenz GPL-3.0 (siehe `LICENSE`). Daten haben die Lizenzen ihrer Quellen (Kapitel 4). Autor und Betreiber: Thorsten Schleicher, Ferschweiler.
+Version 1.0.0-alpha.2. Lizenz GPL-3.0 (siehe `LICENSE`). Daten haben die Lizenzen ihrer Quellen (Kapitel 4). Autor und Betreiber: Thorsten Schleicher, Ferschweiler.

@@ -2,7 +2,7 @@
 
 Eine Alpha-Fassung ist ehrlich, wenn sie sagt, was nicht geht. Dieses Kapitel sammelt es an einer Stelle. Die laufend gepflegte Fassung steht in `docs/rlp/offen.md`.
 
-## 9.1 Was in 1.0.0-alpha.1 nicht fertig ist
+## 9.1 Was in 1.0.0-alpha.2 nicht fertig ist
 
 - **Dauerlauf (R6).** Sieben Tage Betrieb ohne Handeingriff sind noch nicht gelaufen. Bis dahin ist die Stabilität im Langbetrieb behauptet, nicht belegt.
 - **Abnahme (R7).** Die Phase hat noch nicht begonnen. Sie beginnt erst nach Freigabe von R6 durch den Betreiber.

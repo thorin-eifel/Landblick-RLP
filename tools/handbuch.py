@@ -4,7 +4,7 @@
 Zweck:      Setzt die Kapitel zu einer Datei zusammen und erzeugt HTML und PDF. Die Quellentabelle in Kapitel 4 wird aus
             sources.yaml geschrieben (zwischen den Marken quellen:start / quellen:ende), damit sie nicht vom Register abweicht.
 Parameter:  --out DIR     Ausgabeordner (Standard build/handbuch)
-            --version V   Versionsangabe auf dem Deckblatt (Standard: aus pyproject.toml / CHANGELOG-frei: 1.0.0-alpha.1)
+            --version V   Versionsangabe auf dem Deckblatt (Standard: aus pyproject.toml / CHANGELOG-frei: 1.0.0-alpha.2)
             --update      Quellentabelle in docs/handbuch/04-datenquellen.md neu schreiben
             --check       nur prüfen, ob die Tabelle zum Register passt (Exit 1 bei Abweichung)
             --nur-md      nur die zusammengesetzte Markdown-Datei, ohne pandoc
@@ -100,7 +100,7 @@ def chrome() -> str | None:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--out", default=str(ROOT / "build" / "handbuch"))
-    ap.add_argument("--version", default="1.0.0-alpha.1")
+    ap.add_argument("--version", default="1.0.0-alpha.2")
     ap.add_argument("--update", action="store_true")
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--nur-md", action="store_true")

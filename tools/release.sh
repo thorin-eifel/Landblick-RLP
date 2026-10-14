@@ -4,9 +4,9 @@
 #
 # Zweck:     Baut aus einem Git-Stand die Release-Dateien (Quelltext-Archive, Installer, Handbuch als PDF/HTML/Markdown,
 #            Prüfsummen) nach build/release/ und legt auf Wunsch das GitHub-Release an.
-# Aufruf:    tools/release.sh 1.0.0-alpha.1            nur bauen (aus HEAD)
-#            tools/release.sh 1.0.0-alpha.1 --github   bauen, Tag v<Version> auf HEAD setzen und Release anlegen
-#            REF=main tools/release.sh 1.0.0-alpha.1   anderen Git-Stand nehmen
+# Aufruf:    tools/release.sh 1.0.0-alpha.2            nur bauen (aus HEAD)
+#            tools/release.sh 1.0.0-alpha.2 --github   bauen, Tag v<Version> auf HEAD setzen und Release anlegen
+#            REF=main tools/release.sh 1.0.0-alpha.2   anderen Git-Stand nehmen
 # Braucht:   git, python3 mit PyYAML, pandoc, wkhtmltopdf oder Chrome/Chromium/Edge (Handbuch-PDF); für --github die GitHub-CLI `gh`, angemeldet.
 # Regeln:    Nur versionierte Dateien kommen ins Archiv; die uxwing-Symbole (nicht versioniert) sind damit nie dabei.
 #            Notizen aus docs/release-<Version>.md; Versionen mit "-" gelten als Vorabversion.
@@ -14,7 +14,7 @@
 # =============================================================================
 set -euo pipefail
 
-VERSION="${1:?Version angeben, z. B. 1.0.0-alpha.1}"
+VERSION="${1:?Version angeben, z. B. 1.0.0-alpha.2}"
 MODE="${2:-}"
 REF="${REF:-HEAD}"
 ROOT="$(git rev-parse --show-toplevel)"
