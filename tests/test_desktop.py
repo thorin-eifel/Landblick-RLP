@@ -190,3 +190,26 @@ def test_nachladen_fehler_bleibt_sichtbar(srv, tmp_path, monkeypatch):
         assert j["phase"] == "error" and j["error"]
     finally:
         s.close()
+
+
+def test_mitgelieferte_pakete_werden_gelesen(srv, tmp_path):
+    app, port, _ = srv
+    res = tmp_path / "res"
+    (res / "tiles").mkdir(parents=True); (res / "data").mkdir()
+    (res / "tiles" / "gebaeude.pmtiles").write_bytes(b"PMTiles-ish" * 10)
+    (res / "data" / "suche_geo.json").write_text("[1]")
+    (res / "data" / "geheim.json").write_text("[2]")
+    app.pack_dirs = [res.resolve()]
+    assert call(port, "/tiles/gebaeude.pmtiles", headers={"Range": "bytes=0-3"})[0] == 206
+    assert call(port, "/data/suche_geo.json")[1] == b"[1]"
+    assert call(port, "/data/geheim.json")[0] == 404          # nur der feste Suchindex kommt aus dem Installer
+
+
+def test_tiles_fehlen_zaehlt_mitgelieferte(srv, tmp_path):
+    app, _, _ = srv
+    res = tmp_path / "res"; (res / "tiles").mkdir(parents=True)
+    for n in ("region", "core", "ring"):
+        (res / "tiles" / f"{n}.pmtiles").write_bytes(b"x")
+    assert app.tiles_fehlen()
+    app.pack_dirs = [res.resolve()]
+    assert not app.tiles_fehlen()

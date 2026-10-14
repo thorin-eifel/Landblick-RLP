@@ -437,6 +437,9 @@ python -m app.pakete --manifest https://…/dem-hoch.pmtiles.manifest.json --des
 ```
 Abbruch ist unkritisch: `dem-hoch.pmtiles.part` wächst Teil für Teil, jeder Lauf prüft die fertigen Teile neu und setzt das angefangene per Range fort. Umbenannt wird erst nach bestandener Gesamtprüfsumme. Bedarf: Paketgröße plus 200 MB frei. Die Adresse steht in `PAKETE_MANIFEST` (`app/desktop.py`), Überschreiben mit `OSINT_PAKETE_MANIFEST`, Abschalten mit `aus`. Fehler: `/api/state` → `nachladen.error`, Log `osint.pakete`. Namensnennung: die Landesdaten (DGM1, © GeoBasis-DE / LVermGeoRP, dl-de/by-2-0) stehen in den Metadaten der Pakete.
 
+### Mitgelieferte Pakete im Installer
+`desktop/stage-pakete.sh` kopiert `dem.pmtiles` (Zoom ≤ 12), `klippen`, `hang`, `gebaeude` und `suche_geo.json` nach `desktop/src-tauri/pakete/` (nicht im Git). `tauri.conf.json` nimmt den Ordner als Ressource auf, `main.rs` übergibt ihn dem Dienst als `--pack-dir`. Reihenfolge der Suche für `/tiles/`: Datenordner, Installer-Ressource, `web/tiles`. Erlaubt ist so nur Lesen; `/data/` kommt weiter nur aus dem Datenordner, außer `suche_geo.json`. Gesamtgröße ohne Basiskarte rund 1,1 GB. Ablauf: `desktop/build-sidecar.sh` → `desktop/stage-pakete.sh` → `cd desktop && npx tauri build`. Ungetestet auf Windows (Installer wurde noch nicht gebaut).
+
 ### Gebäude, Straßenschilder, Beschriftung, Verkehrsfarben
 
 - **Gebäude** bordeaux (`#800020` hell, `#9c2a4b` dunkel), 60 % transparent (`BUILDING_OPACITY` in `web/js/lage/stil.js`). Standardmäßig an. Die Ebene beginnt bei Zoom 13 (nur große Gebäude, die Kacheln führen darunter nicht mehr). Alle Gebäude gibt es ab Kartenzoom 14: der Kern wird mit `tileSize: 256` eingebunden, dadurch gelten die Zoom-15-Kacheln eine Stufe früher. Weiter vorzuziehen (Zoom 13) würde viermal so viele Kacheln je Bild laden; dafür bräuchte es eigene Gebäudekacheln.

@@ -71,7 +71,10 @@ class Job:
 
 
 class App:
-    def __init__(self, data_dir: Path, web_dir: Path, pmtiles: Path, repo_dir: Path, sources_path: Path | None = None) -> None:
+    def __init__(self, data_dir: Path, web_dir: Path, pmtiles: Path, repo_dir: Path, sources_path: Path | None = None,
+                 pack_dirs: list[Path] | None = None) -> None:
+        # pack_dirs: mitgelieferte, nur lesbare Ordner (Installer-Ressourcen) mit tiles/*.pmtiles und data/suche_geo.json
+        self.pack_dirs = [d.resolve() for d in (pack_dirs or [])]
         self.data_dir, self.web_dir, self.pmtiles, self.repo_dir = data_dir, web_dir.resolve(), pmtiles, repo_dir
         self.job = Job()
         self.nachladen = Job()                 # Nachladepaket im Hintergrund, getrennt vom Aufbau: die App läuft währenddessen
@@ -98,7 +101,7 @@ class App:
     def pack(self, name: str):
         """Kachelpaket tiles/<name>.pmtiles (erst Datenordner, dann App) als PackArchive oder None. Öffnet neu, wenn die Datei sich ändert."""
         from app.tilepack import PackArchive, PackError
-        for root in (self.data_dir, self.web_dir):
+        for root in (self.data_dir, *self.pack_dirs, self.web_dir):
             f = root / "tiles" / f"{name}.pmtiles"
             try:
                 st = f.stat()
@@ -155,7 +158,7 @@ class App:
         return True
 
     def tiles_fehlen(self) -> bool:
-        return not all((self.data_dir / "tiles" / n).exists() for n in ("region.pmtiles", "core.pmtiles", "ring.pmtiles"))
+        return not all(any((r / "tiles" / n).exists() for r in (self.data_dir, *self.pack_dirs)) for n in ("region.pmtiles", "core.pmtiles", "ring.pmtiles"))
 
     def holen_tiles(self) -> None:
         """Karte für das ganze Gebiet (tools/build_region_tiles.py): in Stücken, jeder Lauf macht dort weiter, wo der vorige aufhörte.
@@ -182,7 +185,7 @@ class App:
         url = self.pakete_url()
         if not url or (self.nachlade_thread and self.nachlade_thread.is_alive()):
             return False
-        if any((r / "tiles" / "dem-hoch.pmtiles").exists() for r in (self.data_dir, self.web_dir)):
+        if any((r / "tiles" / "dem-hoch.pmtiles").exists() for r in (self.data_dir, *self.pack_dirs, self.web_dir)):
             self.nachladen.set("ready", "Relief in voller Auflösung vorhanden", 100)
             return False
 
@@ -286,7 +289,12 @@ def make_handler(app: App, port_box: list[int]):
         def translate_path(self, path: str) -> str:
             """/data/ nur aus dem Datenordner (nie Beispieldaten eines anderen Ortes), /tiles/ erst dort, dann aus der App."""
             p = urllib.parse.unquote(urllib.parse.urlsplit(path).path)
-            roots = [app.data_dir] if p.startswith("/data/") else [app.data_dir, app.web_dir] if p.startswith("/tiles/") else [app.web_dir]
+            if p.startswith("/data/"):
+                roots = [app.data_dir] + (app.pack_dirs if p == "/data/suche_geo.json" else [])   # nur der feste Suchindex kommt aus dem Installer
+            elif p.startswith("/tiles/"):
+                roots = [app.data_dir, *app.pack_dirs, app.web_dir]
+            else:
+                roots = [app.web_dir]
             for root in roots:
                 cand = (root / p.lstrip("/")).resolve()
                 if (cand == root or root in cand.parents) and (cand.is_file() or cand.is_dir()):
@@ -435,12 +443,13 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--data-dir", type=Path, required=True)
     ap.add_argument("--web-dir", type=Path, default=root / "web")
     ap.add_argument("--pmtiles", type=Path, default=Path("pmtiles"))
+    ap.add_argument("--pack-dir", type=Path, action="append", default=[], help="mitgelieferter Ordner mit tiles/ und data/suche_geo.json (mehrfach möglich)")
     ap.add_argument("--port", type=int, default=0)
     ap.add_argument("--log-level", default="INFO")
     a = ap.parse_args(argv)
     logging.basicConfig(level=a.log_level, format="%(asctime)s %(levelname)s %(name)s: %(message)s", stream=sys.stderr)
     logging.getLogger("httpx").setLevel(logging.WARNING)
-    app = App(a.data_dir, a.web_dir, a.pmtiles, root)
+    app = App(a.data_dir, a.web_dir, a.pmtiles, root, pack_dirs=[d for d in a.pack_dir if d.is_dir()])
     box = [0]
     srv = ThreadingHTTPServer(("127.0.0.1", a.port), make_handler(app, box))
     box[0] = srv.server_address[1]
