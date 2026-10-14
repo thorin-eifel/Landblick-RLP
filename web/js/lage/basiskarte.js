@@ -9,6 +9,7 @@ import { MED, MED_COLORS, MED_ICON_STYLE, medFlavor, medievalize } from './mitte
 import { HER_LAYERS, NAT_LAYERS, applyNatureVisibility, paintNature, peakLayers } from './natur.js';
 import { INFRA_LAYER_IDS, paintStops } from './orte.js';
 import { placeLgb } from './lgb.js';
+import { skinize, skinById, tintOf, wantsPatterns } from './skins.js';
 import { BUILDING_OPACITY, LABEL_SKIP, LAND, cliffLayers, hangLayers, labelsAndBuildings, ortsnamenUebersicht, landUseLayers, mainRoad, signLayers, waterEdges } from './stil.js';
 import { applyFlow, applyLegends, fillTempLegend, placeRadar } from './wetterkarte.js';
 import { BUILDING_KLASSEN } from '../gebaeude-farben.js';
@@ -44,6 +45,7 @@ export function applyBasemap() {
   for (const l of map.getStyle().layers) if (l.id.startsWith('bm-')) map.removeLayer(l.id);
   const med = !!state.layers.medieval;
   document.documentElement.dataset.karte = med ? 'mittelalter' : '';
+  document.documentElement.dataset.skin = skinById(state.skin).id;
   const flavor = !med && document.documentElement.dataset.ansicht === 'dunkel' ? 'dark' : 'grayscale';
   const before = baseAnchor();
   // Keine Grenzlinien (Länder, Kreise): die Karte zeigt Gelände, Gewässer, Straßen und den Radius
@@ -63,6 +65,8 @@ export function applyBasemap() {
   styled.splice(lab0 < 0 ? styled.length : lab0, 0, ...cliffLayers(med ? 'med' : dark ? 'dark' : 'light', dark, map.hasImage('cliff-stroke'), klippenOk));
   waterEdges(styled, dark);
   styled.push(...peakLayers(dark, map.hasImage('peak-tri')));   // Gipfel oben auf den Beschriftungen des Stils
+  const tint = tintOf(state.skin, dark);
+  if (tint) styled = skinize(styled, tint, { patterns: wantsPatterns(state.skin) });
   if (med) styled = medievalize(styled);
   if (ringOk && !gebOk) {   // gleiche Gebäudeebenen noch einmal aus dem Ring; Kern und Ring überlappen nicht, nichts wird doppelt gezeichnet
     const at2 = styled.map((x) => x.id).lastIndexOf('buildings-line');
@@ -95,7 +99,7 @@ export function applyBasemap() {
 
 // Gewässer blau, damit Mosel, Sauer und Seen auch auf der grauen Basiskarte und über dem Relief sofort lesbar sind
 export function paintWater(dark, med) {
-  const fill = med ? MED.water : dark ? '#1f4f7a' : '#8fc0e8', line = fill;   // Linie in Flächenfarbe: Mittellinie und Fläche gehen nahtlos ineinander über
+  const fill = med ? MED.water : tintOf(state.skin, dark)?.water ?? (dark ? '#1f4f7a' : '#8fc0e8'), line = fill;   // Linie in Flächenfarbe: Mittellinie und Fläche gehen nahtlos ineinander über
   if (map.getLayer('bm-water')) map.setPaintProperty('bm-water', 'fill-color', fill);
   for (const id of ['bm-water_stream', 'bm-water_river']) if (map.getLayer(id)) map.setPaintProperty(id, 'line-color', line);
 }
@@ -119,7 +123,7 @@ export function applyLight(dark = document.documentElement.dataset.ansicht === '
   const last = Math.max(...['bm-water', 'bm-water_stream', 'bm-water_river'].map((i) => ids.indexOf(i)));
   const beforeWater = last >= 0 && ids[last + 1] ? ids[last + 1] : 'radius-fill';
   light.setEnabled(on);
-  light.build(before, beforeWater, { dark, med, waterColor: med ? MED.water : dark ? '#1f4f7a' : '#8fc0e8' });
+  light.build(before, beforeWater, { dark, med, waterColor: med ? MED.water : tintOf(state.skin, dark)?.water ?? (dark ? '#1f4f7a' : '#8fc0e8') });
   if (map.getLayer('relief-hill')) map.setPaintProperty('relief-hill', 'hillshade-exaggeration', on ? 0.12 : hillStrength(dark, med));
   const box = $('#licht-opt'); if (box) box.hidden = !on;
 }

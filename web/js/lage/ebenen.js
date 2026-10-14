@@ -7,6 +7,7 @@ import { pushAir, refreshAir } from './flugverkehr.js';
 import { refresh, render } from './laden.js';
 import { SACRAL_LAYERS } from '../infra.js';
 import { windrose } from './mittelalter.js';
+import { SKINS, skinById } from './skins.js';
 import { applyNatureVisibility } from './natur.js';
 import { applyInfra, applyInfraVisibility, applyRoutesVisibility, applyStopsVisibility } from './orte.js';
 import { applyBlitzVisibility, applyFlow, applyLegends, applyRadarVisibility, applyWind } from './wetterkarte.js';
@@ -95,9 +96,24 @@ export function wire() {
     if (boxes.some((cb) => cb.dataset.layer === 'licht')) applyLight();
     if (t.checked && boxes.some((cb) => cb.dataset.layer === 'air')) refreshAir();
   });
-  for (const r of document.querySelectorAll('input[name="skin"]')) r.addEventListener('change', () => {   // Darstellung: Landblick oder Alte Karte (weitere folgen)
+  // Darstellung: Radios und Hinweis aus der Liste der Skins (skins.js); Alte Karte schaltet zusätzlich die historischen Ebenen
+  const skinBox = document.querySelector('#ctl-darstellung fieldset');
+  const skinHint = document.querySelector('#ctl-darstellung .group-hint');
+  if (skinBox) {
+    skinBox.replaceChildren(...[...skinBox.querySelectorAll('legend')], ...SKINS.map((s) => {
+      const lab = document.createElement('label'), r = document.createElement('input');
+      r.type = 'radio'; r.name = 'skin'; r.value = s.id; r.checked = s.id === state.skin;
+      lab.append(r, ` ${s.name}`);
+      return lab;
+    }));
+  }
+  const showHint = () => { if (skinHint) skinHint.textContent = `${skinById(state.skin).hinweis}. Die Ebenen bleiben in jeder Darstellung wählbar.`; };
+  showHint();
+  for (const r of document.querySelectorAll('input[name="skin"]')) r.addEventListener('change', () => {
     if (!r.checked) return;
-    state.layers.medieval = r.value === 'alte-karte'; applyLayerFilters(); render(); syncGroups(); syncMedieval();
+    state.skin = skinById(r.value).id; state.layers.medieval = state.skin === 'alte-karte'; showHint();
+    applyLayerFilters(); render(); syncGroups();
+    if (state.layers.medieval !== medApplied) syncMedieval(); else recolor();
   });
   syncGroups();
   const tabs = [...document.querySelectorAll('[role="tab"]')];

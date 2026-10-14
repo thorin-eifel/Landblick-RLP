@@ -249,3 +249,11 @@ Vorschlag in einem Satz: eine Skin-Beschreibung als Objekt (`id`, `name`, `flavo
 **Farbe für Hell und Dunkel prüfen.** Immer beide Werte setzen. Prüfen im Browser mit `#debug` und der Karte in beiden Ansichten, danach `node --test tests/js/*.test.mjs` und `python -m pytest -q`.
 
 **Zoom-Ausdrücke.** MapLibre erlaubt `['zoom']` nur als Eingabe des obersten `interpolate`/`step`. Skalieren geht über die Stützwerte (`scaled()`, `scaleSize()`, `widen()` in `stil.js` und `mittelalter.js`), nicht über Verschachteln.
+
+## 11.9 Skins: Aufbau und neue Darstellung anlegen
+
+`web/js/lage/skins.js` führt die Liste `SKINS`. Landblick (keine Nachbearbeitung) und Alte Karte (`medievalize`) bleiben, was sie waren. Jeder weitere Skin ist eine Palette mit den Schlüsseln `bg`, `earth`, `water`, `edge`, `waterInk`, `ink`, `halo`, `forest`, `green`, `scrub`, `farm`, `wet`, `rock`, `landOp`, `bld` und `roads` (je Klasse `[Füllung, Kontur]`), jeweils für `light` und `dark`.
+
+`applyBasemap()` baut die Layer wie gewohnt und ruft danach `skinize(styled, palette, { patterns })`. Das Umfärben läuft über die Layer-IDs; Geometrie, Schalter und Datenebenen bleiben unberührt. Wasserfarbe für `paintWater` und Licht kommt aus derselben Palette. Der Zustand steht in `state.skin`, die Auswahl in `html[data-skin]`; `state.layers.medieval` ist daraus abgeleitet.
+
+Neue Darstellung: Eintrag in `SKINS` mit `id`, `name`, `hinweis` und `tint`, Test in `tests/js/skins.test.mjs` läuft ohne weitere Anpassung. Namen sind Orte, keine Marken. Nicht von der Palette erfasst sind Höhenfärbung (Relief), Wetter- und Datenebenen, Schilder und Zeichen; sie folgen weiter hell/dunkel.
