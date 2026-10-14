@@ -96,14 +96,15 @@ def tile_xy(lon: float, lat: float, z: int) -> tuple[int, int]:
     return x, y
 
 
-def pixel_lonlat(z: int, x: int, y: int, size: int = 256) -> tuple[np.ndarray, np.ndarray]:
-    """Pixelmitten einer Kachel als (lon, lat), je (size, size)."""
+def pixel_lonlat(z: int, x: int, y: int, size: int = 256, margin: int = 0) -> tuple[np.ndarray, np.ndarray]:
+    """Pixelmitten einer Kachel als (lon, lat), je (size + 2 * margin) im Quadrat. `margin` Pixel Rand rundum (Nachbarkacheln)."""
     n = 2**z
-    f = (np.arange(size) + 0.5) / size
+    f = (np.arange(-margin, size + margin) + 0.5) / size
     lon = (x + f) / n * 360.0 - 180.0
     ys = math.pi * (1 - 2 * (y + f) / n)
     lat = np.degrees(np.arctan(np.sinh(ys)))
-    return np.broadcast_to(lon[None, :], (size, size)), np.broadcast_to(lat[:, None], (size, size))
+    side = size + 2 * margin
+    return np.broadcast_to(lon[None, :], (side, side)), np.broadcast_to(lat[:, None], (side, side))
 
 
 # ------------------------------------------------------------------ Dateiliste
@@ -228,10 +229,10 @@ def stage_reduce(items: list[dict], work: Path, budget_s: float, keep_raw: bool 
 
 
 # ------------------------------------------------------------------ Stufe 2: Kacheln
-def sample_state(red: Path, z: int, x: int, y: int, have: set[tuple[int, int]]) -> np.ndarray | None:
-    """Zoom-14-Kachel aus dem 4-m-Raster; NaN, wo keine Landesdaten. None, wenn die Kachel gar nichts trifft."""
+def sample_state(red: Path, z: int, x: int, y: int, have: set[tuple[int, int]], margin: int = 0) -> np.ndarray | None:
+    """Zoom-14-Kachel aus dem 4-m-Raster; NaN, wo keine Landesdaten. None, wenn die Kachel (mit `margin` Pixel Rand) gar nichts trifft."""
     from pyproj import Transformer
-    lon, lat = pixel_lonlat(z, x, y)
+    lon, lat = pixel_lonlat(z, x, y, margin=margin)
     e, n = Transformer.from_crs(4326, 25832, always_xy=True).transform(lon, lat)
     k0, k1 = int(math.floor((e.min() - STEP) / 1000)), int(math.floor((e.max() + STEP) / 1000))
     m0, m1 = int(math.floor((n.min() - STEP) / 1000)), int(math.floor((n.max() + STEP) / 1000))
@@ -267,7 +268,7 @@ def _base_png(base: Path, x: int, y: int) -> np.ndarray | None:
     return _BCACHE[key]
 
 
-def upsample_base(base: Path, z: int, x: int, y: int) -> np.ndarray | None:
+def upsample_base(base: Path, z: int, x: int, y: int, margin: int = 0) -> np.ndarray | None:
     """Kachel (z > 12) aus den Mapzen-Kacheln Zoom 12 hochgerechnet (bilinear); None, wenn die Basis fehlt.
 
     Die Pixelmitten der Zielkachel werden im Pixelraster der Basis gesucht, in einem Mosaik aus der Basiskachel und ihren
@@ -291,48 +292,79 @@ def upsample_base(base: Path, z: int, x: int, y: int) -> np.ndarray | None:
     if bad.any():                                         # Nachbar fehlt (Rand der Abdeckung): nächsten gültigen Wert fortsetzen
         idx = distance_transform_edt(bad, return_distances=False, return_indices=True)
         m = m[tuple(idx)]
-    f = (np.arange(256) + 0.5) / s - 0.5                  # Pixelmitte der Zielkachel im Raster der Basis
+    f = (np.arange(-margin, 256 + margin) + 0.5) / s - 0.5   # Pixelmitte der Zielkachel (mit Rand) im Raster der Basis
     col = 256 + (x - bx * s) * (256 // s) + f
     row_ = 256 + (y - by * s) * (256 // s) + f
     rr, cc = np.meshgrid(row_, col, indexing="ij")
     return map_coordinates(m, [rr, cc], order=1, mode="nearest", prefilter=False).astype(np.float32)
 
 
-def touches(z: int, x: int, y: int, have: set[tuple[int, int]]) -> bool:
-    """Trifft die Kachel (grob, 5 x 5 Stützpunkte plus Rand) mindestens eine 1-km-Kachel mit Landesdaten?"""
+def touches(z: int, x: int, y: int, have: set[tuple[int, int]], margin_m: float = STEP) -> bool:
+    """Trifft die Kachel (grob, 5 x 5 Stützpunkte plus Rand von `margin_m` Metern) mindestens eine 1-km-Kachel mit Landesdaten?"""
     from pyproj import Transformer
     n = 2**z
     fx, fy = np.linspace(0, 1, 5), np.linspace(0, 1, 5)
     lon = ((x + fx) / n * 360.0 - 180.0)[None, :].repeat(5, 0)
     lat = np.degrees(np.arctan(np.sinh(math.pi * (1 - 2 * (y + fy) / n))))[:, None].repeat(5, 1)
     e, nn = Transformer.from_crs(4326, 25832, always_xy=True).transform(lon, lat)
-    k0, k1 = int(math.floor((e.min() - STEP) / 1000)), int(math.floor((e.max() + STEP) / 1000))
-    m0, m1 = int(math.floor((nn.min() - STEP) / 1000)), int(math.floor((nn.max() + STEP) / 1000))
+    k0, k1 = int(math.floor((e.min() - margin_m) / 1000)), int(math.floor((e.max() + margin_m) / 1000))
+    m0, m1 = int(math.floor((nn.min() - margin_m) / 1000)), int(math.floor((nn.max() + margin_m) / 1000))
     return any((a, b) in have for a in range(k0, k1 + 1) for b in range(m0, m1 + 1))
 
 
+FADE_PX = 120          # Länge des Ausgleichs außerhalb der Landesdaten in Zoom-14-Pixeln (rund 730 m)
+
+
+def blend_bias(st: np.ndarray, fb: np.ndarray, fade_px: int = FADE_PX) -> np.ndarray:
+    """Landesdaten `st` (NaN = keine) durch `fb` (Mapzen) ergänzen, ohne Stufe am Rand der Landesdaten.
+
+    Mapzen weicht vom Landes-DGM1 um viele Meter ab (Messung Irrel: im Mittel 9,6 m). Ein hartes Umschalten setzt am Rand der
+    Abdeckung eine Stufe, die die Schummerung als gerade Linie und die Höhenlinien als gedrängtes Band zeigen. Darum wird der
+    Versatz (st - fb) am Rand nach außen fortgesetzt und über `fade_px` Pixel auf null geführt (cos², Steigung null am Rand
+    und am Ende). Innerhalb der Landesdaten bleibt jede Höhe unverändert. Das Ergebnis hängt nur von Pixeln im Abstand
+    `fade_px` ab; Kacheln mit mindestens so großem Rand schließen deshalb ohne Sprung aneinander an."""
+    from scipy.ndimage import distance_transform_edt, gaussian_filter
+    fin = np.isfinite(st)
+    if fin.all() or not fin.any():
+        return np.where(fin, st, fb)
+    w = fin.astype(np.float32)
+    diff = np.where(fin, st - fb, 0.0).astype(np.float32)
+    near = gaussian_filter(diff * w, 3) / np.maximum(gaussian_filter(w, 3), 1e-6)          # Versatz, leicht geglättet
+    dist, idx = distance_transform_edt(~fin, return_indices=True)
+    field = np.where(fin, near, near[idx[0], idx[1]])                                       # nach außen fortgesetzt
+    field = gaussian_filter(field, 5)                                                       # keine Streifen quer zum Rand
+    fade = np.where(dist < fade_px, np.cos(0.5 * math.pi * np.clip(dist / fade_px, 0, 1)) ** 2, 0.0)
+    return np.where(fin, st, fb + field * fade).astype(np.float32)
+
+
 def build_top(args: tuple) -> tuple[int, int, str]:
-    """Zoom-14-Kachel schreiben. Rückgabe (x, y, "state"|"base"|"none")."""
+    """Zoom-14-Kachel schreiben. Rückgabe (x, y, "state"|"edge"|"base"|"none"|"keep"); "edge" = Kachel ohne eigene Landesdaten im Ausgleichsstreifen."""
     x, y, red_s, base_s, out_s, have, force, only_gaps = args
     red, base, out = Path(red_s), Path(base_s), Path(out_s)
     dest = out / str(MAXZ) / str(x) / f"{y}.png"
     if dest.exists() and not force:
         return x, y, "keep"
-    st = sample_state(red, MAXZ, x, y, have)
+    m = FADE_PX
+    inner = (slice(m, m + 256), slice(m, m + 256))
+    st_h = sample_state(red, MAXZ, x, y, have, margin=m)        # mit Rand: der Ausgleich am Rand der Landesdaten braucht die Nachbarschaft
+    st = None if st_h is None else st_h[inner]
     if only_gaps and st is not None and np.isfinite(st).all():
         return x, y, "keep"                                # reine Landesdaten: unverändert lassen
-    fallback = upsample_base(base, MAXZ, x, y)
-    if st is None and fallback is None:
-        return x, y, "none"
-    if st is None:
+    fb_h = upsample_base(base, MAXZ, x, y, margin=m)
+    fallback = None if fb_h is None else fb_h[inner]
+    if st_h is None or not np.isfinite(st_h).any():
+        if fallback is None:
+            return x, y, "none"
         write_png(dest, fallback)
         return x, y, "base"
-    if fallback is not None:
-        st = np.where(np.isfinite(st), st, fallback)
-    if np.isnan(st).all():
+    if fb_h is not None:
+        full = blend_bias(st_h, fb_h)[inner]
+    else:
+        full = st
+    if np.isnan(full).all():
         return x, y, "none"
-    write_png(dest, np.nan_to_num(st, nan=0.0))
-    return x, y, "state"
+    write_png(dest, np.nan_to_num(full, nan=0.0))
+    return x, y, "state" if st is not None and np.isfinite(st).any() else "edge"
 
 
 def merge_children(out: Path, base: Path, z: int, x: int, y: int, touched: set[tuple[int, int]] | None = None) -> np.ndarray | None:
@@ -369,7 +401,7 @@ def stage_tiles(items_have: set[tuple[int, int]], bbox: tuple[float, float, floa
                 cand.append((x, y))
     log.info("Stufe 2: %d Zoom-14-Kacheln im Gebiet", len(cand))
     jobs = [(x, y, str(red), str(base), str(out), items_have, force, only_gaps) for x, y in cand]
-    stats = {"state": 0, "base": 0, "none": 0, "keep": 0}
+    stats = {"state": 0, "edge": 0, "base": 0, "none": 0, "keep": 0}
     with ProcessPoolExecutor(max(1, (os.cpu_count() or 2) - 0)) as pool:
         for k, (x, y, kind) in enumerate(pool.map(build_top, jobs, chunksize=16), 1):
             stats[kind] += 1
@@ -386,7 +418,7 @@ def stage_tiles(items_have: set[tuple[int, int]], bbox: tuple[float, float, floa
             if m is not None:
                 write_png(dest, m)
     # Zoom 12 bis 6: nur dort mitteln, wo Landesdaten liegen; der Rest kommt unverändert aus Mapzen
-    touched_by_z: dict[int, set[tuple[int, int]]] = {13: {(x // 2, y // 2) for x, y in cand if touches(MAXZ, x, y, items_have)}}
+    touched_by_z: dict[int, set[tuple[int, int]]] = {13: {(x // 2, y // 2) for x, y in cand if touches(MAXZ, x, y, items_have, FADE_PX * 6.2)}}
     lvl = touched_by_z[13]   # Zoom 13 mit Landesdaten
     for z in range(BASEZ, MINZ - 1, -1):
         lvl = {(x // 2, y // 2) for x, y in lvl}
