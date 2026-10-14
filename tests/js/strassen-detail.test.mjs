@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { DETAIL_ZOOM, roadsFromDetail } from '../../web/js/lage/stil.js';
+globalThis.window ??= globalThis;
+globalThis.devicePixelRatio ??= 1;
+const { DETAIL_ZOOM, roadsFromDetail } = await import('../../web/js/lage/stil.js');
 
 const roads = (id, extra = {}) => ({ id, type: 'line', source: 'basemap', 'source-layer': 'roads', ...extra });
 const styled = [{ id: 'earth', type: 'fill', source: 'basemap', 'source-layer': 'earth' }, roads('roads_minor_casing'), roads('roads_minor'),
