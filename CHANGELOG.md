@@ -5,7 +5,8 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 ## [Unreleased]
 
 ### Geändert
-- Karte: Klippen aus OpenStreetMap (außerhalb von Rheinland-Pfalz, z. B. Luxemburg) werden wie die Wände aus dem Geländemodell gezeichnet: gleicher Einsatzzoom (13), gleiche Oberkante, Striche ab Zoom 14.
+- Karte: Klippen aus OpenStreetMap (dort, wo keine Wände aus dem Geländemodell vorliegen, z. B. Luxemburg) werden wie diese gezeichnet: gleicher Einsatzzoom (13), gleiche Oberkante, Striche ab Zoom 14.
+- Karte: OSM-Klippen erscheinen nicht mehr zusätzlich dort, wo es Wandkacheln gibt (bisher lagen im Grenzstreifen zu Luxemburg beide Zeichnungen übereinander). Grundlage ist die tatsächliche Kachelabdeckung (`web/js/lage/klippen-umriss.js`, erzeugt mit `tools/build_klippen_umriss.py`), nicht mehr die Landesgrenze.
 
 ### Quellenübersicht: Zugangsdaten auch auf dem lokalen Webserver
 - `deploy/serve-local.py` beantwortet wie die Desktop-App `api/zugang` (Status, Setzen, Löschen) und legt API-Schlüssel in `data/zugang.json` ab (Rechte 600). Nur auf Loopback, mit Host-, Herkunfts- und Kopfprüfung; auf anderen Adressen gibt es den Weg nicht. Die Logik teilen sich App und Webserver (`app/zugang.py`, `handle_post`).

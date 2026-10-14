@@ -19,6 +19,7 @@ Aufruf:     python tools/build_klippen_dgm.py --work ~/Claude/OSINT/dgm1-work --
             python tools/build_klippen_dgm.py --work ... --out ... --bbox 7.70 50.10 7.76 50.14      Ausschnitt (Loreley)
             python tools/build_klippen_dgm.py --work ... --out ... --all-tiles                       ganz Rheinland-Pfalz
             python tools/build_klippen_dgm.py --work ... --out ... --no-fetch                        nur was schon da ist
+Danach:     python tools/build_klippen_umriss.py --tiles <out>   (Abdeckung für den Kartenstil; OSM-Klippen verschwinden dort, wo diese Wände liegen)
 Exit:       0 = fertig, 1 = Fehler / keine Kacheln
 """
 from __future__ import annotations

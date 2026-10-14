@@ -43,7 +43,7 @@ test('Umriss: Trier, Mainz und Irrel liegen darin, Saarbrücken, Luxemburg und K
   for (const [n, lon, lat] of [['Saarbrücken', 7.0, 49.23], ['Luxemburg', 6.13, 49.61], ['Köln', 6.96, 50.94], ['Echternach', 6.42, 49.81]]) assert.ok(!inside(lon, lat), n);
 });
 
-test('Klippen: mit Geländemodell zweiter Satz aus der Quelle klippen, OSM-Klippen nur außerhalb von Rheinland-Pfalz', async () => {
+test('Klippen: mit Geländemodell zweiter Satz aus der Quelle klippen, OSM-Klippen nur außerhalb der Abdeckung durch die Wandkacheln', async () => {
   const { cliffLayers } = await import('../../web/js/lage/stil.js');
   const ohne = cliffLayers('light', false, true, false);
   assert.deepEqual(ohne.map((l) => l.id), ['land-cliff-band', 'land-cliff', 'land-cliff-teeth']);

@@ -1,3 +1,4 @@
+import { KLIPPEN_UMRISS } from './klippen-umriss.js';
 import { RLP_UMRISS } from './rlp-umriss.js';
 import { map } from './zustand.js';
 import { BUILDING, buildingFill } from '../gebaeude-farben.js';
@@ -179,7 +180,7 @@ export function hangLayers(dark, on, visible) {
 
 // k: 'light', 'dark' oder 'med' (Alte Karte: Tinte, Pergament; dieselbe Zeichnung wie in Landblick)
 export function cliffLayers(k, dark, ticks, dgm) {
-  const osmFilter = dgm ? ['all', ['==', ['get', 'kind'], 'cliff'], ['!', ['within', RLP_UMRISS]]] : ['==', 'kind', 'cliff'];
+  const osmFilter = dgm ? ['all', ['==', ['get', 'kind'], 'cliff'], ['!', ['within', KLIPPEN_UMRISS]]] : ['==', 'kind', 'cliff'];
   // Wandhöhe 5 m bis 30 m: Linie und Band wachsen mit der Höhe
   const byDrop = (lo, hi) => ['interpolate', ['linear'], ['get', 'drop'], 5, lo, 30, hi];
   const round = { 'line-cap': 'round', 'line-join': 'round' };
