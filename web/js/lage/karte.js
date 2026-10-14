@@ -28,7 +28,7 @@ import { showPopup } from './popup.js';
 import { initKontext } from './kontext.js';
 import { initSearch } from './suche-karte.js';
 import { applyWind, fillTempLegend, showFlowWind, trackLegendBottom } from './wetterkarte.js';
-import { CORE_URL, GEB_JAHR, GEB_URL, RING_URL, START_VIEW, SYMBOL_LAYERS, TILES_URL, light, map, gebOk, reduceMotion, reliefOk, ripples, setBasemapOk, setCoreOk, setFlow, setGebOk, setKlippenOk, setLight, setMap, setMapReady, setPopup, setReliefOk, setRingOk, setRipples, setSweep, setWind, setWindLow, state, sweep, wind, windLow } from './zustand.js';
+import { CORE_URL, GEB_JAHR, GEB_URL, RING_URL, START_VIEW, SYMBOL_LAYERS, TILES_URL, light, map, gebOk, reduceMotion, reliefOk, ripples, setBasemapOk, setCoreOk, setFlow, setGebOk, setHangOk, setKlippenOk, setLight, setMap, setMapReady, setPopup, setReliefOk, setRingOk, setRipples, setSweep, setWind, setWindLow, state, sweep, wind, windLow } from './zustand.js';
 
 // ------------------------------------------------------------------ Karte
 // Rahmen der Karte: Umriss von Rheinland-Pfalz (web/geo/rlp.geojson: 6,11–8,51 E, 48,97–50,94 N) mit gleichem Rand ringsum, damit der Mittelpunkt
@@ -294,6 +294,14 @@ export async function setupBasemap() {
         setKlippenOk(true);
       }
     } catch (err) { console.warn('Klippen aus dem Gelaendemodell nicht verfuegbar:', err?.message ?? err); }
+    try {   // Hangneigungsklassen aus dem Geländemodell (tools/build_hang_probe.py): Vektorkacheln Zoom 14; ohne Kacheln gibt es die Ebene nicht
+      const hb = new URL('tiles/hang/', location.href).href;
+      const hm = await fetch(hb + 'stats.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      if (hm) {
+        map.addSource('hang', { type: 'vector', tiles: [hb + '{z}/{x}/{y}.pbf'], minzoom: 14, maxzoom: 14 });
+        setHangOk(true);
+      }
+    } catch (err) { console.warn('Hangneigung nicht verfuegbar:', err?.message ?? err); }
     note.replaceChildren('Karte: ', link('https://www.openstreetmap.org/copyright', '© OpenStreetMap-Mitwirkende (ODbL)'), ' · Protomaps');
     if (gebOk) note.append(' · Gebäude in Rheinland-Pfalz: ', link('https://lvermgeo.rlp.de', `© GeoBasis-DE / LVermGeoRP (${GEB_JAHR}), dl-de/by-2-0 [Daten bearbeitet]`));
     if (globalThis.mlcontour) note.append(' · ', RELIEF_ATTRIBUTION);

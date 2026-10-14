@@ -167,6 +167,15 @@ export function labelsAndBuildings(dark) {
 // dünne Wandlinie mit Schraffen (lange und kurze Striche im Wechsel, Bild cliff-tick).
 // Mit `dgm` kommen die Wände in Rheinland-Pfalz aus dem Geländemodell (Quelle klippen, Ebenen wand, kante, schraffur, Attribut drop = Wandhöhe in m);
 // die OpenStreetMap-Klippen der Basiskarte gelten dann nur noch außerhalb des Landes.
+// Hangneigung aus dem DGM1 (Probe): drei ineinander liegende Flächen (ab 15, 25, 35 Grad), je steiler desto dunkler. Nur mit Kacheln (hang).
+export function hangLayers(dark, on, visible) {
+  if (!on) return [];
+  const col = dark ? { ab15: '#8a7a4a', ab25: '#9a6a3a', ab35: '#b04a3a' } : { ab15: '#e6d27a', ab25: '#d98a3a', ab35: '#b3342a' };
+  return ['ab15', 'ab25', 'ab35'].map((c) => ({ id: `land-hang-${c}`, type: 'fill', source: 'hang', 'source-layer': c, minzoom: 14,
+    layout: { visibility: visible ? 'visible' : 'none' },
+    paint: { 'fill-color': col[c], 'fill-opacity': c === 'ab15' ? 0.28 : c === 'ab25' ? 0.34 : 0.42, 'fill-antialias': true } }));
+}
+
 export function cliffLayers(k, dark, ticks, dgm) {
   const osmFilter = dgm ? ['all', ['==', ['get', 'kind'], 'cliff'], ['!', ['within', RLP_UMRISS]]] : ['==', 'kind', 'cliff'];
   // Wandhöhe 5 m bis 30 m: Linie und Band wachsen mit der Höhe
