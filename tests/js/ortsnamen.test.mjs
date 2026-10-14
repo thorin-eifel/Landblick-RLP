@@ -46,7 +46,7 @@ test('Umriss: Trier, Mainz und Irrel liegen darin, Saarbrücken, Luxemburg und K
 test('Klippen: mit Geländemodell zweiter Satz aus der Quelle klippen, OSM-Klippen nur außerhalb von Rheinland-Pfalz', async () => {
   const { cliffLayers } = await import('../../web/js/lage/stil.js');
   const ohne = cliffLayers('light', false, true, false);
-  assert.deepEqual(ohne.map((l) => l.id), ['land-cliff-band', 'land-cliff-case', 'land-cliff', 'land-cliff-teeth']);
+  assert.deepEqual(ohne.map((l) => l.id), ['land-cliff-band', 'land-cliff', 'land-cliff-teeth']);
   assert.ok(ohne.every((l) => l.source === 'basemap'));
   const mit = cliffLayers('light', false, true, true);
   const dgm = mit.filter((l) => l.id.endsWith('-dgm'));

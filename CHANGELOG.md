@@ -4,6 +4,9 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unreleased]
 
+### Geändert
+- Karte: Klippen aus OpenStreetMap (außerhalb von Rheinland-Pfalz, z. B. Luxemburg) werden wie die Wände aus dem Geländemodell gezeichnet: gleicher Einsatzzoom (13), gleiche Oberkante, Striche ab Zoom 14.
+
 ### Quellenübersicht: Zugangsdaten auch auf dem lokalen Webserver
 - `deploy/serve-local.py` beantwortet wie die Desktop-App `api/zugang` (Status, Setzen, Löschen) und legt API-Schlüssel in `data/zugang.json` ab (Rechte 600). Nur auf Loopback, mit Host-, Herkunfts- und Kopfprüfung; auf anderen Adressen gibt es den Weg nicht. Die Logik teilen sich App und Webserver (`app/zugang.py`, `handle_post`).
 - `app/config.py` liest `data/zugang.json` nach der `.env` in die Umgebung, damit Zeitplan-Läufe die dort eingegebenen Schlüssel nutzen (`OSINT_ZUGANG` ändert den Pfad). `.env` und Shell gehen vor.

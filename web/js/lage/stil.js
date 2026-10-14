@@ -184,19 +184,20 @@ export function cliffLayers(k, dark, ticks, dgm) {
   const byDrop = (lo, hi) => ['interpolate', ['linear'], ['get', 'drop'], 5, lo, 30, hi];
   const round = { 'line-cap': 'round', 'line-join': 'round' };
   const osm = { source: 'basemap', 'source-layer': 'earth' };
+  // Gleiche Zeichnung für beide Quellen: OSM-Linien (außerhalb von RLP, z. B. Luxemburg) setzen wie die DGM-Wände erst ab Zoom 13 ein,
+  // mit derselben Oberkante (Breite wie eine 10-m-Wand), einem zarten Wandband statt der Fläche und Strichen ab Zoom 14.
+  const wallColor = k === 'med' ? '#b39d73' : dark ? '#625c52' : '#c7bca4';
   const out = [
-    { id: 'land-cliff-band', type: 'line', ...osm, minzoom: 12, filter: osmFilter, layout: round,
-      paint: { 'line-color': CLIFF_SCREE[k], 'line-opacity': 0.55, 'line-blur': 2.5, 'line-offset': ['interpolate', ['linear'], ['zoom'], 12, 2, 17, 6],
-        'line-width': ['interpolate', ['linear'], ['zoom'], 12, 4, 17, 12] } },
-    { id: 'land-cliff-case', type: 'line', ...osm, minzoom: 12, filter: osmFilter, layout: round,
-      paint: { 'line-color': k === 'med' ? '#e8d6a6' : dark ? '#161616' : '#ffffff', 'line-opacity': 0.5, 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 2.4, 16, 4] } },
-    { id: 'land-cliff', type: 'line', ...osm, minzoom: 12, filter: osmFilter, layout: round,
-      paint: { 'line-color': CLIFF[k], 'line-opacity': 1, 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1.1, 16, 2.2] } },
-    ...(ticks ? [{ id: 'land-cliff-teeth', type: 'symbol', ...osm, minzoom: 13, filter: osmFilter,
+    { id: 'land-cliff-band', type: 'line', ...osm, minzoom: 13, filter: osmFilter, layout: round,
+      paint: { 'line-color': wallColor, 'line-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.2], 'line-blur': 2.5, 'line-offset': ['interpolate', ['linear'], ['zoom'], 13, 3, 17, 6],
+        'line-width': ['interpolate', ['linear'], ['zoom'], 13, 6, 17, 12] } },
+    { id: 'land-cliff', type: 'line', ...osm, minzoom: 13, filter: osmFilter, layout: round,
+      paint: { 'line-color': CLIFF[k], 'line-opacity': 1, 'line-width': ['interpolate', ['linear'], ['zoom'], 13, 0.92, 16, 1.6, 18, 2.28] } },
+    ...(ticks ? [{ id: 'land-cliff-teeth', type: 'symbol', ...osm, minzoom: 14, filter: osmFilter,
       layout: { 'symbol-placement': 'line', 'symbol-spacing': 8, 'icon-image': 'cliff-tick', 'icon-anchor': 'top', 'icon-offset': [0, 0.5],
         'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true,
-        'icon-size': ['interpolate', ['linear'], ['zoom'], 13, 0.85, 17, 1.25] },
-      paint: { 'icon-color': CLIFF[k], 'icon-opacity': 1 } }] : []),
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 14, 0.85, 17, 1.25] },
+      paint: { 'icon-color': CLIFF[k], 'icon-opacity': 0.9 } }] : []),
   ];
   if (!dgm) return out;
   // Aus dem DGM1 (1 m) gezeichnete Felswand: helle Wandfläche (Polygon, 60 % Deckkraft), Striche in Fallrichtung (von oben nach
