@@ -60,8 +60,8 @@ export const LAND = {
 // Tinte der Signaturen (Rgba), Bilder lp-<klasse>-<light|dark> aus icons.js registerLandPatterns()
 export const PAT_MIN_ZOOM = 12;
 export const PROTECTED = { light: '#2e7d3c', dark: '#7fd18a' };
-export const CLIFF = { light: '#000000', dark: '#dedad2' }; // dunkles Steingrau bzw. helles Grau, bewusst kein Braun: Höhenlinien sind braun
-export const CLIFF_SCREE = { light: '#6f675b', dark: '#8d8578' };   // Geröllband am Fuß der Wand
+export const CLIFF = { light: '#000000', dark: '#dedad2', med: '#3a2614' }; // dunkles Steingrau bzw. helles Grau, bewusst kein Braun: Höhenlinien sind braun
+export const CLIFF_SCREE = { light: '#6f675b', dark: '#8d8578', med: '#7a5530' };   // Geröllband am Fuß der Wand
 export const QUARRY = { light: ['#8a6d3b', '#4a3a1c'], dark: ['#d9b56b', '#f0dcae'] };
 export const LAND_KINDS = {
   forest: ['forest', 'wood'],
@@ -177,6 +177,7 @@ export function hangLayers(dark, on, visible) {
     paint: { 'fill-color': col[c], 'fill-opacity': c === 'ab15' ? 0.16 : c === 'ab25' ? 0.2 : 0.24, 'fill-antialias': true } }));
 }
 
+// k: 'light', 'dark' oder 'med' (Alte Karte: Tinte, Pergament; dieselbe Zeichnung wie in Landblick)
 export function cliffLayers(k, dark, ticks, dgm) {
   const osmFilter = dgm ? ['all', ['==', ['get', 'kind'], 'cliff'], ['!', ['within', RLP_UMRISS]]] : ['==', 'kind', 'cliff'];
   // Wandhöhe 5 m bis 30 m: Linie und Band wachsen mit der Höhe
@@ -188,7 +189,7 @@ export function cliffLayers(k, dark, ticks, dgm) {
       paint: { 'line-color': CLIFF_SCREE[k], 'line-opacity': 0.55, 'line-blur': 2.5, 'line-offset': ['interpolate', ['linear'], ['zoom'], 12, 2, 17, 6],
         'line-width': ['interpolate', ['linear'], ['zoom'], 12, 4, 17, 12] } },
     { id: 'land-cliff-case', type: 'line', ...osm, minzoom: 12, filter: osmFilter, layout: round,
-      paint: { 'line-color': dark ? '#161616' : '#ffffff', 'line-opacity': 0.5, 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 2.4, 16, 4] } },
+      paint: { 'line-color': k === 'med' ? '#e8d6a6' : dark ? '#161616' : '#ffffff', 'line-opacity': 0.5, 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 2.4, 16, 4] } },
     { id: 'land-cliff', type: 'line', ...osm, minzoom: 12, filter: osmFilter, layout: round,
       paint: { 'line-color': CLIFF[k], 'line-opacity': 1, 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1.1, 16, 2.2] } },
     ...(ticks ? [{ id: 'land-cliff-teeth', type: 'symbol', ...osm, minzoom: 13, filter: osmFilter,
@@ -205,7 +206,7 @@ export function cliffLayers(k, dark, ticks, dgm) {
   return [
     ...out,
     { id: 'land-cliff-wand-dgm', type: 'fill', ...wall('wand'), minzoom: 13,
-      paint: { 'fill-color': dark ? '#625c52' : '#c7bca4', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.2], 'fill-antialias': true } },
+      paint: { 'fill-color': k === 'med' ? '#b39d73' : dark ? '#625c52' : '#c7bca4', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.2], 'fill-antialias': true } },
     { id: 'land-cliff-schraffur-dgm', type: 'line', ...wall('schraffur'), minzoom: 14, layout: round,
       paint: { 'line-color': CLIFF[k], 'line-opacity': 0.9, 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 0.5, 17, 0.9, 19, 1.4] } },
     { id: 'land-cliff-dgm', type: 'line', ...wall('kante'), minzoom: 13, layout: round, filter: ['>=', ['get', 'drop'], 5],

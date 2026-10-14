@@ -5,6 +5,7 @@ import { $, initTheme, tickAges } from '../util.js';
 import { applyBaseToggles, applyLegend, applyLight, recolor } from './basiskarte.js';
 import { pushAir, refreshAir } from './flugverkehr.js';
 import { refresh, render } from './laden.js';
+import { SACRAL_LAYERS } from '../infra.js';
 import { windrose } from './mittelalter.js';
 import { applyNatureVisibility } from './natur.js';
 import { applyInfra, applyInfraVisibility, applyRoutesVisibility, applyStopsVisibility } from './orte.js';
@@ -82,6 +83,7 @@ export function wire() {
   };
   for (const cb of document.querySelectorAll('input[data-layer]')) cb.addEventListener('change', () => {
     state.layers[cb.dataset.layer] = cb.checked; applyLayerFilters(); render(); syncGroups(); syncMedieval();
+    if (SACRAL_LAYERS.includes(cb.dataset.layer)) applyInfra();   // Kirchen, Mühlen … erst laden, wenn eine dieser Ebenen an ist
     if (cb.dataset.layer === 'licht') applyLight();
     if (cb.dataset.layer === 'air' && cb.checked) refreshAir();
   });
@@ -89,8 +91,13 @@ export function wire() {
     const boxes = [...t.closest('.layer-group').querySelectorAll('input[data-layer]')];
     for (const cb of boxes) { cb.checked = t.checked; state.layers[cb.dataset.layer] = t.checked; }
     applyLayerFilters(); render(); syncGroups(); syncMedieval();
+    if (boxes.some((cb) => SACRAL_LAYERS.includes(cb.dataset.layer))) applyInfra();
     if (boxes.some((cb) => cb.dataset.layer === 'licht')) applyLight();
     if (t.checked && boxes.some((cb) => cb.dataset.layer === 'air')) refreshAir();
+  });
+  for (const r of document.querySelectorAll('input[name="skin"]')) r.addEventListener('change', () => {   // Darstellung: Landblick oder Alte Karte (weitere folgen)
+    if (!r.checked) return;
+    state.layers.medieval = r.value === 'alte-karte'; applyLayerFilters(); render(); syncGroups(); syncMedieval();
   });
   syncGroups();
   const tabs = [...document.querySelectorAll('[role="tab"]')];

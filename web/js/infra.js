@@ -1,10 +1,12 @@
 // Infrastruktur-Zeichen (Windrad, Ladesäule, Defibrillator, Feuerwache, Krankenhaus) und ihre Karteneben-Beschreibung.
 // Alles eigene Zeichnung auf Canvas, keine Vorlage, nichts wird nachgeladen. Daten: infrastruktur.json (OpenStreetMap über Overpass, wöchentlich).
-// Karte um 1450: nur Windmühle (statt Windrad) und Spital (statt Krankenhaus); Ladesäule, Defibrillator und Feuerwache gab es nicht und werden dort ausgeblendet.
+// Alte Karte: nur Windmühle (statt Windrad) und Spital (statt Krankenhaus); Ladesäule, Defibrillator und Feuerwache gab es nicht und werden dort ausgeblendet.
 // Aufrufer: lage.js (initMap: registerInfra, applyInfra).
 export const INFRA_KINDS = ['wind', 'charging', 'aed', 'fire_station', 'hospital', 'weir', 'lock', 'bridge', 'tunnel', 'ferry', 'picnic', 'shelter', 'bathing', 'school', 'townhall', 'cemetery'];
-export const SACRAL_KINDS = ['church', 'chapel', 'cross', 'shrine', 'watermill', 'windmill', 'ford', 'border', 'gallows', 'well'];   // nur auf der Karte um 1450 gezeichnet
-export const INFRA_WORD = { wind: 'Windrad', charging: 'Ladesäule', aed: 'Defibrillator (AED)', fire_station: 'Feuerwache', hospital: 'Krankenhaus', weir: 'Wehr', lock: 'Schleuse', bridge: 'Brücke', tunnel: 'Tunnel', ferry: 'Fähranleger', picnic: 'Rastplatz', shelter: 'Schutzhütte', bathing: 'Badestelle', church: 'Kirche', chapel: 'Kapelle', cross: 'Wegkreuz', shrine: 'Bildstock', school: 'Schule', townhall: 'Rathaus', cemetery: 'Friedhof' };
+export const SACRAL_KINDS = ['church', 'chapel', 'cross', 'shrine', 'watermill', 'windmill', 'ford', 'border', 'gallows', 'well'];   // Kultur und Geschichte; Datei sakral.json, in jeder Darstellung wählbar
+export const SACRAL_LAYERS = ['herChurch', 'herChapel', 'herCross', 'herMill', 'herFord', 'herBorder', 'herGallows', 'herWell'];   // Schalter dieser Arten
+export const sakralAn = (layers) => SACRAL_LAYERS.some((n) => layers[n]);
+export const INFRA_WORD = { wind: 'Windrad', charging: 'Ladesäule', aed: 'Defibrillator (AED)', fire_station: 'Feuerwache', hospital: 'Krankenhaus', weir: 'Wehr', lock: 'Schleuse', bridge: 'Brücke', tunnel: 'Tunnel', ferry: 'Fähranleger', picnic: 'Rastplatz', shelter: 'Schutzhütte', bathing: 'Badestelle', church: 'Kirche', chapel: 'Kapelle', cross: 'Wegkreuz', shrine: 'Bildstock', watermill: 'Wassermühle', windmill: 'Windmühle', ford: 'Furt', border: 'Grenzstein', gallows: 'Richtstätte', well: 'Brunnen', school: 'Schule', townhall: 'Rathaus', cemetery: 'Friedhof' };
 export const INFRA_WORD_MED = { wind: 'Windmühle', hospital: 'Spital', watermill: 'Mühle', windmill: 'Windmühle', ford: 'Furt', ferry: 'Fähre', gallows: 'Galgen', border: '', well: '' };
 export const INFRA_COLOR = { wind: '#0f766e', charging: '#0369a1', aed: '#15803d', fire_station: '#8b1e3f', hospital: '#1e3a8a',
   weir: '#0e7490', lock: '#0e7490', ferry: '#0e7490', bridge: '#52525b', tunnel: '#52525b', picnic: '#a16207', shelter: '#a16207', bathing: '#0284c7', school: '#be185d', townhall: '#475569', cemetery: '#4d7c0f' };
@@ -171,6 +173,7 @@ function medDraw(kind) {
 export function registerInfra(map) {
   for (const k of INFRA_KINDS) put(map, `inf-${k}`, plaque(k));
   for (const k of INFRA_MEDIEVAL) put(map, `med-inf-${k}`, medDraw(k));
+  for (const k of SACRAL_KINDS) put(map, `inf-${k}`, medDraw(k));   // Kirchen, Mühlen … in der Darstellung Landblick mit denselben Zeichen (Tinte, Pergamentfüllung, heller Saum)
 }
 
 // Eigenschaften je Objekt für die Karte: Beschriftung nur bei Wache, Krankenhaus und benanntem Windrad

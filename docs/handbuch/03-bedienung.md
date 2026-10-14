@@ -42,7 +42,7 @@ Das Menü *Ebenen* ist nach Themen gegliedert; jede Gruppe lässt sich als Ganze
 | **Bewuchs und Flächen** | Wald, Wiesen, Busch und Heide, Äcker, Obst und Wein, Feuchtgebiete, Fels und Strand |
 | **Kultur und Geschichte** | Burgen, Ausgrabungen, Klöster, historische Gebäude, Friedhöfe |
 | **Grenzen und Schutzgebiete** | Staats-, Landes-, Kreis- und Gemeindegrenzen, Naturschutzgebiete, Nationalparks, Militärgelände |
-| **Kartengrundlage** | Schummerung und Höhenfärbung, Höhenlinien, Lichtquelle am Zeiger, Klippen, Gebäude, Karte im Stil des 15. Jahrhunderts |
+| **Kartengrundlage** | Schummerung und Höhenfärbung, Höhenlinien, Lichtquelle am Zeiger, Klippen, Gebäude |
 
 Einige Ebenen verdienen ein Wort.
 
@@ -60,7 +60,7 @@ Einige Ebenen verdienen ein Wort.
 
 **Lichtquelle am Zeiger.** Eine Spielerei mit ernstem Kern: Ein Punktlicht über dem Mauszeiger beleuchtet das Relief, Schatten fallen hinter die Kämme. Gerechnet wird auf der Grafikkarte (WebGL2). Sie gilt nur bei Nordausrichtung ohne Neigung.
 
-**Karte im Stil des 15. Jahrhunderts.** Eine zweite Darstellung mit Farben, Schrift, Windrose und eigenen Zeichen. Nur in diesem Stil erscheinen Kirchen, Kapellen, Wegkreuze, Mühlen, Furten, Grenzsteine, Richtstätten und Brunnen.
+**Darstellung.** Im Menü „Darstellung“ wählt man zwischen „Landblick“ (Standard) und „Alte Karte“, einer zweiten Darstellung mit Pergamentfarben, gebrochener Schrift, Windrose und eigenen Zeichen. Weitere Darstellungen sollen folgen. Alle Ebenen bleiben in beiden wählbar, auch Kirchen, Kapellen, Wegkreuze, Mühlen, Furten, Grenzsteine, Richtstätten und Brunnen (Kultur und Geschichte). Klippen und Felswände sind in beiden gleich gezeichnet: Wandfläche, Schraffen und Oberkante; in der Alten Karte in Tinte und Pergament.
 
 ## 3.4 Suche und Rechtsklick
 

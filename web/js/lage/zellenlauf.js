@@ -7,6 +7,7 @@
 // Stufen:  Zoom < 7: keine Zellen, nur Dichte-Ebene (Zählwerte je Zelle) und Warnband-Punkte aus dem Startpaket.
 //          Zoom ≥ 7: Zellen im Ausschnitt plus Rand (ab Zoom 9), Arten nach Ebenenbudget (zellen.js KIND_MIN_ZOOM).
 // Fehler:  Eine Zelle, die nicht kommt, steht in der Statuszeile ("1 Zelle fehlt"); die übrigen bleiben. Nach 30 s ein neuer Versuch.
+import { sakralAn } from '../infra.js';
 import { getJSON } from '../util.js';
 import { GEBIET_LEER, gebietPasst, gebietAktiv } from '../gebiet.js';
 import { KIND_KEY, KIND_MIN_ZOOM, ZellenSpeicher, anreichern, cellsInBounds, dichtePunkte, einheitenPunkte, kindsForZoom, warnbandAlsEreignisse } from '../zellen.js';
@@ -44,7 +45,7 @@ function viewCells() {
 }
 
 function wantedKinds(z) {
-  return kindsForZoom(z).filter((k) => k !== 'sakral' || state.layers.medieval);
+  return kindsForZoom(z).filter((k) => k !== 'sakral' || sakralAn(state.layers));
 }
 
 export function setzeStatuszeile() {

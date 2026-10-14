@@ -4,6 +4,12 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unreleased]
 
+### Darstellung: Alte Karte
+- Neues Menü „Darstellung“ mit „Landblick“ und „Alte Karte“ (bisher „Karte im Stil des 15. Jahrhunderts“, ein Schalter unter Kartengrundlage). Weitere Darstellungen sind vorgesehen.
+- Klippen und Felswände aus dem Geländemodell (Wandfläche, Schraffen, Oberkante, Geröllband) werden in der Alten Karte genauso gezeichnet wie in Landblick, in Tinte und Pergament statt Grau.
+- Kirchen, Kapellen, Wegkreuze, Mühlen, Furten, Grenzsteine, Richtstätten und Brunnen sind in beiden Darstellungen wählbar; der Zusatz „(nur Karte um 1450)“ entfällt. In Landblick erscheinen sie mit denselben Zeichen wie in der Alten Karte.
+- Am Rand: `med-cliff` (altes Schraffenbild) entfällt.
+
 ### Karte: Reihenfolge der Ebenen
 - Die Hangneigung liegt jetzt unter der Vegetation (Landnutzung), die Klippen weiterhin über allem Gelände. Die Hangflächen sind etwas kräftiger (Deckkraft 0,16 / 0,20 / 0,24), damit sie durch Wald und Wiese lesbar bleiben.
 

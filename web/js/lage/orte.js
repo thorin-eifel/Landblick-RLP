@@ -1,4 +1,4 @@
-import { INFRA_MEDIEVAL, SACRAL_KINDS, infraFeatures } from '../infra.js';
+import { INFRA_MEDIEVAL, infraFeatures, sakralAn } from '../infra.js';
 import { getJSON } from '../util.js';
 import { MED } from './mittelalter.js';
 import { loadView } from './zellenlauf.js';
@@ -16,9 +16,9 @@ export function paintStops() {
 }
 // Infrastruktur aus OpenStreetMap (Windräder, Ladesäulen, Notfallpunkte). Eine Quelle, eine Zeichen- und eine Namensebene; welche Arten stehen, regelt der Filter.
 export let infraKey = '';
-export function ensureSakral() {   // Kirchen, Kapellen, Wegkreuze gibt es nur auf der Karte um 1450: Datei erst dann laden
-  if (state.zellen) { if (state.layers.medieval) loadView(); return; }   // Zellenbetrieb: Art 'sakral' kommt mit den Zellen
-  if (!state.layers.medieval || state.sakral || state.sakralLoading) return;
+export function ensureSakral() {   // Kirchen, Kapellen, Wegkreuze, Mühlen …: Datei erst laden, wenn eine dieser Ebenen an ist (gleich in welcher Darstellung)
+  if (state.zellen) { if (sakralAn(state.layers)) loadView(); return; }   // Zellenbetrieb: Art 'sakral' kommt mit den Zellen
+  if (!sakralAn(state.layers) || state.sakral || state.sakralLoading) return;
   state.sakralLoading = true;
   getJSON('data/sakral.json').then((j) => { state.sakral = j; applyInfra(); }).catch(() => {}).finally(() => { state.sakralLoading = false; });
 }
@@ -32,12 +32,12 @@ export const INFRA_LAYER_OF = { fire_station: 'inf-fire', church: 'inf-sac', cha
 export function infraFeaturesOn() {
   const med = !!state.layers.medieval;
   const group = (k) => (med && (k === 'ferry' || k === 'bridge') ? 'herFord' : INFRA_GROUP[k]);      // um 1450: Fähren und alte Brücken gehören zum Erbe, nicht zu Wehr/Brücke
-  return Object.keys(INFRA_GROUP).filter((k) => state.layers[group(k)] && (med ? INFRA_MEDIEVAL.has(k) : !SACRAL_KINDS.includes(k)));
+  return Object.keys(INFRA_GROUP).filter((k) => state.layers[group(k)] && (!med || INFRA_MEDIEVAL.has(k)));
 }
 export function applyInfra() {
   if (!mapReady || !state.infra) return;
   ensureSakral();
-  const sak = state.layers.medieval && state.sakral;
+  const sak = !!state.sakral;
   const items = sak ? [...state.infra.items, ...state.sakral.items] : state.infra.items;
   const key = `${state.infra.fetched_at}|${sak ? state.sakral.fetched_at : '-'}`;
   const src = map.getSource('infra');

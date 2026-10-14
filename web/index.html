@@ -45,6 +45,14 @@
             <label><input type="radio" name="within" value="7d"> 7 Tage</label>
           </fieldset>
           </details>
+        <details class="controls" id="ctl-darstellung">
+          <summary>Darstellung</summary>
+          <fieldset><legend class="sr-only">Darstellung der Karte</legend>
+            <label><input type="radio" name="skin" value="landblick" checked> Landblick</label>
+            <label><input type="radio" name="skin" value="alte-karte"> Alte Karte</label>
+          </fieldset>
+          <p class="group-hint small muted">Weitere Darstellungen folgen. Die Ebenen bleiben in jeder Darstellung wählbar.</p>
+        </details>
         <details class="controls" id="ctl-ebenen">
           <summary>Ebenen</summary>
           <div class="layer-groups" role="group" aria-label="Ebenen nach Thema">
@@ -139,14 +147,14 @@
               <label><input type="checkbox" data-layer="herArch"> <span class="ico ico-natur" aria-hidden="true"></span>Ausgrabungen und Fundstellen</label>
               <label><input type="checkbox" data-layer="herMonastery"> <span class="ico ico-natur" aria-hidden="true"></span>Klöster</label>
               <label><input type="checkbox" data-layer="herBuilding"> <span class="ico ico-natur" aria-hidden="true"></span>Historische Gebäude</label>
-              <label><input type="checkbox" data-layer="herChurch"> <span class="ico ico-natur" aria-hidden="true"></span>Kirchen (nur Karte um 1450)</label>
-              <label><input type="checkbox" data-layer="herChapel"> <span class="ico ico-natur" aria-hidden="true"></span>Kapellen (nur Karte um 1450)</label>
-              <label><input type="checkbox" data-layer="herCross"> <span class="ico ico-natur" aria-hidden="true"></span>Wegkreuze und Bildstöcke (nur Karte um 1450)</label>
-              <label><input type="checkbox" data-layer="herMill"> <span class="ico ico-natur" aria-hidden="true"></span>Mühlen: Wasser- und Windmühlen (nur Karte um 1450)</label>
-              <label><input type="checkbox" data-layer="herFord"> <span class="ico ico-natur" aria-hidden="true"></span>Furten, Fähren und alte Brücken (nur Karte um 1450)</label>
-              <label><input type="checkbox" data-layer="herBorder"> <span class="ico ico-natur" aria-hidden="true"></span>Grenzsteine (nur Karte um 1450)</label>
-              <label><input type="checkbox" data-layer="herGallows"> <span class="ico ico-natur" aria-hidden="true"></span>Galgen und Richtstätten (nur Karte um 1450)</label>
-              <label><input type="checkbox" data-layer="herWell"> <span class="ico ico-natur" aria-hidden="true"></span>Brunnen (nur Karte um 1450)</label>
+              <label><input type="checkbox" data-layer="herChurch"> <span class="ico ico-natur" aria-hidden="true"></span>Kirchen</label>
+              <label><input type="checkbox" data-layer="herChapel"> <span class="ico ico-natur" aria-hidden="true"></span>Kapellen</label>
+              <label><input type="checkbox" data-layer="herCross"> <span class="ico ico-natur" aria-hidden="true"></span>Wegkreuze und Bildstöcke</label>
+              <label><input type="checkbox" data-layer="herMill"> <span class="ico ico-natur" aria-hidden="true"></span>Mühlen: Wasser- und Windmühlen</label>
+              <label><input type="checkbox" data-layer="herFord"> <span class="ico ico-natur" aria-hidden="true"></span>Furten, Fähren und alte Brücken</label>
+              <label><input type="checkbox" data-layer="herBorder"> <span class="ico ico-natur" aria-hidden="true"></span>Grenzsteine</label>
+              <label><input type="checkbox" data-layer="herGallows"> <span class="ico ico-natur" aria-hidden="true"></span>Galgen und Richtstätten</label>
+              <label><input type="checkbox" data-layer="herWell"> <span class="ico ico-natur" aria-hidden="true"></span>Brunnen</label>
               <label><input type="checkbox" data-layer="cemetery"> <span class="ico ico-natur" aria-hidden="true"></span>Friedhöfe</label>
             </div>
           </details>
@@ -172,7 +180,6 @@
               <label><input type="checkbox" data-layer="cliffs" checked> <span class="ico ico-relief" aria-hidden="true"></span>Klippen und Steinbrüche</label>
               <label><input type="checkbox" data-layer="hang"> <span class="ico ico-relief" aria-hidden="true"></span>Hangneigung ab 15, 25, 35 Grad (Probe, 1-m-Gelände)</label>
               <label><input type="checkbox" data-layer="buildings" checked> <span class="ico ico-relief" aria-hidden="true"></span>Gebäude</label>
-              <label><input type="checkbox" data-layer="medieval"> <span class="ico ico-relief" aria-hidden="true"></span>Karte im Stil des 15. Jahrhunderts</label>
             </div>
           </details>
           <details class="lgb-gruppe" id="lgb-gruppe" hidden><summary>LGB Daten</summary>
@@ -215,7 +222,7 @@
         <div class="lgb-vermerke"><p class="lgb-vermerk small" id="lgb-vermerk" hidden></p><p class="lgb-vermerk small" id="lad-vermerk" hidden></p></div>
         <details class="relief-legend map-legend" id="map-legend" hidden>
           <summary>Zeichenerklärung</summary>
-          <section data-legend="medieval" hidden><h3 class="legend-h">Karte um 1450</h3></section>
+          <section data-legend="medieval" hidden><h3 class="legend-h">Alte Karte</h3></section>
           <section data-legend="flow" hidden>
             <div class="relief-title">Wasserbewegung</div>
             <div class="legend-row">Wandernde Striche und Pfeile zeigen die Fließrichtung, auf breiten Flüssen (Mosel, Saar, Sauer) ein Wellenfeld über die ganze Breite. Bäche laufen schneller als Flüsse; Mosel und Saar sind staugeregelt, dort rückt das Muster kaum.</div>

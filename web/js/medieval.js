@@ -75,7 +75,6 @@ const tiles = {
 
 export function registerMedievalPatterns(map) {
   drawBuildingHatch(map);
-  drawCliffHatch(map);
   let n = 11;
   for (const [name, draw] of Object.entries(tiles)) {
     const [, x] = canvas(T, T), r = rng(n++ * 7919);
@@ -140,16 +139,6 @@ function drawBuildingHatch(map) {
   x.strokeStyle = MED.ink; x.lineWidth = 2.7; x.lineCap = 'butt';
   for (const c of [0, 6, 12, 18, 24]) { x.beginPath(); x.moveTo(c + 1, -1); x.lineTo(-1, c + 1); x.stroke(); }
   put(map, 'med-bldg', x.getImageData(0, 0, T2, T2));
-}
-
-// Felsabbruch wie im Stich: an der Kante eine Reihe spitz zulaufender Striche, lang und kurz im Wechsel, nach unten (Abbruchseite) gezogen
-function drawCliffHatch(map) {
-  const [, x] = canvas(12, 18);
-  x.fillStyle = MED.ink;
-  for (const [cx, len, w] of [[3, 17, 2.4], [9, 9, 2]]) {
-    x.beginPath(); x.moveTo(cx - w / 2, 0); x.lineTo(cx + w / 2, 0); x.lineTo(cx + 0.15, len); x.lineTo(cx - 0.15, len); x.closePath(); x.fill();
-  }
-  put(map, 'med-cliff', x.getImageData(0, 0, 12, 18));
 }
 
 // Feines Hügelzeichen: Umriss mit Strichlage auf der Schattenseite (rechts unten) und Tupfen, wie im Stich
