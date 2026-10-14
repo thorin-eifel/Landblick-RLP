@@ -45,7 +45,9 @@ export const LABEL_SKIP = /^(boundaries|pois$|roads_shields|roads_oneway|places_
 export const INK = { light: '#111111', dark: '#f4f4f4' };
 export const WATER_INK = { light: '#0b4f9c', dark: '#8cc4ff' };   // Gewässernamen immer blau
 export const HALO = { light: 'rgba(255,255,255,0.95)', dark: 'rgba(16,16,16,0.95)' };
-export const BUILDING_OPACITY = 0.4; // 60 % Transparenz, damit Relief und Straßen durchscheinen
+// Deckkraft der Gebäude nach Zoom: in der Übersicht 40 % (Relief und Straßen scheinen durch), im Nahbereich bis 75 % (Häuser stehen deutlich da)
+export const BUILDING_OPACITY = ['interpolate', ['linear'], ['zoom'], 14, 0.4, 17, 0.75];
+export const BUILDING_OPACITY_LEGEND = 0.75;   // Farbfeld der Zeichenerklärung
 export const GREEN = { light: '#9fc98a', dark: '#2f6a43' };
 // Flächenfarben nach OSM-Klasse (Farbe, Deckkraft); dezent, damit Relief, Straßen und Ereignisse führen
 // Farben nach der Natur: Wald dunkles Blattgrün, Wiese frisches Gelbgrün, Weide/Rasen satteres Grün, Busch olivgrau,

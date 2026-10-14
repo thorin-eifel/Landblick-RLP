@@ -10,7 +10,7 @@ import { HER_LAYERS, NAT_LAYERS, applyNatureVisibility, paintNature, peakLayers 
 import { INFRA_LAYER_IDS, paintStops } from './orte.js';
 import { placeLgb } from './lgb.js';
 import { skinize, skinById, tintOf, wantsPatterns } from './skins.js';
-import { BUILDING_OPACITY, LABEL_SKIP, LAND, cliffLayers, hangLayers, labelsAndBuildings, ortsnamenUebersicht, landUseLayers, mainRoad, roadsFromDetail, signLayers, waterEdges } from './stil.js';
+import { BUILDING_OPACITY_LEGEND, LABEL_SKIP, LAND, cliffLayers, hangLayers, labelsAndBuildings, ortsnamenUebersicht, landUseLayers, mainRoad, roadsFromDetail, signLayers, waterEdges } from './stil.js';
 import { applyFlow, applyLegends, fillTempLegend, placeRadar } from './wetterkarte.js';
 import { BUILDING_KLASSEN } from '../gebaeude-farben.js';
 import { basemapOk, coreOk, flow, gebOk, hangOk, light, klippenOk, map, mapReady, reliefOk, ringOk, state } from './zustand.js';
@@ -33,7 +33,7 @@ const VEG_LEGENDE = [['forest', 'Wald'], ['meadow', 'Wiese, Weide'], ['grass', '
 /** Zeichenerklärung der Flächen: Gebäudefunktion, Bewuchs, Meldungsstufen. Farben folgen dem Farbschema (hell/dunkel). */
 function fillFlaechenLegenden(dark) {
   const k = dark ? 'dark' : 'light';
-  $('#legend-geb')?.replaceChildren(...BUILDING_KLASSEN.filter(([id]) => id !== 'sonst').map(([, titel, c]) => legendZeile(c[k], titel, BUILDING_OPACITY + 0.4)));
+  $('#legend-geb')?.replaceChildren(...BUILDING_KLASSEN.filter(([id]) => id !== 'sonst').map(([, titel, c]) => legendZeile(c[k], titel, BUILDING_OPACITY_LEGEND)));
   $('#legend-veg')?.replaceChildren(...VEG_LEGENDE.map(([id, titel]) => legendZeile(LAND[k][id][0], titel, Math.min(1, LAND[k][id][1] + 0.3))));
   const pal = palette();
   $('#legend-warn')?.replaceChildren(...['critical', 'warning', 'notice', 'info'].map((id) => legendZeile(pal[id], SEV[id].label)));

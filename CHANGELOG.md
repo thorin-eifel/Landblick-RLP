@@ -14,6 +14,7 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 - Karte: Straßennamen fehlten fast überall außer an Haupt- und Landstraßen, ebenso kleine Straßen und Wege. Ursache: `region.pmtiles` endet bei Zoom 13 und führt dort Namen nur für größere Straßen. Straßenlinien und -namen werden ab Zoom 14 aus `core.pmtiles` und `ring.pmtiles` gezeichnet (`roadsFromDetail` in `stil.js`, Ebenen mit Endung `_c` und `_r`), die dieselbe Schicht vollständig tragen. Geprüft in Irrel, Wittlich (Kern) und Pirmasens (Ring). Tests: `tests/js/strassen-detail.test.mjs`.
 
 ### Geändert
+- Karte: Gebäude stehen im Nahbereich deutlicher da: Deckkraft 40 % bis Zoom 14, linear bis 75 % bei Zoom 17 (vorher fest 40 %). Gebäude liegen unter Schummerung, Hangneigung und Höhenlinien, Wasser liegt darüber.
 - Karte: Klippen aus OpenStreetMap (dort, wo keine Wände aus dem Geländemodell vorliegen, z. B. Luxemburg) werden wie diese gezeichnet: Wandband rechts der Linie, Oberkante wie bei einer 10-m-Wand, feine Fallstriche (Bild `cliff-stroke`) ab Zoom 14; Breite, Strichlänge und -abstand wachsen mit dem Zoom wie bei den Kacheln.
 - Karte: OSM-Klippen erscheinen nicht mehr zusätzlich dort, wo es Wandkacheln gibt (bisher lagen im Grenzstreifen zu Luxemburg beide Zeichnungen übereinander). Grundlage ist die tatsächliche Kachelabdeckung (`web/js/lage/klippen-umriss.js`, erzeugt mit `tools/build_klippen_umriss.py`), nicht mehr die Landesgrenze.
 
