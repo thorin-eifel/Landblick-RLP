@@ -214,7 +214,7 @@ def ua() -> str:
     return f"Landblick/1.0 (+{os.environ.get('OSINT_CONTACT') or PROJECT_URL})"
 
 
-_PACK_URL = re.compile(r"^/tiles/(dem|klippen)/(README\.txt|meta\.json|(\d{1,2})/(\d{1,8})/(\d{1,8})\.(png|pbf))$")
+_PACK_URL = re.compile(r"^/tiles/(dem|klippen|hang)/(README\.txt|meta\.json|(\d{1,2})/(\d{1,8})/(\d{1,8})\.(png|pbf))$")
 _PACK_TYPES = {"png": "image/png", "pbf": "application/x-protobuf"}
 
 

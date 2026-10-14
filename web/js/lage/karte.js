@@ -296,7 +296,7 @@ export async function setupBasemap() {
     } catch (err) { console.warn('Klippen aus dem Gelaendemodell nicht verfuegbar:', err?.message ?? err); }
     try {   // Hangneigungsklassen aus dem Geländemodell (tools/build_hang_probe.py): Vektorkacheln Zoom 14; ohne Kacheln gibt es die Ebene nicht
       const hb = new URL('tiles/hang/', location.href).href;
-      const hm = await fetch(hb + 'stats.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      const hm = await fetch(hb + 'meta.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
       if (hm) {
         map.addSource('hang', { type: 'vector', tiles: [hb + '{z}/{x}/{y}.pbf'], minzoom: 14, maxzoom: 14 });
         setHangOk(true);
