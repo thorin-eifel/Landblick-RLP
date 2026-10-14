@@ -22,6 +22,9 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    "resources": {
+      "pakete/": "pakete/"
+    },
     "externalBin": [
       "binaries/osint-core",
       "binaries/pmtiles"

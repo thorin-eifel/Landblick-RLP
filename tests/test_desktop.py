@@ -87,3 +87,129 @@ def test_user_agent_has_real_contact_by_default(monkeypatch):
     assert ".invalid" not in desktop.ua() and desktop.PROJECT_URL in desktop.ua()    # Nominatim: 403 bei Platzhalteradresse
     monkeypatch.setenv("OSINT_CONTACT", "mail@beispiel.de")
     assert "mail@beispiel.de" in desktop.ua()
+
+
+# --- Kachelpakete: Relief und Felswände aus einer PMTiles-Datei unter der alten Ordner-URL -----------------------------
+
+def _make_pack(tmp_path, name, ext, tiles, meta=None):
+    """Packt Kacheln {(z,x,y): bytes} mit tools/pack_tiles.py nach <tmp>/<name>.pmtiles."""
+    from tools import pack_tiles
+    src = tmp_path / f"src_{name}"
+    for (z, x, y), data in tiles.items():
+        p = src / str(z) / str(x) / f"{y}.{ext}"
+        p.parent.mkdir(parents=True, exist_ok=True); p.write_bytes(data)
+    out = tmp_path / f"{name}.pmtiles"
+    pack_tiles.pack(src, out, meta or {})
+    return out
+
+
+def test_pack_serves_tiles_readme_and_meta(srv, tmp_path):
+    app, port, _ = srv
+    png = b"\x89PNG\r\n\x1a\n" + b"x" * 40
+    pk = _make_pack(tmp_path, "dem", "png", {(12, 2145, 1380): png, (6, 33, 21): b"\x89PNGklein"}, {"attribution": "DGM1 test"})
+    (app.data_dir / "tiles" / "dem.pmtiles").write_bytes(pk.read_bytes())
+    st, body, h = call(port, "/tiles/dem/12/2145/1380.png")
+    assert st == 200 and body == png and h["Content-Type"] == "image/png" and "Content-Encoding" not in h
+    assert call(port, "/tiles/dem/README.txt")[0] == 200
+    st, body, _ = call(port, "/tiles/dem/meta.json")
+    assert st == 200 and json.loads(body)["attribution"] == "DGM1 test"
+    assert call(port, "/tiles/dem/12/1/1.png")[0] == 404
+    assert call(port, "/tiles/dem/12/2145/1380.png", method="HEAD")[0] == 200
+
+
+def test_pack_gzip_vector_tiles_keep_encoding(srv, tmp_path):
+    import gzip
+    app, port, _ = srv
+    raw = b"vektor" * 20
+    pk = _make_pack(tmp_path, "klippen", "pbf", {(13, 4290, 2760): gzip.compress(raw)})
+    (app.data_dir / "tiles" / "klippen.pmtiles").write_bytes(pk.read_bytes())
+    st, body, h = call(port, "/tiles/klippen/13/4290/2760.pbf")
+    assert st == 200 and h.get("Content-Encoding") == "gzip" and gzip.decompress(body) == raw
+
+
+def test_pack_missing_and_folder_priority(srv, tmp_path):
+    app, port, _ = srv
+    assert call(port, "/tiles/dem/README.txt")[0] == 404               # weder Ordner noch Paket
+    pk = _make_pack(tmp_path, "dem", "png", {(12, 1, 1): b"aus-dem-paket"})
+    (app.data_dir / "tiles" / "dem.pmtiles").write_bytes(pk.read_bytes())
+    d = app.data_dir / "tiles" / "dem" / "12" / "1"; d.mkdir(parents=True); (d / "1.png").write_bytes(b"aus-dem-ordner")
+    assert call(port, "/tiles/dem/12/1/1.png")[1] == b"aus-dem-ordner"  # vorhandene Datei hat Vorrang
+
+
+def test_pack_rejects_odd_paths_and_broken_files(srv):
+    app, port, _ = srv
+    (app.data_dir / "tiles" / "dem.pmtiles").write_bytes(b"kein pmtiles")
+    assert call(port, "/tiles/dem/12/1/1.png")[0] == 404
+    assert call(port, "/tiles/dem/../../etc/passwd")[0] in (400, 403, 404)
+    assert call(port, "/tiles/other/1/1/1.png")[0] == 404
+
+
+def test_pack_more_serves_higher_zoom_from_second_file(srv, tmp_path):
+    app, port, _ = srv
+    base = _make_pack(tmp_path, "dem", "png", {(12, 1, 1): b"niedrig"})
+    more = _make_pack(tmp_path, "dem-hoch", "png", {(13, 2, 2): b"hoch"})
+    (app.data_dir / "tiles" / "dem.pmtiles").write_bytes(base.read_bytes())
+    (app.data_dir / "tiles" / "dem-hoch.pmtiles").write_bytes(more.read_bytes())
+    assert call(port, "/tiles/dem/12/1/1.png")[1] == b"niedrig"
+    assert call(port, "/tiles/dem/13/2/2.png")[1] == b"hoch"
+    assert call(port, "/tiles/dem/13/9/9.png")[0] == 404
+
+
+def test_nachladen_aus_ohne_manifest(srv, monkeypatch):
+    app, port, _ = srv
+    monkeypatch.delenv("OSINT_PAKETE_MANIFEST", raising=False)
+    assert app.start_nachladen() is False
+    assert json.loads(call(port, "/api/state")[1])["nachladen"]["phase"] == "idle"
+
+
+def test_nachladen_holt_paket_und_meldet_zustand(srv, tmp_path, monkeypatch):
+    from tests.test_pakete import Srv, paket
+    app, port, _ = srv
+    data, man, files = paket(tmp_path)
+    s = Srv(files)
+    try:
+        monkeypatch.setenv("OSINT_PAKETE_MANIFEST", s.url + "dem-hoch.pmtiles.manifest.json")
+        assert app.start_nachladen() is True
+        app.nachlade_thread.join(10)
+        assert (app.data_dir / "tiles" / "dem-hoch.pmtiles").read_bytes() == data
+        assert json.loads(call(port, "/api/state")[1])["nachladen"]["phase"] == "ready"
+        assert app.start_nachladen() is False      # schon da: kein zweiter Abruf
+    finally:
+        s.close()
+
+
+def test_nachladen_fehler_bleibt_sichtbar(srv, tmp_path, monkeypatch):
+    from tests.test_pakete import Srv
+    app, _, _ = srv
+    s = Srv({})
+    try:
+        monkeypatch.setenv("OSINT_PAKETE_MANIFEST", s.url + "fehlt.json")
+        app.start_nachladen()
+        app.nachlade_thread.join(10)
+        j = app.nachladen.snapshot()
+        assert j["phase"] == "error" and j["error"]
+    finally:
+        s.close()
+
+
+def test_mitgelieferte_pakete_werden_gelesen(srv, tmp_path):
+    app, port, _ = srv
+    res = tmp_path / "res"
+    (res / "tiles").mkdir(parents=True); (res / "data").mkdir()
+    (res / "tiles" / "gebaeude.pmtiles").write_bytes(b"PMTiles-ish" * 10)
+    (res / "data" / "suche_geo.json").write_text("[1]")
+    (res / "data" / "geheim.json").write_text("[2]")
+    app.pack_dirs = [res.resolve()]
+    assert call(port, "/tiles/gebaeude.pmtiles", headers={"Range": "bytes=0-3"})[0] == 206
+    assert call(port, "/data/suche_geo.json")[1] == b"[1]"
+    assert call(port, "/data/geheim.json")[0] == 404          # nur der feste Suchindex kommt aus dem Installer
+
+
+def test_tiles_fehlen_zaehlt_mitgelieferte(srv, tmp_path):
+    app, _, _ = srv
+    res = tmp_path / "res"; (res / "tiles").mkdir(parents=True)
+    for n in ("region", "core", "ring"):
+        (res / "tiles" / f"{n}.pmtiles").write_bytes(b"x")
+    assert app.tiles_fehlen()
+    app.pack_dirs = [res.resolve()]
+    assert not app.tiles_fehlen()

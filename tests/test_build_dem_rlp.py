@@ -210,3 +210,75 @@ def test_rohkachel_format_gleich_klippen():
     src = (ROOT / "tools" / "build_klippen_dgm.py").read_text()
     m = re.search(r"^OFFSET, SCALE = ([\d.]+), ([\d.]+)", src, re.M)
     assert (float(m.group(1)), float(m.group(2))) == (B.OFFSET, B.RAW_SCALE)
+
+
+# ---------------------------------------------------------------- Ausgleich am Rand der Landesdaten
+def test_blend_bias_ohne_stufe_am_rand():
+    """Landesdaten links (100 m), Mapzen überall 90 m: am Rand keine Stufe, nach FADE_PX Pixeln wieder Mapzen."""
+    fade = 40
+    st = np.full((64, 200), np.nan, np.float32)
+    st[:, :100] = 100.0
+    fb = np.full((64, 200), 90.0, np.float32)
+    out = B.blend_bias(st, fb, fade)
+    assert np.allclose(out[:, :100], 100.0)                                     # Landesdaten bleiben unverändert
+    assert abs(float(out[32, 100]) - 100.0) < 0.6                               # erster Pixel außen: kaum Stufe (< 0,6 statt 10 m)
+    assert np.abs(np.diff(out[32, 99:150])).max() < 0.5                         # Übergang ohne Sprung
+    assert np.allclose(out[:, 100 + fade:], 90.0)                               # danach wieder reines Mapzen
+    assert np.all(np.diff(out[32, 100:100 + fade]) <= 1e-4)                     # monoton fallend
+
+
+def test_blend_bias_unveraendert_ohne_rand():
+    fb = np.full((32, 32), 5.0, np.float32)
+    assert np.allclose(B.blend_bias(np.full((32, 32), 7.0, np.float32), fb, 10), 7.0)           # alles Landesdaten
+    assert np.allclose(B.blend_bias(np.full((32, 32), np.nan, np.float32), fb, 10), 5.0)        # nichts Landesdaten
+
+
+def test_blend_bias_kacheln_schliessen_aneinander_an():
+    """Zwei Kacheln mit Rand, gerechnet aus demselben Gelände: an der gemeinsamen Kante kein Sprung."""
+    fade, T = 30, 64
+    rng = np.random.default_rng(1)
+    world_st = np.full((T + 2 * fade, 2 * T + 2 * fade), np.nan, np.float32)
+    world_st[:, : T + fade + 10] = 200 + rng.normal(0, 3, (T + 2 * fade, T + fade + 10)).cumsum(axis=1) * 0.1
+    world_fb = (180 + 0.05 * np.arange(world_st.shape[1]))[None, :].repeat(world_st.shape[0], 0).astype(np.float32)
+    full = B.blend_bias(world_st, world_fb, fade)
+    a = B.blend_bias(world_st[:, : T + 2 * fade], world_fb[:, : T + 2 * fade], fade)[:, fade:fade + T]
+    b = B.blend_bias(world_st[:, T: 2 * T + 2 * fade], world_fb[:, T: 2 * T + 2 * fade], fade)[:, fade:fade + T]
+    assert np.abs(a - full[:, fade:fade + T]).max() < 0.35
+    assert np.abs(b - full[:, fade + T:fade + 2 * T]).max() < 0.35
+    assert abs(float(b[30, 0]) - float(a[30, -1])) < 0.6                         # gemeinsame Kante (ein Pixel Abstand)
+
+
+def test_sample_state_und_upsample_mit_rand(tmp_path):
+    from pyproj import Transformer
+    red, have = _red_with_plane(tmp_path, 316, 5525)
+    lon, lat = Transformer.from_crs(25832, 4326, always_xy=True).transform(316500, 5525500)
+    x, y = B.tile_xy(lon, lat, 14)
+    v = B.sample_state(red, 14, x, y, have, margin=20)
+    assert v.shape == (296, 296)
+    assert np.array_equal(B.sample_state(red, 14, x, y, have)[:, :], v[20:276, 20:276], equal_nan=True)
+    lo, la = B.pixel_lonlat(14, x, y, margin=20)
+    assert lo.shape == (296, 296) and lo[0, 20] == B.pixel_lonlat(14, x, y)[0][0, 0]
+    _base_rampe(tmp_path, 2100, 1400, 2.0)
+    f = B.upsample_base(tmp_path, 14, 4 * 2100 + 1, 4 * 1400 + 1, margin=20)
+    assert f.shape == (296, 296)
+    assert np.allclose(f[20:276, 20:276], B.upsample_base(tmp_path, 14, 4 * 2100 + 1, 4 * 1400 + 1))
+
+
+def test_build_top_gleicht_die_stufe_am_rand_aus(tmp_path):
+    """Landesdaten (Ebene bei 300 m) treffen auf Mapzen mit 20 m Versatz: am Rand der Daten springt das Ergebnis nicht."""
+    from pyproj import Transformer
+    red, have = _red_with_plane(tmp_path, 316, 5525)
+    lon, lat = Transformer.from_crs(25832, 4326, always_xy=True).transform(316500, 5525500)
+    x, y = B.tile_xy(lon, lat, 14)
+    base = tmp_path / "base"
+    for bx in range(x // 4 - 1, x // 4 + 2):
+        for by in range(y // 4 - 1, y // 4 + 2):
+            B.write_png(base / "12" / str(bx) / f"{by}.png", np.full((256, 256), 280.0, np.float32))
+    out = tmp_path / "out"
+    kinds = {}
+    for dx in (-1, 0, 1):
+        for dy in (-1, 0, 1):
+            kinds[(dx, dy)] = B.build_top((x + dx, y + dy, str(red), str(base), str(out), have, True, False))[2]
+    assert kinds[(0, 0)] in ("state", "edge")
+    a = B.read_png(out / "14" / str(x) / f"{y}.png")
+    assert a is not None and np.isfinite(a).all()

@@ -48,6 +48,8 @@ def use_certifi() -> str | None:
 use_certifi()
 _RANGE = re.compile(r"^bytes=(\d*)-(\d*)$")
 CYCLE_S = 300
+# Manifest des Nachladepakets (Relief Zoom 13/14). Leer, bis die Veröffentlichung steht; OSINT_PAKETE_MANIFEST überschreibt, "aus" schaltet ab.
+PAKETE_MANIFEST = ""
 
 
 class Job:
@@ -69,9 +71,15 @@ class Job:
 
 
 class App:
-    def __init__(self, data_dir: Path, web_dir: Path, pmtiles: Path, repo_dir: Path, sources_path: Path | None = None) -> None:
+    def __init__(self, data_dir: Path, web_dir: Path, pmtiles: Path, repo_dir: Path, sources_path: Path | None = None,
+                 pack_dirs: list[Path] | None = None) -> None:
+        # pack_dirs: mitgelieferte, nur lesbare Ordner (Installer-Ressourcen) mit tiles/*.pmtiles und data/suche_geo.json
+        self.pack_dirs = [d.resolve() for d in (pack_dirs or [])]
         self.data_dir, self.web_dir, self.pmtiles, self.repo_dir = data_dir, web_dir.resolve(), pmtiles, repo_dir
         self.job = Job()
+        self.nachladen = Job()                 # Nachladepaket im Hintergrund, getrennt vom Aufbau: die App läuft währenddessen
+        self.nachlade_thread: threading.Thread | None = None
+        self.nachlade_cancel = threading.Event()
         self.progress_path = data_dir / ".collect-progress.json"      # Fortschritt des Sammellaufs (app/collect.py), nur Quellennamen
         self.later_progress_path = data_dir / ".collect-later.json"   # Nachlauf der langsamen Quellen im Hintergrund
         self.worker: threading.Thread | None = None
@@ -87,6 +95,33 @@ class App:
         data_dir.mkdir(parents=True, exist_ok=True)
         (data_dir / "data").mkdir(exist_ok=True)
         (data_dir / "tiles").mkdir(exist_ok=True)
+        self._packs: dict[str, tuple[tuple[str, float], object]] = {}
+        self._packs_lock = threading.Lock()
+
+    def pack(self, name: str):
+        """Kachelpaket tiles/<name>.pmtiles (erst Datenordner, dann App) als PackArchive oder None. Öffnet neu, wenn die Datei sich ändert."""
+        from app.tilepack import PackArchive, PackError
+        for root in (self.data_dir, *self.pack_dirs, self.web_dir):
+            f = root / "tiles" / f"{name}.pmtiles"
+            try:
+                st = f.stat()
+            except OSError:
+                continue
+            key = (str(f), st.st_mtime)
+            with self._packs_lock:
+                hit = self._packs.get(name)
+                if hit and hit[0] == key:
+                    return hit[1]
+                try:
+                    pk = PackArchive(f)
+                except (OSError, PackError) as err:
+                    log.warning("Kachelpaket %s unlesbar: %s", f, err)
+                    continue
+                if hit:
+                    hit[1].close()
+                self._packs[name] = (key, pk)
+                return pk
+        return None
 
     def env(self, progress: Path | None = None) -> dict:
         e = dict(os.environ)
@@ -123,7 +158,7 @@ class App:
         return True
 
     def tiles_fehlen(self) -> bool:
-        return not all((self.data_dir / "tiles" / n).exists() for n in ("region.pmtiles", "core.pmtiles", "ring.pmtiles"))
+        return not all(any((r / "tiles" / n).exists() for r in (self.data_dir, *self.pack_dirs)) for n in ("region.pmtiles", "core.pmtiles", "ring.pmtiles"))
 
     def holen_tiles(self) -> None:
         """Karte für das ganze Gebiet (tools/build_region_tiles.py): in Stücken, jeder Lauf macht dort weiter, wo der vorige aufhörte.
@@ -141,11 +176,45 @@ class App:
                 raise RuntimeError(f"Kartenabruf fehlgeschlagen (Code {rc})")
         raise RuntimeError("Karte nach 60 Läufen noch nicht vollständig")
 
+    def pakete_url(self) -> str:
+        url = os.environ.get("OSINT_PAKETE_MANIFEST", PAKETE_MANIFEST).strip()
+        return "" if url.lower() in ("", "aus", "off") else url
+
+    def start_nachladen(self) -> bool:
+        """Nachladepaket (dem-hoch) im Hintergrund holen, falls konfiguriert und noch nicht da. Fehler bleiben sichtbar, stoppen aber nichts."""
+        url = self.pakete_url()
+        if not url or (self.nachlade_thread and self.nachlade_thread.is_alive()):
+            return False
+        if any((r / "tiles" / "dem-hoch.pmtiles").exists() for r in (self.data_dir, *self.pack_dirs, self.web_dir)):
+            self.nachladen.set("ready", "Relief in voller Auflösung vorhanden", 100)
+            return False
+
+        def run() -> None:
+            from app import pakete
+
+            def prog(done: int, total: int) -> None:
+                self.nachladen.set("download", f"Relief Zoom 13/14: {done / 1e9:.1f} von {total / 1e9:.1f} GB", int(100 * done / total))
+            try:
+                self.nachladen.set("download", "Relief Zoom 13/14 wird geholt", 0)
+                pakete.download(url, self.data_dir / "tiles", prog, self.nachlade_cancel, ua=ua())
+                self.nachladen.set("ready", "Relief in voller Auflösung vorhanden", 100)
+            except pakete.PaketError as err:
+                log.warning("Nachladepaket: %s", err)
+                self.nachladen.set("error", "Relief Zoom 13/14 nicht geladen, nächster Versuch beim Start", error=str(err)[:300])
+            except Exception as err:   # nie den Aufbau mitreißen
+                log.exception("Nachladepaket abgebrochen")
+                self.nachladen.set("error", "Relief Zoom 13/14 nicht geladen", error=str(err)[:300])
+
+        self.nachlade_thread = threading.Thread(target=run, daemon=True, name="osint-nachladen")
+        self.nachlade_thread.start()
+        return True
+
     def work(self) -> None:
         """Karte holen (einmalig), danach Sammeln und Exportieren im Takt. Fehler stoppen den Aufbau sichtbar, nie still."""
         try:
             if self.tiles_fehlen():
                 self.holen_tiles()
+            self.start_nachladen()
             first = True
             while True:
                 self.job.set("collect", "Daten werden abgerufen", 70)
@@ -187,6 +256,11 @@ def ua() -> str:
     return f"Landblick/1.0 (+{os.environ.get('OSINT_CONTACT') or PROJECT_URL})"
 
 
+_PACK_URL = re.compile(r"^/tiles/(dem|klippen|hang)/(README\.txt|meta\.json|(\d{1,2})/(\d{1,8})/(\d{1,8})\.(png|pbf))$")
+_PACK_TYPES = {"png": "image/png", "pbf": "application/x-protobuf"}
+_PACK_MORE = {"dem": ("dem-hoch",)}   # Zusatzpakete: gleiche Kacheln, höhere Zoomstufen (Nachladepaket); die erste Datei mit der Kachel gewinnt
+
+
 def make_handler(app: App, port_box: list[int]):
     class H(SimpleHTTPRequestHandler):
         extensions_map = {**SimpleHTTPRequestHandler.extensions_map, ".js": "text/javascript", ".json": "application/json", ".pmtiles": "application/octet-stream",
@@ -215,7 +289,12 @@ def make_handler(app: App, port_box: list[int]):
         def translate_path(self, path: str) -> str:
             """/data/ nur aus dem Datenordner (nie Beispieldaten eines anderen Ortes), /tiles/ erst dort, dann aus der App."""
             p = urllib.parse.unquote(urllib.parse.urlsplit(path).path)
-            roots = [app.data_dir] if p.startswith("/data/") else [app.data_dir, app.web_dir] if p.startswith("/tiles/") else [app.web_dir]
+            if p.startswith("/data/"):
+                roots = [app.data_dir] + (app.pack_dirs if p == "/data/suche_geo.json" else [])   # nur der feste Suchindex kommt aus dem Installer
+            elif p.startswith("/tiles/"):
+                roots = [app.data_dir, *app.pack_dirs, app.web_dir]
+            else:
+                roots = [app.web_dir]
             for root in roots:
                 cand = (root / p.lstrip("/")).resolve()
                 if (cand == root or root in cand.parents) and (cand.is_file() or cand.is_dir()):
@@ -227,12 +306,58 @@ def make_handler(app: App, port_box: list[int]):
                 return self.json({"error": "host"}, 403)
             u = urllib.parse.urlsplit(self.path)
             if u.path == "/api/state":
-                return self.json({"configured": True, "job": app.job_snapshot()})
+                return self.json({"configured": True, "job": app.job_snapshot(), "nachladen": app.nachladen.snapshot()})
             if u.path == "/api/zugang":
                 return self.json({"quellen": app.zugang.status()})   # nur gesetzt/nicht gesetzt, nie Werte
             if u.path.startswith("/api/"):
                 return self.json({"error": "unbekannt"}, 404)
+            if self.serve_pack(u.path, head=False):
+                return
             return self.serve_range()
+
+        def serve_pack(self, path: str, head: bool) -> bool:
+            """tiles/dem/… und tiles/klippen/… aus dem Kachelpaket, wenn es den Ordner nicht gibt. Ein vorhandener Ordner hat Vorrang.
+
+            README.txt und meta.json sind die Prüfdateien der Karte; meta.json kommt aus den Metadaten des Pakets.
+            True, wenn die Anfrage hier beantwortet wurde (auch mit 404 für eine Kachel, die das Paket nicht enthält).
+            """
+            m = _PACK_URL.match(path)
+            if not m or os.path.isfile(self.translate_path(path)):
+                return False
+            pk = app.pack(m.group(1))
+            if pk is None:
+                return False
+            if m.group(3) is None:
+                body = (b"Kachelpaket, gelesen aus " + pk.path.name.encode() + b"\n") if m.group(2) == "README.txt" else json.dumps(pk.metadata(), ensure_ascii=False).encode()
+                ctype = "text/plain; charset=utf-8" if m.group(2) == "README.txt" else "application/json"
+                got, gz = body, False
+            else:
+                try:
+                    z, x, y = int(m.group(3)), int(m.group(4)), int(m.group(5))
+                    hit = pk.get(z, x, y)
+                    for more in _PACK_MORE.get(m.group(1), ()):
+                        if hit is not None:
+                            break
+                        extra = app.pack(more)
+                        hit = extra.get(z, x, y) if extra else None
+                except (OSError, ValueError):
+                    log.exception("Kachelpaket %s: Lesefehler", pk.path)
+                    self.send_error(500)
+                    return True
+                if hit is None:
+                    self.send_error(404)
+                    return True
+                got, gz = hit
+                ctype = _PACK_TYPES[m.group(6)]
+            self.send_response(HTTPStatus.OK)
+            self.send_header("Content-Type", ctype)
+            if gz:
+                self.send_header("Content-Encoding", "gzip")
+            self.send_header("Content-Length", str(len(got)))
+            self.end_headers()
+            if not head:
+                self.wfile.write(got)
+            return True
 
         def do_POST(self) -> None:
             if not self.host_ok() or self.headers.get("X-OSINT") != "1":
@@ -300,6 +425,8 @@ def make_handler(app: App, port_box: list[int]):
         def do_HEAD(self) -> None:
             if not self.host_ok():
                 return self.json({"error": "host"}, 403)
+            if self.serve_pack(urllib.parse.urlsplit(self.path).path, head=True):
+                return
             super().do_HEAD()
     return H
 
@@ -316,12 +443,13 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--data-dir", type=Path, required=True)
     ap.add_argument("--web-dir", type=Path, default=root / "web")
     ap.add_argument("--pmtiles", type=Path, default=Path("pmtiles"))
+    ap.add_argument("--pack-dir", type=Path, action="append", default=[], help="mitgelieferter Ordner mit tiles/ und data/suche_geo.json (mehrfach möglich)")
     ap.add_argument("--port", type=int, default=0)
     ap.add_argument("--log-level", default="INFO")
     a = ap.parse_args(argv)
     logging.basicConfig(level=a.log_level, format="%(asctime)s %(levelname)s %(name)s: %(message)s", stream=sys.stderr)
     logging.getLogger("httpx").setLevel(logging.WARNING)
-    app = App(a.data_dir, a.web_dir, a.pmtiles, root)
+    app = App(a.data_dir, a.web_dir, a.pmtiles, root, pack_dirs=[d for d in a.pack_dir if d.is_dir()])
     box = [0]
     srv = ThreadingHTTPServer(("127.0.0.1", a.port), make_handler(app, box))
     box[0] = srv.server_address[1]

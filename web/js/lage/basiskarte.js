@@ -9,10 +9,10 @@ import { MED, MED_COLORS, MED_ICON_STYLE, medFlavor, medievalize } from './mitte
 import { HER_LAYERS, NAT_LAYERS, applyNatureVisibility, paintNature, peakLayers } from './natur.js';
 import { INFRA_LAYER_IDS, paintStops } from './orte.js';
 import { placeLgb } from './lgb.js';
-import { BUILDING_OPACITY, LABEL_SKIP, LAND, cliffLayers, labelsAndBuildings, ortsnamenUebersicht, landUseLayers, mainRoad, signLayers, waterEdges } from './stil.js';
+import { BUILDING_OPACITY, LABEL_SKIP, LAND, cliffLayers, hangLayers, labelsAndBuildings, ortsnamenUebersicht, landUseLayers, mainRoad, signLayers, waterEdges } from './stil.js';
 import { applyFlow, applyLegends, fillTempLegend, placeRadar } from './wetterkarte.js';
 import { BUILDING_KLASSEN } from '../gebaeude-farben.js';
-import { basemapOk, coreOk, flow, gebOk, light, klippenOk, map, mapReady, reliefOk, ringOk, state } from './zustand.js';
+import { basemapOk, coreOk, flow, gebOk, hangOk, light, klippenOk, map, mapReady, reliefOk, ringOk, state } from './zustand.js';
 
 /** Farbfeld mit Text als Zeile der Zeichenerklärung (Farbe per CSSOM, die CSP verbietet Inline-Styles im Markup). */
 function legendZeile(farbe, text, deckkraft = 1) {
@@ -59,7 +59,7 @@ export function applyBasemap() {
   styled.splice(at >= 0 ? at + 1 : 0, 0, ...landUseLayers(dark, !!map.getSource('rlp-grenze')));
   // Klippen weit oben: über Relief, Höhenlinien, Vegetation, Gewässer und Straßen, unter den Beschriftungen
   const lab0 = styled.findIndex((x) => x.layout?.['text-font'] && !x.id.startsWith('land-'));
-  styled.splice(lab0 < 0 ? styled.length : lab0, 0, ...cliffLayers(dark ? 'dark' : 'light', dark, map.hasImage('cliff-tick'), klippenOk));
+  styled.splice(lab0 < 0 ? styled.length : lab0, 0, ...hangLayers(dark, hangOk, state.layers.hang), ...cliffLayers(dark ? 'dark' : 'light', dark, map.hasImage('cliff-tick'), klippenOk));
   waterEdges(styled, dark);
   styled.push(...peakLayers(dark, map.hasImage('peak-tri')));   // Gipfel oben auf den Beschriftungen des Stils
   if (med) styled = medievalize(styled);
@@ -196,6 +196,7 @@ export function applyBaseToggles() {
   for (const l of map.getStyle().layers) {
     let key = null;
     if (l.id.startsWith('bm-flow-')) key = 'flow';
+    else if (l.id.startsWith('bm-land-hang-')) key = 'hang';
     else if (/^bm-land-(cliff|quarry)/.test(l.id)) key = 'cliffs';
     else if (/^bm-land-protected-nr-/.test(l.id)) key = 'protNature';
     else if (/^bm-land-protected-np-/.test(l.id)) key = 'protPark';

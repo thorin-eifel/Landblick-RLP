@@ -21,10 +21,12 @@ fn main() {
             // pmtiles liegt als zweites Sidecar neben der Programmdatei
             let exe_dir = std::env::current_exe()?.parent().map(|p| p.to_path_buf()).unwrap_or_default();
             let pm = exe_dir.join(if cfg!(windows) { "pmtiles.exe" } else { "pmtiles" });
+            // mitgelieferte Kachelpakete (Relief, Felswände, Hangneigung, Gebäude) und Suchindex: Installer-Ressourcen, nur lesbar
+            let pakete = app.path().resource_dir()?.join("pakete");
             let (mut rx, child) = app
                 .shell()
                 .sidecar("osint-core")?
-                .args(["--data-dir", &data_dir.to_string_lossy(), "--pmtiles", &pm.to_string_lossy()])
+                .args(["--data-dir", &data_dir.to_string_lossy(), "--pmtiles", &pm.to_string_lossy(), "--pack-dir", &pakete.to_string_lossy()])
                 .spawn()?;
             *app.state::<Core>().0.lock().unwrap() = Some(child);
 
