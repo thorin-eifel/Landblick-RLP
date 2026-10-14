@@ -74,3 +74,61 @@ def test_check_range_tool_ok_and_detects_missing_range(server, tmp_path):
     with httpx.Client(transport=httpx.MockTransport(wrong_file)) as c:
         problems = check_range.check("https://example.invalid/x.pmtiles", n=16, client=c)
     assert any("PMTiles-Kennung" in p or "Bytes" in p for p in problems)
+
+
+# --- Zugangsdaten (API-Schlüssel) über /api/zugang, nur auf Loopback -------------------------------------------------------------
+
+@pytest.fixture
+def zserver(tmp_path):
+    (tmp_path / "w").mkdir()
+    store = serve.make_zugang(str(tmp_path / "zugang.json"), str(ROOT / "sources.yaml"))
+    srv = serve.make_server(str(tmp_path / "w"), 0, "127.0.0.1", store)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    yield f"http://127.0.0.1:{srv.server_address[1]}", tmp_path / "zugang.json"
+    srv.shutdown()
+    srv.server_close()
+
+
+def test_zugang_status_setzen_loeschen(zserver):
+    base, datei = zserver
+    st = httpx.get(f"{base}/api/zugang").json()["quellen"]
+    felder = {f["env"]: f["gesetzt"] for q in st for f in q["felder"]}
+    assert felder["TANKERKOENIG_API_KEY"] is False
+    r = httpx.post(f"{base}/api/zugang", json={"env": "TANKERKOENIG_API_KEY", "wert": "geheim-123"}, headers={"X-OSINT": "1"})
+    assert r.status_code == 200 and "geheim-123" not in r.text
+    assert "geheim-123" not in httpx.get(f"{base}/api/zugang").text
+    assert datei.exists() and (datei.stat().st_mode & 0o777) == 0o600
+    r = httpx.post(f"{base}/api/zugang", json={"env": "TANKERKOENIG_API_KEY", "loeschen": True}, headers={"X-OSINT": "1"})
+    assert r.status_code == 200
+    assert all(not f["gesetzt"] for q in r.json()["quellen"] for f in q["felder"])
+
+
+def test_zugang_verweigert_ohne_header_fremder_host_unbekannte_variable(zserver):
+    base, _ = zserver
+    assert httpx.post(f"{base}/api/zugang", json={"env": "TANKERKOENIG_API_KEY", "wert": "x"}).status_code == 403
+    assert httpx.post(f"{base}/api/zugang", json={"env": "TANKERKOENIG_API_KEY", "wert": "x"}, headers={"X-OSINT": "1", "Origin": "http://evil.example"}).status_code == 403
+    assert httpx.get(f"{base}/api/zugang", headers={"Host": "evil.example"}).status_code == 403
+    assert httpx.post(f"{base}/api/zugang", json={"env": "PATH", "wert": "x"}, headers={"X-OSINT": "1"}).status_code == 400
+
+
+def test_zugang_nicht_ausserhalb_von_loopback(tmp_path):
+    store = serve.make_zugang(str(tmp_path / "zugang.json"), str(ROOT / "sources.yaml"))
+    srv = serve.make_server(str(tmp_path), 0, "0.0.0.0", store)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    try:
+        r = httpx.post(f"http://127.0.0.1:{srv.server_address[1]}/api/zugang", json={"env": "TANKERKOENIG_API_KEY", "wert": "x"}, headers={"X-OSINT": "1"})
+        assert r.status_code == 404
+    finally:
+        srv.shutdown()
+        srv.server_close()
+
+
+def test_config_liest_zugang_datei(tmp_path, monkeypatch):
+    from app import config
+    f = tmp_path / "zugang.json"
+    f.write_text('{"TANKERKOENIG_API_KEY": "abc", "kaputt name": "x", "PATH": "wird-nicht-gesetzt-weil-gesetzt"}')
+    monkeypatch.delenv("TANKERKOENIG_API_KEY", raising=False)
+    assert config.load_zugang(f) == 1
+    import os
+    assert os.environ["TANKERKOENIG_API_KEY"] == "abc"
+    monkeypatch.delenv("TANKERKOENIG_API_KEY")

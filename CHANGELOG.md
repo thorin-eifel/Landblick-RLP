@@ -4,6 +4,10 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unreleased]
 
+### Quellenübersicht: Zugangsdaten auch auf dem lokalen Webserver
+- `deploy/serve-local.py` beantwortet wie die Desktop-App `api/zugang` (Status, Setzen, Löschen) und legt API-Schlüssel in `data/zugang.json` ab (Rechte 600). Nur auf Loopback, mit Host-, Herkunfts- und Kopfprüfung; auf anderen Adressen gibt es den Weg nicht. Die Logik teilen sich App und Webserver (`app/zugang.py`, `handle_post`).
+- `app/config.py` liest `data/zugang.json` nach der `.env` in die Umgebung, damit Zeitplan-Läufe die dort eingegebenen Schlüssel nutzen (`OSINT_ZUGANG` ändert den Pfad). `.env` und Shell gehen vor.
+
 ### Darstellung: Alte Karte
 - Neues Menü „Darstellung“ mit „Landblick“ und „Alte Karte“ (bisher „Karte im Stil des 15. Jahrhunderts“, ein Schalter unter Kartengrundlage). Weitere Darstellungen sind vorgesehen.
 - Klippen und Felswände aus dem Geländemodell (Wandfläche, Schraffen, Oberkante, Geröllband) werden in der Alten Karte genauso gezeichnet wie in Landblick, in Tinte und Pergament statt Grau.

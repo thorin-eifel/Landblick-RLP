@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import threading
 from pathlib import Path
 from typing import Any
@@ -24,6 +25,43 @@ MAX_LEN = 256
 
 class ZugangError(ValueError):
     """Eingabe abgelehnt (unbekannte Variable, ungültiger Wert). Die Meldung enthält nie den Wert."""
+
+
+NAME = re.compile(r"^[A-Z][A-Z0-9_]{1,63}$")
+
+
+def env_from_file(path: Path) -> dict[str, str]:
+    """Liest eine zugang.json für Sammler, die ohne die App laufen (Zeitplan, Kommandozeile). Nur gültige Variablennamen und Texte;
+    welche Namen erlaubt sind, hat schon ZugangStore beim Schreiben anhand des Quellenregisters entschieden."""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    return {k: v for k, v in data.items() if isinstance(k, str) and NAME.match(k) and isinstance(v, str) and v and "\n" not in v}
+
+
+def handle_post(store: "ZugangStore", raw: bytes) -> tuple[int, dict[str, Any]]:
+    """Gemeinsame Annahme für App und lokalen Webserver: {"env": "NAME", "wert": "…"} setzt, {"env": "NAME", "loeschen": true} entfernt.
+    Rückgabe (HTTP-Status, Antwort); Antworten enthalten nie den Wert."""
+    try:
+        body = json.loads(raw[:4096] or b"{}")
+        env = body["env"]
+        if not isinstance(env, str):
+            raise ZugangError("Unbekannte Zugangsvariable")
+        if body.get("loeschen") is True:
+            store.delete(env)
+        else:
+            store.set(env, body.get("wert"))
+    except ZugangError as err:
+        return 400, {"error": str(err)}
+    except (ValueError, KeyError, TypeError):
+        return 400, {"error": "Eingabe ungültig"}
+    except OSError:
+        log.exception("Zugangsdatei nicht schreibbar")
+        return 500, {"error": "Datei im Datenordner nicht schreibbar"}
+    return 200, {"ok": True, "quellen": store.status()}
 
 
 class ZugangStore:

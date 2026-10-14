@@ -371,25 +371,10 @@ def make_handler(app: App, port_box: list[int]):
 
         def post_zugang(self) -> None:
             """{"env": "NAME", "wert": "…"} setzt, {"env": "NAME", "loeschen": true} entfernt. Antworten enthalten nie den Wert."""
-            from app.zugang import ZugangError
-            try:
-                n = int(self.headers.get("Content-Length") or 0)
-                body = json.loads(self.rfile.read(min(n, 4096)) or b"{}")
-                env = body["env"]
-                if not isinstance(env, str):
-                    raise ZugangError("Unbekannte Zugangsvariable")
-                if body.get("loeschen") is True:
-                    app.zugang.delete(env)
-                else:
-                    app.zugang.set(env, body.get("wert"))
-            except ZugangError as err:
-                return self.json({"error": str(err)}, 400)
-            except (ValueError, KeyError, TypeError):
-                return self.json({"error": "Eingabe ungültig"}, 400)
-            except OSError:
-                log.exception("Zugangsdatei nicht schreibbar")
-                return self.json({"error": "Datei im Datenordner nicht schreibbar"}, 500)
-            self.json({"ok": True, "quellen": app.zugang.status()})
+            from app.zugang import handle_post
+            n = int(self.headers.get("Content-Length") or 0)
+            code, obj = handle_post(app.zugang, self.rfile.read(min(n, 4096)))
+            self.json(obj, code)
 
         def serve_range(self) -> None:
             header, path = self.headers.get("Range"), self.translate_path(self.path)

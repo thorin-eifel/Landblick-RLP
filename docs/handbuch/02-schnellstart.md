@@ -58,7 +58,7 @@ Die Desktop-App (Tauri, mit dem System-WebView, WebGL auf der Grafikkarte) bring
 
 Der Windows-Installer (`Landblick - RLP_<Version>_x64-setup.exe`) wird mit dem GitHub-Workflow **windows-installer** gebaut (Kapitel 6.10). Er installiert pro Benutzer, ohne Administratorrechte. Er ist nicht signiert: Windows SmartScreen meldet „Der Computer wurde durch Windows geschützt“; unter „Weitere Informationen“ lässt er sich trotzdem ausführen. Daten und Zugangsdaten liegen unter `%APPDATA%\de.ctw.osint`.
 
-In der Desktop-App erscheinen in der Quellenübersicht Eingabefelder für Zugangsdaten (Tankerkönig-Schlüssel, NASA-FIRMS-Schlüssel). Auf dem Dauerläufer (Weg A) trägt man sie in `.env` ein.
+In der Desktop-App und auf dem lokalen Webserver (Adresse `127.0.0.1`) erscheinen in der Quellenübersicht Eingabefelder für Zugangsdaten (Tankerkönig-Schlüssel, NASA-FIRMS-Schlüssel). Alternativ trägt man sie in `.env` ein; die `.env` hat Vorrang.
 
 ## 2.3 Weg C: von Hand aus dem Quelltext
 
