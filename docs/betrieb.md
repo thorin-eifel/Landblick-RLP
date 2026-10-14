@@ -418,6 +418,18 @@ Was fehlt und warum, steht im Katalog unter `ausgelassen`: Kommunen (bewusst nic
 
 **Flugzeugklassen.** Der Collector speichert `klass`: `civil`, `mil` (Militär-Kennzeichen der adsb.lol-Datenbank, `dbFlags` Bit 0), `heli` (Kategorie A7) oder `milheli`. Kennzeichen, Hex-Code und Typ bleiben draußen, gespeichert wird nur die Klasse. Darstellung: zivil = dunkles Flugzeug, militärisch = violett im Ring, Hubschrauber = eigenes Symbol (uxwing „helicopter“, Seitenansicht, dreht sich nicht). Die Klasse ist so gut wie die Datenbank von adsb.lol: nicht gemeldete oder nicht erfasste Militärflugzeuge erscheinen als zivil.
 
+### Hangneigung aus dem DGM1
+
+`tools/build_hang_rlp.py` rechnet aus dem 1-m-DGM1 drei Neigungsklassen (ab 15, 25 und 35 Grad) als Vektorflächen und schreibt Kacheln Zoom 14 nach `web/tiles/hang/` (Ebenen `ab15`, `ab25`, `ab35`, dazu `meta.json` mit Namensnennung). Die Karte zeigt sie als Ebene „Hangneigung“ (unter Relief, standardmäßig aus), bewusst durchscheinend: die drei Flächen liegen ineinander und addieren sich nach innen auf rund 32 % Deckkraft, die Klippenfläche hat 20 %. Wandstriche und Oberkante der Klippen bleiben deckend, damit Schummerung, Höhenlinien und Neigung zusammen ein genaueres Bild ergeben. Ohne Kacheln gibt es die Ebene nicht.
+
+Der Lauf teilt das Land in Blöcke von 4 km (+ 1 km Rand zum Glätten), rechnet sie parallel und ist wiederaufnehmbar (Marken unter `web/tiles/hang_parts/_done`). Masken reichen 1 m über den Blockrand, die Teilstücke einer Kachel werden vereinigt, deshalb gibt es keine Nähte. Messung RLP (Mac, 6 Arbeiter): 1 391 Blöcke, 33 Minuten, 8 845 Kacheln, 144 MB gzip (188 MB ungepackt), davon `ab15` 78 MB, `ab25` 49 MB, `ab35` 19 MB. Speicherbedarf rund 1 GB je Arbeiter.
+
+    python tools/build_hang_rlp.py --raw ~/Claude/OSINT/dgm1-work/raw --out web/tiles/hang --workers 6
+    python tools/build_hang_rlp.py ... --bbox 6.3 49.7 6.6 49.95       # Ausschnitt
+    python tools/build_hang_probe.py --raw ... --center 6.45 49.85 --size-km 3 --out /tmp/hang   # nur messen
+
+Parameter und ihre Wirkung: `--sigma` (Glättung des Geländes, Standard 1 m), `--simplify` (Umrisse, 1,5 m), `--min-area` (kleinste Fläche, 40 m²), `--classes` (Schwellen in Grad). Die Deckkraft steht in `web/js/lage/stil.js` (`hangLayers`, `cliffLayers`).
+
 ### Gebäude, Straßenschilder, Beschriftung, Verkehrsfarben
 
 - **Gebäude** bordeaux (`#800020` hell, `#9c2a4b` dunkel), 60 % transparent (`BUILDING_OPACITY` in `web/js/lage/stil.js`). Standardmäßig an. Die Ebene beginnt bei Zoom 13 (nur große Gebäude, die Kacheln führen darunter nicht mehr). Alle Gebäude gibt es ab Kartenzoom 14: der Kern wird mit `tileSize: 256` eingebunden, dadurch gelten die Zoom-15-Kacheln eine Stufe früher. Weiter vorzuziehen (Zoom 13) würde viermal so viele Kacheln je Bild laden; dafür bräuchte es eigene Gebäudekacheln.
@@ -437,7 +449,7 @@ Nach einer Änderung des Radius neu bauen, in dieser Reihenfolge: `tools/build_t
 
 Suchfeld oben links in der Karte (Taste `/` oder Strg+K). Alles läuft im Browser, keine Anfrage nach außen. Der Index wird erst beim ersten Fokus geladen.
 
-- `web/data/suche_geo.json` (statisch, ca. 2,5 MB): Orte, Straßen, Bäche, Gipfel, Wälder, Schutzgebiete aus unseren Kartenkacheln. Bauen: `python tools/build_search_index.py --rescan` (liest `web/tiles/region.pmtiles` und `core.pmtiles`, Zwischenstand in `data/search_raw.json.gz`; ohne `--rescan` wird der Zwischenstand benutzt). Nach jedem Kachel-Neubau wiederholen.
+- `web/data/suche_geo.json` (statisch, ca. 6,5 MB, rund 160 000 Einträge): Orte, Straßen, Bäche, Gipfel, Wälder, Schutzgebiete aus unseren Kartenkacheln. Bauen: `python tools/build_search_index.py --rescan` (liest `web/tiles/region.pmtiles` und `core.pmtiles`, Zwischenstand in `data/search_raw.json.gz`; ohne `--rescan` wird der Zwischenstand benutzt). Nach jedem Kachel-Neubau wiederholen.
 - `web/data/suche.json` (dynamisch, ca. 1,3 MB): Schulen, Kirchen, Feuerwachen, Brücken, Landmarken, Haltestellen, Routen, Pegel. Entsteht bei `python -m app.export`.
 - Format `{"v":1,"t":[Typen],"o":[Orte],"e":[[Name,Typ,Breite*1e4,Länge*1e4,Ort]]}`; `TYPES` in `app/search.py` nur anhängen, nie umsortieren.
 - Datenschutz: keine Hausnummern, keine Adressen, keine Personennamen. Reine Zahlennamen werden verworfen. Lizenz: © OpenStreetMap-Mitwirkende (ODbL).
