@@ -2,6 +2,11 @@
 
 Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt: läuft, ist aber nicht abgenommen (rechtliche Prüfung, Dauerbetrieb, Lizenzvermerke der Landesdienste stehen aus).
 
+## [Unreleased]
+
+### Karte: Reihenfolge der Ebenen
+- Die Hangneigung liegt jetzt unter der Vegetation (Landnutzung), die Klippen weiterhin über allem Gelände. Die Hangflächen sind etwas kräftiger (Deckkraft 0,16 / 0,20 / 0,24), damit sie durch Wald und Wiese lesbar bleiben.
+
 ## [1.0.0-alpha.2] - 2026-10-14
 
 ### Relief: Naht an der Abdeckungskante

@@ -167,14 +167,14 @@ export function labelsAndBuildings(dark) {
 // dünne Wandlinie mit Schraffen (lange und kurze Striche im Wechsel, Bild cliff-tick).
 // Mit `dgm` kommen die Wände in Rheinland-Pfalz aus dem Geländemodell (Quelle klippen, Ebenen wand, kante, schraffur, Attribut drop = Wandhöhe in m);
 // die OpenStreetMap-Klippen der Basiskarte gelten dann nur noch außerhalb des Landes.
-// Hangneigung aus dem DGM1: drei ineinander liegende Flächen (ab 15, 25, 35 Grad), je steiler desto dunkler. Bewusst durchscheinend (die Deckkraft addiert sich
-// nach innen auf rund 0,32), damit Schummerung und Höhenlinien darunter lesbar bleiben; Wandstriche und Oberkante der Klippen bleiben deckend. Nur mit Kacheln (hang).
+// Hangneigung aus dem DGM1: drei ineinander liegende Flächen (ab 15, 25, 35 Grad), je steiler desto dunkler. Liegt unter der Vegetation (Wald, Wiese …), darüber nur die Klippen; deshalb
+// etwas kräftiger (die Deckkraft addiert sich nach innen auf rund 0,5), damit sie durch die Landnutzung noch lesbar bleibt. Wandstriche und Oberkante der Klippen bleiben deckend. Nur mit Kacheln (hang).
 export function hangLayers(dark, on, visible) {
   if (!on) return [];
   const col = dark ? { ab15: '#8a7a4a', ab25: '#9a6a3a', ab35: '#b04a3a' } : { ab15: '#e6d27a', ab25: '#d98a3a', ab35: '#b3342a' };
   return ['ab15', 'ab25', 'ab35'].map((c) => ({ id: `land-hang-${c}`, type: 'fill', source: 'hang', 'source-layer': c, minzoom: 14,
     layout: { visibility: visible ? 'visible' : 'none' },
-    paint: { 'fill-color': col[c], 'fill-opacity': c === 'ab15' ? 0.1 : c === 'ab25' ? 0.12 : 0.14, 'fill-antialias': true } }));
+    paint: { 'fill-color': col[c], 'fill-opacity': c === 'ab15' ? 0.16 : c === 'ab25' ? 0.2 : 0.24, 'fill-antialias': true } }));
 }
 
 export function cliffLayers(k, dark, ticks, dgm) {
