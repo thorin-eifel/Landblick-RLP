@@ -64,8 +64,8 @@ export function applyBasemap() {
   const lab0 = styled.findIndex((x) => x.layout?.['text-font'] && !x.id.startsWith('land-'));
   styled.splice(lab0 < 0 ? styled.length : lab0, 0, ...cliffLayers(med ? 'med' : dark ? 'dark' : 'light', dark, map.hasImage('cliff-stroke'), klippenOk));
   waterEdges(styled, dark);
-  // Hangneigung ergänzt die Schummerung: über Höhenfärbung, Schummerung (relief.js legt sie davor) und Vegetation, unter Wasser, Gebäuden und Straßen
-  { const wi = styled.findIndex((x) => x.id === 'water'); styled.splice(wi < 0 ? styled.length : wi, 0, ...hangLayers(dark, hangOk, state.layers.hang)); }
+  // Hangneigung ergänzt die Schummerung: über Höhenfärbung, Schummerung (relief.js legt sie davor) und Vegetation, vor der ersten Wasserebene (Säume, Rand, Fläche), dahinter die Höhenlinien (relief.js)
+  { const wi = styled.findIndex((x) => /^water(_stream_casing|_river_casing|_edge)?$/.test(x.id)); styled.splice(wi < 0 ? styled.length : wi, 0, ...hangLayers(dark, hangOk, state.layers.hang)); }
   styled.push(...peakLayers(dark, map.hasImage('peak-tri')));   // Gipfel oben auf den Beschriftungen des Stils
   const tint = tintOf(state.skin, dark);
   if (tint) styled = skinize(styled, tint, { patterns: wantsPatterns(state.skin) });

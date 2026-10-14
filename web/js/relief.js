@@ -77,8 +77,9 @@ export function buildRelief(map, dark, shade, contours, med = false) {
   for (const id of RELIEF_LAYERS) if (map.getLayer(id)) map.removeLayer(id);
   const ramp = ['interpolate', ['linear'], ['elevation'], ...(med ? MED_RAMP : RAMP[dark ? 'dark' : 'light']).flat()];
   const anchor = 'radius-fill';
-  const under = map.getLayer('bm-water') ? 'bm-water' : anchor;
-  const over = map.getLayer('bm-roads_minor_service_casing') ? 'bm-roads_minor_service_casing' : anchor;
+  // Wasser (Säume, Rand, Fläche): Schummerung, Hangneigung und Höhenlinien liegen darunter, damit in Seen und Flüssen nichts davon durchscheint
+  const under = ['bm-water_stream_casing', 'bm-water_river_casing', 'bm-water_edge', 'bm-water'].find((id) => map.getLayer(id)) ?? anchor;
+  const over = under;
   // Höhenfärbung unter den Flächenfarben (Wald, Wiese, Acker), Schummerung darüber: so bleibt das Grün sichtbar
   const colorUnder = map.getLayer('bm-land-forest') ? 'bm-land-forest' : under;
   map.addLayer({ id: 'relief-color', type: 'color-relief', source: ELEV_SRC, layout: { visibility: vis },
