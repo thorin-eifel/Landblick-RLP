@@ -10,7 +10,7 @@ import { HER_LAYERS, NAT_LAYERS, applyNatureVisibility, paintNature, peakLayers 
 import { INFRA_LAYER_IDS, paintStops } from './orte.js';
 import { placeLgb } from './lgb.js';
 import { skinize, skinById, tintOf, wantsPatterns } from './skins.js';
-import { BUILDING_OPACITY, LABEL_SKIP, LAND, cliffLayers, hangLayers, labelsAndBuildings, ortsnamenUebersicht, landUseLayers, mainRoad, signLayers, waterEdges } from './stil.js';
+import { BUILDING_OPACITY, LABEL_SKIP, LAND, cliffLayers, hangLayers, labelsAndBuildings, ortsnamenUebersicht, landUseLayers, mainRoad, roadsFromDetail, signLayers, waterEdges } from './stil.js';
 import { applyFlow, applyLegends, fillTempLegend, placeRadar } from './wetterkarte.js';
 import { BUILDING_KLASSEN } from '../gebaeude-farben.js';
 import { basemapOk, coreOk, flow, gebOk, hangOk, light, klippenOk, map, mapReady, reliefOk, ringOk, state } from './zustand.js';
@@ -68,6 +68,7 @@ export function applyBasemap() {
   const tint = tintOf(state.skin, dark);
   if (tint) styled = skinize(styled, tint, { patterns: wantsPatterns(state.skin) });
   if (med) styled = medievalize(styled);
+  styled = roadsFromDetail(styled, { core: coreOk, ring: ringOk });   // Straßen und Namen ab Zoom 14 aus Kern und Ring (vollständiger als Zoom 13)
   if (ringOk && !gebOk) {   // gleiche Gebäudeebenen noch einmal aus dem Ring; Kern und Ring überlappen nicht, nichts wird doppelt gezeichnet
     const at2 = styled.map((x) => x.id).lastIndexOf('buildings-line');
     const extra = styled.filter((x) => x.id === 'buildings' || x.id === 'buildings-line').map((x) => ({ ...x, id: `${x.id}-ring`, source: 'basemap-ring' }));

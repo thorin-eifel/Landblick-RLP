@@ -334,3 +334,22 @@ export function signLayers(dark) {
     mk('bm-sign-land', ['major_road'], ['L', 'K', 'D', 'C'], 'sign-land', '#111111', 12),
   ];
 }
+
+// Straßen ab Zoom 14 aus den feineren Archiven. region.pmtiles endet bei Zoom 13: dort fehlen kleine Straßen, Wege und fast alle
+// Straßennamen (Kachelfeld `name` nur an Haupt- und Landstraßen). core.pmtiles (Zoom 14 und 15) und ring.pmtiles (Zoom 14, außerhalb der
+// Kerne) führen dieselbe Schicht `roads` vollständig. Jede Straßenebene der Basiskarte (Linien und Namen) bekommt je Archiv einen Zwilling
+// direkt hinter sich (gleiche Stapelfolge), das Original endet vor Zoom 14. Die Kachelfelder sind dieselben, Filter und Zeichnung gelten unverändert.
+export const DETAIL_ZOOM = 14;
+export function roadsFromDetail(styled, { core = false, ring = false } = {}) {
+  if (!core && !ring) return styled;
+  const out = [];
+  for (const l of styled) {
+    if (l.source !== 'basemap' || l['source-layer'] !== 'roads' || l.type === 'fill') { out.push(l); continue; }
+    out.push({ ...l, maxzoom: Math.min(l.maxzoom ?? DETAIL_ZOOM, DETAIL_ZOOM) });
+    for (const [on, suffix, source] of [[core, 'c', 'basemap-core'], [ring, 'r', 'basemap-ring']]) {
+      if (!on || (l.maxzoom != null && l.maxzoom <= DETAIL_ZOOM)) continue;
+      out.push({ ...l, id: `${l.id}_${suffix}`, source, minzoom: Math.max(l.minzoom ?? 0, DETAIL_ZOOM) });
+    }
+  }
+  return out;
+}
