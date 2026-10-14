@@ -65,8 +65,9 @@ def handle_post(store: "ZugangStore", raw: bytes) -> tuple[int, dict[str, Any]]:
 
 
 class ZugangStore:
-    def __init__(self, path: Path, entries: list[Any]) -> None:
+    def __init__(self, path: Path, entries: list[Any], dotenv: Path | None = None) -> None:
         self.path = path
+        self.dotenv = dotenv   # nur für die Anzeige: Variablen, die schon in dieser .env stehen (Werte werden nicht gelesen)
         self._lock = threading.Lock()
         self.allowed: dict[str, tuple[Any, Any]] = {f.env: (e, f) for e in entries for f in getattr(e, "zugang", [])}
 
@@ -122,11 +123,25 @@ class ZugangStore:
         with self._lock:
             return self._read()
 
+    def _extern(self) -> set[str]:
+        """Namen, die außerhalb dieser Datei gesetzt sind: Umgebung des Prozesses oder .env. Nur Namen, nie Werte."""
+        names = {k for k in self.allowed if os.environ.get(k)}
+        if self.dotenv:
+            try:
+                for line in self.dotenv.read_text(encoding="utf-8").splitlines():
+                    k, sep, v = line.strip().partition("=")
+                    if sep and k.strip() in self.allowed and v.strip().strip("'\""):
+                        names.add(k.strip())
+            except OSError:
+                pass
+        return names
+
     def status(self) -> list[dict[str, Any]]:
-        """Je Quelle mit Zugangsfeldern: Felder samt "gesetzt". Nie mit Werten."""
+        """Je Quelle mit Zugangsfeldern: Felder samt "gesetzt" (in dieser Datei) und "extern" (.env oder Umgebung). Nie mit Werten."""
         have = self._read()
+        extern = self._extern()
         out: dict[str, dict[str, Any]] = {}
         for env, (entry, f) in self.allowed.items():
             src = out.setdefault(entry.id, {"source_id": entry.id, "name": entry.kurzname or entry.name, "hinweis": entry.auth, "url": entry.url, "felder": []})
-            src["felder"].append({"env": env, "art": f.art, "bezeichnung": f.bezeichnung, "gesetzt": env in have})
+            src["felder"].append({"env": env, "art": f.art, "bezeichnung": f.bezeichnung, "gesetzt": env in have, "extern": env in extern and env not in have})
         return list(out.values())

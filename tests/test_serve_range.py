@@ -132,3 +132,15 @@ def test_config_liest_zugang_datei(tmp_path, monkeypatch):
     import os
     assert os.environ["TANKERKOENIG_API_KEY"] == "abc"
     monkeypatch.delenv("TANKERKOENIG_API_KEY")
+
+
+def test_zugang_zeigt_schluessel_aus_env_datei_als_extern(tmp_path):
+    env = tmp_path / ".env"
+    env.write_text("TANKERKOENIG_API_KEY=abc\nFIRMS_MAP_KEY=\n")
+    from app.registry import Registry
+    from app.zugang import ZugangStore
+    st = ZugangStore(tmp_path / "z.json", Registry.load(ROOT / "sources.yaml").entries, dotenv=env)
+    felder = {f["env"]: f for q in st.status() for f in q["felder"]}
+    assert felder["TANKERKOENIG_API_KEY"]["extern"] and not felder["TANKERKOENIG_API_KEY"]["gesetzt"]
+    assert not felder["FIRMS_MAP_KEY"]["extern"]
+    assert "abc" not in str(st.status())

@@ -31,9 +31,9 @@ export function zugangBox(q) {
     for (const f of felder) {
       const z = zeilen.get(f.env);
       if (!z) continue;
-      z.badge.textContent = f.gesetzt ? 'gesetzt' : 'nicht gesetzt';
-      z.badge.className = `badge ${f.gesetzt ? 'st-ok' : 'st-stale'}`;
-      z.input.placeholder = f.gesetzt ? 'zum Ändern neu eingeben' : '';
+      z.badge.textContent = f.gesetzt ? 'gesetzt' : f.extern ? 'gesetzt (.env)' : 'nicht gesetzt';
+      z.badge.className = `badge ${f.gesetzt || f.extern ? 'st-ok' : 'st-stale'}`;
+      z.input.placeholder = f.gesetzt ? 'zum Ändern neu eingeben' : f.extern ? 'zum Überschreiben eingeben' : '';
       z.entfernen.hidden = !f.gesetzt;
     }
   };

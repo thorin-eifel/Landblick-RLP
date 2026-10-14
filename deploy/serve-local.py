@@ -141,7 +141,7 @@ def make_zugang(path: str | None, sources: str | None) -> object | None:
     except Exception as err:   # noqa: BLE001  fehlendes yaml, kaputtes Register: Server läuft ohne Zugangsweg weiter
         log.warning("Zugangsdaten nicht verfügbar: %s", err)
         return None
-    return ZugangStore(Path(path) if path else root / "data" / "zugang.json", entries)
+    return ZugangStore(Path(path) if path else root / "data" / "zugang.json", entries, dotenv=root / ".env")
 
 
 def make_server(directory: str, port: int, bind: str = "127.0.0.1", zugang: object | None = None) -> ThreadingHTTPServer:
