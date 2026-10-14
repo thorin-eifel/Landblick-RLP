@@ -87,6 +87,33 @@ class App:
         data_dir.mkdir(parents=True, exist_ok=True)
         (data_dir / "data").mkdir(exist_ok=True)
         (data_dir / "tiles").mkdir(exist_ok=True)
+        self._packs: dict[str, tuple[tuple[str, float], object]] = {}
+        self._packs_lock = threading.Lock()
+
+    def pack(self, name: str):
+        """Kachelpaket tiles/<name>.pmtiles (erst Datenordner, dann App) als PackArchive oder None. Öffnet neu, wenn die Datei sich ändert."""
+        from app.tilepack import PackArchive, PackError
+        for root in (self.data_dir, self.web_dir):
+            f = root / "tiles" / f"{name}.pmtiles"
+            try:
+                st = f.stat()
+            except OSError:
+                continue
+            key = (str(f), st.st_mtime)
+            with self._packs_lock:
+                hit = self._packs.get(name)
+                if hit and hit[0] == key:
+                    return hit[1]
+                try:
+                    pk = PackArchive(f)
+                except (OSError, PackError) as err:
+                    log.warning("Kachelpaket %s unlesbar: %s", f, err)
+                    continue
+                if hit:
+                    hit[1].close()
+                self._packs[name] = (key, pk)
+                return pk
+        return None
 
     def env(self, progress: Path | None = None) -> dict:
         e = dict(os.environ)
@@ -187,6 +214,10 @@ def ua() -> str:
     return f"Landblick/1.0 (+{os.environ.get('OSINT_CONTACT') or PROJECT_URL})"
 
 
+_PACK_URL = re.compile(r"^/tiles/(dem|klippen)/(README\.txt|meta\.json|(\d{1,2})/(\d{1,8})/(\d{1,8})\.(png|pbf))$")
+_PACK_TYPES = {"png": "image/png", "pbf": "application/x-protobuf"}
+
+
 def make_handler(app: App, port_box: list[int]):
     class H(SimpleHTTPRequestHandler):
         extensions_map = {**SimpleHTTPRequestHandler.extensions_map, ".js": "text/javascript", ".json": "application/json", ".pmtiles": "application/octet-stream",
@@ -232,7 +263,47 @@ def make_handler(app: App, port_box: list[int]):
                 return self.json({"quellen": app.zugang.status()})   # nur gesetzt/nicht gesetzt, nie Werte
             if u.path.startswith("/api/"):
                 return self.json({"error": "unbekannt"}, 404)
+            if self.serve_pack(u.path, head=False):
+                return
             return self.serve_range()
+
+        def serve_pack(self, path: str, head: bool) -> bool:
+            """tiles/dem/… und tiles/klippen/… aus dem Kachelpaket, wenn es den Ordner nicht gibt. Ein vorhandener Ordner hat Vorrang.
+
+            README.txt und meta.json sind die Prüfdateien der Karte; meta.json kommt aus den Metadaten des Pakets.
+            True, wenn die Anfrage hier beantwortet wurde (auch mit 404 für eine Kachel, die das Paket nicht enthält).
+            """
+            m = _PACK_URL.match(path)
+            if not m or os.path.isfile(self.translate_path(path)):
+                return False
+            pk = app.pack(m.group(1))
+            if pk is None:
+                return False
+            if m.group(3) is None:
+                body = (b"Kachelpaket, gelesen aus " + pk.path.name.encode() + b"\n") if m.group(2) == "README.txt" else json.dumps(pk.metadata(), ensure_ascii=False).encode()
+                ctype = "text/plain; charset=utf-8" if m.group(2) == "README.txt" else "application/json"
+                got, gz = body, False
+            else:
+                try:
+                    hit = pk.get(int(m.group(3)), int(m.group(4)), int(m.group(5)))
+                except (OSError, ValueError):
+                    log.exception("Kachelpaket %s: Lesefehler", pk.path)
+                    self.send_error(500)
+                    return True
+                if hit is None:
+                    self.send_error(404)
+                    return True
+                got, gz = hit
+                ctype = _PACK_TYPES[m.group(6)]
+            self.send_response(HTTPStatus.OK)
+            self.send_header("Content-Type", ctype)
+            if gz:
+                self.send_header("Content-Encoding", "gzip")
+            self.send_header("Content-Length", str(len(got)))
+            self.end_headers()
+            if not head:
+                self.wfile.write(got)
+            return True
 
         def do_POST(self) -> None:
             if not self.host_ok() or self.headers.get("X-OSINT") != "1":
@@ -300,6 +371,8 @@ def make_handler(app: App, port_box: list[int]):
         def do_HEAD(self) -> None:
             if not self.host_ok():
                 return self.json({"error": "host"}, 403)
+            if self.serve_pack(urllib.parse.urlsplit(self.path).path, head=True):
+                return
             super().do_HEAD()
     return H
 
