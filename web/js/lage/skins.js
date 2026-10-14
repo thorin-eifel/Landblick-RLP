@@ -65,6 +65,17 @@ export const SKINS = [
         forest: '#2a4025', green: '#31492a', scrub: '#34462a', farm: '#38341f', wet: '#254a40', rock: '#403c30', landOp: 0.95, bld: ['#4a3430', 1],
         roads: road(['#b85a22', '#4a1d08'], ['#a08c20', '#3d3408'], ['#6a6430', '#221f0e'], ['#4e4a38', '#221f0e'], ['#423e30', '#221f0e'], '#5c5846') },
       patterns: false } },
+  { id: 'oxford', name: 'Oxford', hinweis: 'Federzeichnung: Pergamentton, Tusche, feine Linien, an handgezeichnete Fantasy-Karten angelehnt; dunkel als Nachtblatt',
+    tint: {
+      light: { bg: '#e9e0c6', earth: '#f4edd8', water: '#d6dfd8', edge: '#3d4a52', waterInk: '#3d4a52', ink: '#2a2118', halo: 'rgba(244,237,216,0.92)',
+        forest: '#d5dbc0', green: '#e6e7cd', scrub: '#dfdfc2', farm: '#eee5c8', wet: '#d3dcc9', rock: '#dcd3bd', landOp: 0.7, bld: ['#cdbf9f', 0.85],
+        roads: road(['#5a4a38', '#5a4a38'], ['#5a4a38', '#5a4a38'], ['#6b5a45', '#6b5a45'], ['#6b5a45', '#6b5a45'], ['#7a6850', '#7a6850'], '#7a6850'),
+        inkRoads: 0.42, spacing: 0.12 },
+      dark: { bg: '#1e1812', earth: '#2a2218', water: '#27333a', edge: '#9fb2bb', waterInk: '#9fb2bb', ink: '#eadfc4', halo: 'rgba(42,34,24,0.92)',
+        forest: '#353a28', green: '#3b3d2a', scrub: '#3a3a2a', farm: '#403824', wet: '#33402f', rock: '#43392b', landOp: 0.7, bld: ['#4a3e2c', 0.85],
+        roads: road(['#cdbd9c', '#cdbd9c'], ['#cdbd9c', '#cdbd9c'], ['#b6a785', '#b6a785'], ['#b6a785', '#b6a785'], ['#9d8f70', '#9d8f70'], '#9d8f70'),
+        inkRoads: 0.42, spacing: 0.12 },
+      patterns: true } },
 ];
 
 export const DEFAULT_SKIN = 'landblick';
@@ -82,6 +93,13 @@ export function roadClass(id) {
 }
 
 const setPaint = (l, p) => ({ ...l, paint: { ...l.paint, ...p } });
+
+/** Linienbreite (Zahl oder Ausdruck) mit k multiplizieren; Zoom-Ausdrücke dürfen "zoom" nur als obersten Eingang führen, also die Stützwerte einzeln. */
+export function scaleWidth(w, k) {
+  if (typeof w === 'number') return w * k;
+  if (Array.isArray(w) && w[0] === 'interpolate') return w.map((x, i) => (i >= 4 && i % 2 === 0 ? scaleWidth(x, k) : x));
+  return ['*', k, w];
+}
 
 /**
  * Färbt die Layerliste (nach labelsAndBuildings, waterEdges, peakLayers) mit der Palette um.
@@ -108,11 +126,19 @@ export function skinize(styled, p, opts = {}) {
       if (r && l.type === 'line') {
         const c = p.roads[r.cls];
         x = setPaint(l, { 'line-color': r.cls === 'rail' ? c : c[r.casing ? 1 : 0] });
+        if (p.inkRoads && r.cls !== 'rail') {   // Federzeichnung: keine Konturen, feine Linie, Nebenwege gestrichelt
+          if (r.casing) x = setPaint(x, { 'line-opacity': 0 });
+          else {
+            x = setPaint(x, { 'line-width': scaleWidth(l.paint?.['line-width'] ?? 1, p.inkRoads) });
+            if (r.cls === 'minor' || r.cls === 'other') x = setPaint(x, { 'line-dasharray': r.cls === 'other' ? [2, 2] : [6, 2] });
+          }
+        }
       }
     }
     if (x.layout?.['text-font']) {
       const water = /^water_/.test(x.id);
       x = setPaint(x, { 'text-color': water ? p.waterInk : p.ink, 'text-halo-color': p.halo });
+      if (p.spacing && /^places_/.test(x.id)) x = { ...x, layout: { ...x.layout, 'text-letter-spacing': p.spacing } };
     }
     out.push(x);
   }

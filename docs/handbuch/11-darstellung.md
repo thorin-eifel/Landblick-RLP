@@ -257,3 +257,5 @@ Vorschlag in einem Satz: eine Skin-Beschreibung als Objekt (`id`, `name`, `flavo
 `applyBasemap()` baut die Layer wie gewohnt und ruft danach `skinize(styled, palette, { patterns })`. Das Umfärben läuft über die Layer-IDs; Geometrie, Schalter und Datenebenen bleiben unberührt. Wasserfarbe für `paintWater` und Licht kommt aus derselben Palette. Der Zustand steht in `state.skin`, die Auswahl in `html[data-skin]`; `state.layers.medieval` ist daraus abgeleitet.
 
 Neue Darstellung: Eintrag in `SKINS` mit `id`, `name`, `hinweis` und `tint`, Test in `tests/js/skins.test.mjs` läuft ohne weitere Anpassung. Namen sind Orte, keine Marken. Nicht von der Palette erfasst sind Höhenfärbung (Relief), Wetter- und Datenebenen, Schilder und Zeichen; sie folgen weiter hell/dunkel.
+
+Palette-Zusatz für Federzeichnungen: `inkRoads` (Faktor der Linienbreite, Konturen aus, Nebenwege gestrichelt) und `spacing` (Sperrung der Ortsnamen). Der Skin Oxford nutzt beides.

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { LAND_GROUP, SKINS, roadClass, skinById, skinize, tintOf, wantsPatterns } from '../../web/js/lage/skins.js';
+import { LAND_GROUP, SKINS, roadClass, scaleWidth, skinById, skinize, tintOf, wantsPatterns } from '../../web/js/lage/skins.js';
 
 const KEYS = ['bg', 'earth', 'water', 'edge', 'waterInk', 'ink', 'halo', 'forest', 'green', 'scrub', 'farm', 'wet', 'rock', 'landOp', 'bld', 'roads'];
 
@@ -68,4 +68,27 @@ test('Signaturen nur dort, wo der Skin sie will', () => {
 
 test('Bewuchsklassen sind abgebildet', () => {
   for (const g of Object.values(LAND_GROUP)) assert.ok(KEYS.includes(g));
+});
+
+test('Federzeichnung: Straßen ohne Kontur, fein, Nebenwege gestrichelt', () => {
+  const p = tintOf('oxford', false);
+  const w = ['interpolate', ['exponential', 1.6], ['zoom'], 6, 1.2, 15, 7];
+  const out = skinize([
+    { id: 'roads_minor_casing', type: 'line', paint: { 'line-width': 1 } },
+    { id: 'roads_minor', type: 'line', paint: { 'line-width': w } },
+    { id: 'roads_highway', type: 'line', paint: { 'line-width': w } },
+    { id: 'places_locality', type: 'symbol', layout: { 'text-font': ['x'] }, paint: {} },
+  ], p);
+  const by = Object.fromEntries(out.map((l) => [l.id, l]));
+  assert.equal(by.roads_minor_casing.paint['line-opacity'], 0);
+  assert.deepEqual(by.roads_minor.paint['line-dasharray'], [6, 2]);
+  assert.equal(by.roads_highway.paint['line-dasharray'], undefined);
+  assert.ok(Math.abs(by.roads_highway.paint['line-width'][4] - 1.2 * p.inkRoads) < 1e-9);
+  assert.equal(by.places_locality.layout['text-letter-spacing'], p.spacing);
+});
+
+test('scaleWidth: Zahl, Zoom-Ausdruck und sonstiger Ausdruck', () => {
+  assert.equal(scaleWidth(2, 0.5), 1);
+  assert.deepEqual(scaleWidth(['interpolate', ['linear'], ['zoom'], 5, 2, 10, 4], 0.5), ['interpolate', ['linear'], ['zoom'], 5, 1, 10, 2]);
+  assert.deepEqual(scaleWidth(['get', 'w'], 0.5), ['*', 0.5, ['get', 'w']]);
 });
