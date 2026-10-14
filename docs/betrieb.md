@@ -430,6 +430,13 @@ Der Lauf teilt das Land in Blöcke von 4 km (+ 1 km Rand zum Glätten), rechnet 
 
 Parameter und ihre Wirkung: `--sigma` (Glättung des Geländes, Standard 1 m), `--simplify` (Umrisse, 1,5 m), `--min-area` (kleinste Fläche, 40 m²), `--classes` (Schwellen in Grad). Die Deckkraft steht in `web/js/lage/stil.js` (`hangLayers`, `cliffLayers`).
 
+### Relief nachladen (dem-hoch)
+Das Relief liegt in zwei Paketen: `dem.pmtiles` (Zoom 6–12) im Installer, `dem-hoch.pmtiles` (Zoom 13/14, rund 4,3 GB) wird beim ersten Start im Hintergrund geholt. Der Server liefert Kacheln aus `dem` und fällt für fehlende (hohe) Zoomstufen auf `dem-hoch` zurück; bis das Nachladepaket da ist, wird Zoom 12 überzoomt.
+```
+python -m app.pakete --manifest https://…/dem-hoch.pmtiles.manifest.json --dest ~/.local/share/osint/tiles
+```
+Abbruch ist unkritisch: `dem-hoch.pmtiles.part` wächst Teil für Teil, jeder Lauf prüft die fertigen Teile neu und setzt das angefangene per Range fort. Umbenannt wird erst nach bestandener Gesamtprüfsumme. Bedarf: Paketgröße plus 200 MB frei. Die Adresse steht in `PAKETE_MANIFEST` (`app/desktop.py`), Überschreiben mit `OSINT_PAKETE_MANIFEST`, Abschalten mit `aus`. Fehler: `/api/state` → `nachladen.error`, Log `osint.pakete`. Namensnennung: die Landesdaten (DGM1, © GeoBasis-DE / LVermGeoRP, dl-de/by-2-0) stehen in den Metadaten der Pakete.
+
 ### Gebäude, Straßenschilder, Beschriftung, Verkehrsfarben
 
 - **Gebäude** bordeaux (`#800020` hell, `#9c2a4b` dunkel), 60 % transparent (`BUILDING_OPACITY` in `web/js/lage/stil.js`). Standardmäßig an. Die Ebene beginnt bei Zoom 13 (nur große Gebäude, die Kacheln führen darunter nicht mehr). Alle Gebäude gibt es ab Kartenzoom 14: der Kern wird mit `tileSize: 256` eingebunden, dadurch gelten die Zoom-15-Kacheln eine Stufe früher. Weiter vorzuziehen (Zoom 13) würde viermal so viele Kacheln je Bild laden; dafür bräuchte es eigene Gebäudekacheln.
