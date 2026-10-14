@@ -65,7 +65,13 @@ export function applyBasemap() {
   styled.splice(lab0 < 0 ? styled.length : lab0, 0, ...cliffLayers(med ? 'med' : dark ? 'dark' : 'light', dark, map.hasImage('cliff-stroke'), klippenOk));
   waterEdges(styled, dark);
   // Hangneigung ergänzt die Schummerung: über Höhenfärbung, Schummerung (relief.js legt sie davor) und Vegetation, vor der ersten Wasserebene (Säume, Rand, Fläche), dahinter die Höhenlinien (relief.js)
-  { const wi = styled.findIndex((x) => /^water(_stream_casing|_river_casing|_edge)?$/.test(x.id)); styled.splice(wi < 0 ? styled.length : wi, 0, ...hangLayers(dark, hangOk, state.layers.hang)); }
+  {
+    // Gebäude rücken unter Schummerung, Hangneigung und Höhenlinien (ein Haus kann am Hang stehen), bleiben aber über der Vegetation; Wasser liegt darüber
+    const isBld = (x) => /^buildings(-line)?$/.test(x.id), bld = styled.filter(isBld);
+    for (let i = styled.length - 1; i >= 0; i--) if (isBld(styled[i])) styled.splice(i, 1);
+    const wi = styled.findIndex((x) => /^water(_stream_casing|_river_casing|_edge)?$/.test(x.id));
+    styled.splice(wi < 0 ? styled.length : wi, 0, ...bld, ...hangLayers(dark, hangOk, state.layers.hang));
+  }
   styled.push(...peakLayers(dark, map.hasImage('peak-tri')));   // Gipfel oben auf den Beschriftungen des Stils
   const tint = tintOf(state.skin, dark);
   if (tint) styled = skinize(styled, tint, { patterns: wantsPatterns(state.skin) });
