@@ -258,4 +258,10 @@ Vorschlag in einem Satz: eine Skin-Beschreibung als Objekt (`id`, `name`, `flavo
 
 Neue Darstellung: Eintrag in `SKINS` mit `id`, `name`, `hinweis` und `tint`, Test in `tests/js/skins.test.mjs` läuft ohne weitere Anpassung. Namen sind Orte, keine Marken. Nicht von der Palette erfasst sind Höhenfärbung (Relief), Wetter- und Datenebenen, Schilder und Zeichen; sie folgen weiter hell/dunkel.
 
-Palette-Zusatz für Federzeichnungen: `inkRoads` (Faktor der Linienbreite, Konturen aus, Nebenwege gestrichelt) und `spacing` (Sperrung der Ortsnamen). Der Skin Oxford nutzt beides.
+Palette-Zusatz für feine Linien: `inkRoads` (Faktor der Linienbreite, Konturen aus, Nebenwege gestrichelt) und `spacing` (Sperrung der Ortsnamen).
+
+### Zwei Methoden
+
+**Farbpalette (`tint`).** Tauscht nur Farben der fertigen Layerliste; Texturen, Symbole und Schrift bleiben die von Landblick. Dafür gibt es hell und dunkel. Beispiel: Mountain View.
+
+**Zeichensatz (`art`).** Tauscht Texturen und Symbole: Flächenmuster (Baumkronen, Furchen, Schilf), Hügel-, Wellen- und Siedlungszeichen, Gebäudeschraffur, Zeichen der Infrastruktur, Schrift und Zierde (Titelschild, Windrose, Fabelwesen). Die Zeichnungen entstehen auf Canvas und lesen ihre Farben aus Objekten (`MED` in `medieval.js` und `mittelalter.js`, `PIG` in `pigmente.js`, `MED_COLORS`, `MED_LAND`, `MED_RAMP`, `MED_STYLE`, `CLIFF`). `applyArt()` in `lage/zeichensatz.js` schreibt die Werte des gewählten Satzes dorthin und zeichnet Muster und Symbole mit gleichen Bildnamen neu; danach läuft `recolor()`. Die Daten eines Satzes stehen in `lage/zeichensaetze.js` (`ARTS`); ein neuer Satz braucht dieselben Schlüssel wie `alte-karte` (der Test prüft das). Zeichensätze kennen nur hell. Neue Zeichenformen (andere Bäume, andere Häuser) brauchen eine Parameterisierung der Zeichenfunktionen in `medieval.js`; bisher ändern Sätze Farben, Schrift und Zierde, die Formen sind noch die der Alten Karte.
