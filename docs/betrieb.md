@@ -473,9 +473,9 @@ Die Karte im Stil des 15. Jahrhunderts hat keine Papiertextur mehr (Foto und Üb
 
 **Wasserbewegung** (Ebene „Wasserbewegung“, standardmäßig aus, `web/js/fluss.js`): Striche und Pfeile entlang der Gewässerlinien zeigen die Fließrichtung (Digitalisierungsrichtung der OSM-Linien, geprüft an Mosel, Saar, Our, Sûre, Kyll, Prüm, Nims, Alzette, Lieser, Ruwer). Tempo ist eine Klasse (Bach, Fluss, gestaut), kein gemessener Abfluss. `IMPOUNDED` (Mosel, Saar) bewegt sich kaum: staugeregelt. Seen, Teiche und Becken zeigen Wellenzeichen, die mit dem Modellwind (ICON-D2, Kartenmitte) ziehen; bei Flaute oder ohne Windmodell bleibt das Wasser glatt. Flächen ohne Gewässerart gelten als Stillgewässer. Bei `prefers-reduced-motion` stehen die Zeichen still. Tests: `node tests/js/fluss.test.mjs`. Prüfhilfe: `#debug` schreibt Seitenfehler nach `data-debug-err` am `<html>`.
 
-## Lichtquelle am Zeiger
+## Licht am Zeiger
 
-Ebene „Lichtquelle am Zeiger“ (aus, unter Kartengrundlage; braucht Höhenrelief). `web/js/licht.js` rechnet im Fragment-Shader (WebGL2): Höhenmosaik aus den sichtbaren Terrarium-Kacheln (höchstens 48, Zoom 6 bis 12), Hangneigung per Sobel, Punktlicht über dem Zeiger (Höhe einstellbar), Schatten durch Strahlverfolgung mit weichem Rand (48 Schritte). Ohne Maus gilt die Bildmitte bzw. der letzte Tippunkt. Gilt nur bei Nordausrichtung ohne Neigung. Prüfzugang: `licht:{on,lon,lat,hoehe}` im `#debug`-Auftrag.
+Ebene „Licht am Zeiger“ (aus, unter Kartengrundlage; braucht Höhenrelief). `web/js/licht.js` rechnet im Fragment-Shader (WebGL2): Höhenmosaik aus den sichtbaren Terrarium-Kacheln (höchstens 48, Zoom 6 bis 12), Hangneigung per Sobel, Punktlicht über dem Zeiger (Höhe einstellbar), Schatten durch Strahlverfolgung mit weichem Rand (48 Schritte). Ohne Maus gilt die Bildmitte bzw. der letzte Tippunkt. Gilt nur bei Nordausrichtung ohne Neigung. Prüfzugang: `licht:{on,lon,lat,hoehe}` im `#debug`-Auftrag.
 
 ## Desktop-App (Tauri, lokal, GPU)
 

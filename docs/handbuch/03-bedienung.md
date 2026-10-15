@@ -42,7 +42,7 @@ Das Menü *Ebenen* ist nach Themen gegliedert; jede Gruppe lässt sich als Ganze
 | **Bewuchs und Flächen** | Wald, Wiesen, Busch und Heide, Äcker, Obst und Wein, Feuchtgebiete, Fels und Strand |
 | **Kultur und Geschichte** | Burgen, Ausgrabungen, Klöster, historische Gebäude, Friedhöfe |
 | **Grenzen und Schutzgebiete** | Staats-, Landes-, Kreis- und Gemeindegrenzen, Naturschutzgebiete, Nationalparks, Militärgelände |
-| **Kartengrundlage** | Schummerung und Höhenfärbung, Höhenlinien, Lichtquelle am Zeiger, Klippen, Gebäude |
+| **Kartengrundlage** | Schummerung und Höhenfärbung, Höhenlinien, Licht am Zeiger, Klippen, Hangneigung, Gebäude |
 
 Einige Ebenen verdienen ein Wort.
 

@@ -86,7 +86,7 @@
           <summary>Ebenen</summary>
           <div class="layer-groups" role="group" aria-label="Ebenen nach Thema">
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Warnungen und Lage ganz ein- oder ausblenden"> <span>Warnungen und Lage</span></label></summary>
-            <p class="group-hint small muted">Lage jetzt: was gerade gilt oder passiert</p>
+            <p class="group-hint small muted">Was gerade gilt oder passiert</p>
             <div class="layer-list">
               <label><input type="checkbox" data-layer="warning"> <span class="ico ico-warnung" aria-hidden="true"></span>Warnungen (NINA, DWD)</label>
               <label><input type="checkbox" data-layer="flood"> <span class="ico ico-hochwasser" aria-hidden="true"></span>Hochwasser</label>
@@ -101,22 +101,22 @@
             <div class="layer-list">
               <label><input type="checkbox" data-layer="radar" checked> <span class="ico ico-regen" aria-hidden="true"></span>Regenradar <span class="live-note small" id="radarnote" aria-live="off"></span></label>
               <label><input type="checkbox" data-layer="drops" checked> <span class="ico ico-regen" aria-hidden="true"></span>Regentropfen (Animation)</label>
-              <label><input type="checkbox" data-layer="wind"> <span class="ico ico-wind" aria-hidden="true"></span>Wind (Strömung, 10 m) <span class="live-note small" id="windnote" aria-live="off"></span></label>
-              <label><input type="checkbox" data-layer="windlow"> <span class="ico ico-wind" aria-hidden="true"></span>Wind im Gelände (Täler, Schätzung) <span class="live-note small" id="windlownote" aria-live="off"></span></label>
+              <label title="Strömung in 10 m Höhe"><input type="checkbox" data-layer="wind"> <span class="ico ico-wind" aria-hidden="true"></span>Wind <span class="live-note small" id="windnote" aria-live="off"></span></label>
+              <label><input type="checkbox" data-layer="windlow"> <span class="ico ico-wind" aria-hidden="true"></span>Wind im Gelände <span class="live-note small" id="windlownote" aria-live="off"></span></label>
               <label><input type="checkbox" data-layer="wxst" checked> <span class="ico ico-temperatur" aria-hidden="true"></span>Wetterstationen (DWD, KMI)</label>
               <label><input type="checkbox" data-layer="airq" checked> <span class="ico ico-luft" aria-hidden="true"></span>Luftqualität</label>
             </div>
           </details>
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Gewässer ganz ein- oder ausblenden"> <span>Gewässer</span></label></summary>
-            <p class="group-hint small muted">Pegel, Wehre und Fließbewegung des Wassers</p>
+            <p class="group-hint small muted">Pegel, Wehre, Fließrichtung</p>
             <div class="layer-list">
               <label><input type="checkbox" data-layer="gew" checked> <span class="ico ico-pegel" aria-hidden="true"></span>Pegel</label>
               <label><input type="checkbox" data-layer="wehr"> <span class="ico ico-pegel" aria-hidden="true"></span>Wehre, Schleusen, Fähranleger</label>
-              <label><input type="checkbox" data-layer="flow"> <span class="ico ico-wind" aria-hidden="true"></span>Wasserbewegung (Fließrichtung, Stau, Wellen im Wind)</label>
+              <label title="Fließrichtung, Stau, Wellen im Wind"><input type="checkbox" data-layer="flow"> <span class="ico ico-wind" aria-hidden="true"></span>Wasserbewegung</label>
             </div>
           </details>
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Verkehr ganz ein- oder ausblenden"> <span>Verkehr</span></label></summary>
-            <p class="group-hint small muted">Straße, Luft, Preise: was gerade fließt oder steht</p>
+            <p class="group-hint small muted">Was gerade fließt oder steht</p>
             <div class="layer-list">
               <label><input type="checkbox" data-layer="traffic"> <span class="ico ico-stau" aria-hidden="true"></span>Straßenverkehr und Baustellen</label>
               <label><input type="checkbox" data-layer="transit"> <span class="ico ico-bahn" aria-hidden="true"></span>ÖPNV-Verspätungen</label>
@@ -125,7 +125,7 @@
             </div>
           </details>
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Straßen und Bahn ganz ein- oder ausblenden"> <span>Straßen und Bahn</span></label></summary>
-            <p class="group-hint small muted">Netz der Grundkarte nach Straßenart, dazu Haltestellen, Schilder und Brücken</p>
+            <p class="group-hint small muted">Straßen nach Art, Haltestellen, Schilder</p>
             <div class="layer-list">
               <label><input type="checkbox" data-layer="roadHw" checked> <span class="ico ico-stau" aria-hidden="true"></span>Autobahnen und Auffahrten</label>
               <label><input type="checkbox" data-layer="roadMain" checked> <span class="ico ico-stau" aria-hidden="true"></span>Bundes- und Hauptstraßen</label>
@@ -140,9 +140,9 @@
             </div>
           </details>
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Gemeinwesen und Infrastruktur ganz ein- oder ausblenden"> <span>Gemeinwesen und Infrastruktur</span></label></summary>
-            <p class="group-hint small muted">Notfallpunkte, Schulen, Ladesäulen und Windräder</p>
+            <p class="group-hint small muted">Notfall, Schulen, Laden, Wind</p>
             <div class="layer-list">
-              <label><input type="checkbox" data-layer="emerg"> <span class="ico ico-warnung" aria-hidden="true"></span>Notfallpunkte (Defibrillator, Feuerwache, Krankenhaus)</label>
+              <label title="Defibrillator, Feuerwache, Krankenhaus"><input type="checkbox" data-layer="emerg"> <span class="ico ico-warnung" aria-hidden="true"></span>Notfallpunkte</label>
               <label><input type="checkbox" data-layer="civic"> <span class="ico ico-natur" aria-hidden="true"></span>Schulen und Rathäuser</label>
               <label><input type="checkbox" data-layer="charge"> <span class="ico ico-stau" aria-hidden="true"></span>Ladesäulen für E-Autos</label>
               <label><input type="checkbox" data-layer="wturb"> <span class="ico ico-wind" aria-hidden="true"></span>Windräder</label>
@@ -161,7 +161,7 @@
             <p class="group-hint small muted">Landnutzung der Karte nach Art</p>
             <div class="layer-list">
               <label><input type="checkbox" data-layer="vegForest" checked> <span class="ico ico-natur" aria-hidden="true"></span>Wald</label>
-              <label><input type="checkbox" data-layer="vegMeadow" checked> <span class="ico ico-natur" aria-hidden="true"></span>Wiesen, Weiden, Parks und Friedhofsgrün</label>
+              <label><input type="checkbox" data-layer="vegMeadow" checked> <span class="ico ico-natur" aria-hidden="true"></span>Wiesen und Parks</label>
               <label><input type="checkbox" data-layer="vegScrub" checked> <span class="ico ico-natur" aria-hidden="true"></span>Busch und Heide</label>
               <label><input type="checkbox" data-layer="vegField" checked> <span class="ico ico-natur" aria-hidden="true"></span>Äcker und Gärten</label>
               <label><input type="checkbox" data-layer="vegVine" checked> <span class="ico ico-natur" aria-hidden="true"></span>Obst und Wein</label>
@@ -200,15 +200,15 @@
             </div>
           </details>
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Kartengrundlage ganz ein- oder ausblenden"> <span>Kartengrundlage</span></label></summary>
-            <p class="group-hint small muted">Schummerung, Höhenlinien, Licht, Klippen, Gebäude und Kartenstil</p>
+            <p class="group-hint small muted">Gelände, Klippen und Gebäude</p>
             <div class="layer-list">
-              <label><input type="checkbox" data-layer="relief" checked> <span class="ico ico-relief" aria-hidden="true"></span>Schummerung und Höhenfärbung</label>
-              <label><input type="checkbox" data-layer="contours" checked> <span class="ico ico-relief" aria-hidden="true"></span>Höhenlinien</label>
-              <label><input type="checkbox" data-layer="licht"> <span class="ico ico-relief" aria-hidden="true"></span>Lichtquelle am Zeiger (Hänge hell, Schatten hinter Kämmen)</label>
+              <label><input type="checkbox" data-layer="relief" checked>Schummerung und Höhenfärbung</label>
+              <label><input type="checkbox" data-layer="contours" checked>Höhenlinien</label>
+              <label title="Hänge hell, Schatten hinter Kämmen"><input type="checkbox" data-layer="licht">Licht am Zeiger</label>
               <div class="layer-sub" id="licht-opt" hidden><label>Lichthöhe <input type="range" id="licht-hoehe" min="20" max="300" step="10" value="80" aria-label="Höhe der Lichtquelle über dem Gelände"></label></div>
-              <label><input type="checkbox" data-layer="cliffs" checked> <span class="ico ico-relief" aria-hidden="true"></span>Klippen und Steinbrüche</label>
-              <label><input type="checkbox" data-layer="hang"> <span class="ico ico-relief" aria-hidden="true"></span>Hangneigung ab 15, 25, 35 Grad (Probe, 1-m-Gelände)</label>
-              <label><input type="checkbox" data-layer="buildings" checked> <span class="ico ico-relief" aria-hidden="true"></span>Gebäude</label>
+              <label><input type="checkbox" data-layer="cliffs" checked>Klippen und Steinbrüche</label>
+              <label title="Ab 15, 25 und 35 Grad (Probe, Gelände 1 m)"><input type="checkbox" data-layer="hang">Hangneigung</label>
+              <label><input type="checkbox" data-layer="buildings" checked>Gebäude</label>
             </div>
           </details>
           <details class="lgb-gruppe" id="lgb-gruppe" hidden><summary>LGB Daten</summary>
