@@ -8,6 +8,7 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 - Handbuch: neues Kapitel 11 „Darstellung und Skins“ (Aufbau des Kartenstils, Farbquellen, Zeichen, CSS und SVG, Befund für Themen).
 
 ### Geändert
+- Warnungen (NINA, DWD) und Hochwasser sind jetzt standardmäßig an. Vorher zählte die Übersicht sie je Kreis mit, aber nach dem Zoom in einen Kreis fehlten die Einzelmeldungen auf der Karte, weil die Ebenen aus waren.
 - Ebenenmenü aufgeräumt: lange Beschriftungen gekürzt (Einzelheiten als Tooltip), Zeilen brechen um statt abzuschneiden (kein seitliches Scrollen, keine leeren Zeilen), die sechs gleichen Gebirgs-Icons der Kartengrundlage entfallen, Trennlinien zwischen den Themen, kürzere Themen-Hinweise.
 
 ### Hinzugefügt
