@@ -8,6 +8,7 @@ import { createLight } from '../licht.js';
 import { FAUNA_SOURCE, faunaPoints, registerFauna, registerMedievalPatterns } from '../medieval.js';
 import { ping as pingSound, silence as silenceSound, sizzle as sizzleSound, zap as zapSound } from '../ping-sound.js';
 import { detailNachBewegung } from './laden.js';
+import { initPlaketten, plakettenEbene } from './plakette.js';
 import { initFont } from './schrift.js';
 import { RELIEF_ATTRIBUTION, demTile, glyphsUrl, setupRelief } from '../relief.js';
 import { createRipples } from '../ripples.js';
@@ -131,19 +132,14 @@ export async function initMap() {
   // ohne dieses Feld (alter Export) je Rasterzelle. Von Einzelmeldungen wichtig nach unwichtig: Warnungen stehen schon hier als Punkte.
   map.addSource('dichte', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
   const LAND = ['==', ['get', 'level'], 'land'], KREIS = ['==', ['get', 'level'], 'kreis'];
-  const rad = (lo, hi) => ['interpolate', ['linear'], ['sqrt', ['get', 'n']], 1, lo, 60, hi];
-  const circ = (id, filter, r, minzoom, maxzoom) => map.addLayer({ id, type: 'circle', source: 'dichte', minzoom, maxzoom, filter,
-    layout: { 'circle-sort-key': ['*', -1, ['get', 'n']] },
-    paint: { 'circle-radius': r, 'circle-color': sevColor(c, 'sev'), 'circle-opacity': 0.88, 'circle-stroke-color': c.white, 'circle-stroke-width': 1.5 } });
-  const num = (id, filter, size, minzoom, maxzoom) => map.addLayer({ id, type: 'symbol', source: 'dichte', minzoom, maxzoom, filter,
-    layout: { 'text-field': ['to-string', ['get', 'n']], 'text-font': ['Noto Sans Regular'], 'text-size': size, 'text-allow-overlap': true },
-    paint: { 'text-color': ['match', ['get', 'sev'], 'warning', '#111', 'notice', '#111', c.white] } });   // dunkle Schrift auf Orange und Gelb (Kontrast), weiß auf Rot und Blau
   const name = (id, filter, size, off, minzoom, maxzoom) => map.addLayer({ id, type: 'symbol', source: 'dichte', minzoom, maxzoom, filter,
     layout: { 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Regular'], 'text-size': size, 'text-anchor': 'top', 'text-offset': off, 'text-optional': true,
       'symbol-sort-key': ['*', -1, ['get', 'n']], 'text-max-width': 8 },
     paint: { 'text-color': c.ink ?? '#222', 'text-halo-color': c.white, 'text-halo-width': 2, 'text-halo-blur': 0.3 } });
-  circ('dichte-land', LAND, rad(16, 34), 0, LAND_MAX_ZOOM);  num('dichte-land-zahl', LAND, 14, 0, LAND_MAX_ZOOM);  name('dichte-land-name', LAND, 13, [0, 2.2], 0, LAND_MAX_ZOOM);
-  circ('dichte-kreis', KREIS, rad(8, 22), LAND_MAX_ZOOM, KIND_MIN_ZOOM.events);  num('dichte-kreis-zahl', KREIS, 12, LAND_MAX_ZOOM, KIND_MIN_ZOOM.events);
+  // Kreis und Zahl als ein Bild, nach der Tinte der Ziffern zentriert (plakette.js); Radius wächst mit sqrt(n)
+  initPlaketten(c);
+  plakettenEbene('dichte-land', 'land', LAND, 0, LAND_MAX_ZOOM, c);  name('dichte-land-name', LAND, 13, [0, 2.2], 0, LAND_MAX_ZOOM);
+  plakettenEbene('dichte-kreis', 'kreis', KREIS, LAND_MAX_ZOOM, KIND_MIN_ZOOM.events, c);
   name('dichte-kreis-name', KREIS, 11, [0, 1.6], 7, KIND_MIN_ZOOM.events);
 
   // Luftverkehr: eigene Quelle, weil sie sich jede Sekunde bewegt

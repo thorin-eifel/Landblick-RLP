@@ -6,3 +6,5 @@ woff2/ (Schriftwahl unter Darstellung; Teilmenge "latin", Regular, aus den Fonts
 Lora (Cyreal), Alegreya (Huerta Tipográfica), Cinzel (NDISCOVER), IM Fell English (Igino Marini), Almendra (Ana Sanfelippo), Uncial Antiqua (Astigmatic), Pirata One (Rodrigo Fuenzalida), Caveat (Impallari/Googlefonts). Lizenztext: OFL.txt; die Urheberzeilen stehen in den Paketen @fontsource/<name> (LICENSE).
 Die Glyphen entstehen im Browser (MapLibre font-faces), es werden keine Schriften nachgeladen.
 
+
+noto-sans.woff2 (Zahlenplaketten der Uebersicht, Canvas), Noto Sans, SIL Open Font License 1.1 (OFL.txt).

@@ -29,12 +29,14 @@ export const BUNDLED = [
 const orig = new Map();   // Layer-ID → ursprüngliche text-font-Liste
 let local = [];           // Namen lokaler Schriften (queryLocalFonts oder getippt)
 let applying = false;
+let haken = () => {};   // wird nach jedem Schriftwechsel gerufen (Zahlenplaketten zeichnen mit der gewählten Schrift neu)
+export const beiSchriftwechsel = (fn) => { haken = fn; };
 
 export const localNames = () => local.slice();
 
 /** Einen Schriftnamen für text-font bereinigen: Länge, keine Steuerzeichen, keine Kommas (sonst Stack-Trennung). */
 export function cleanFontName(s) {
-  const t = String(s ?? '').replace(/[\u0000-\u001f\u007f,"'{}<>\\/]/g, '').replace(/\s+/g, ' ').trim();
+  const t = String(s ?? '').replace(/[\u0000-\u001f\u007f,"'{}<>\\/|]/g, '').replace(/\s+/g, ' ').trim();
   return t.length >= 2 && t.length <= 80 ? t : '';
 }
 
@@ -83,6 +85,7 @@ export function applyFont(id = state.schrift) {
       if (next && JSON.stringify(cur) !== JSON.stringify(next)) map.setLayoutProperty(l.id, 'text-font', next);
     }
   } finally { applying = false; }
+  haken();
 }
 
 /** Beim Neuaufbau der Basiskarte entstehen die bm-Layer neu (mit Standardschrift): ihre gemerkten Ursprünge verwerfen. */
