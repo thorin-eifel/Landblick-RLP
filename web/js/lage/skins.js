@@ -72,7 +72,21 @@ export const SKINS = [
 ];
 
 export const DEFAULT_SKIN = 'landblick';
-export const skinById = (id) => SKINS.find((s) => s.id === id) ?? SKINS[0];
+
+// Die Darstellung hat drei Achsen: Farb-Schema (tint), Symbole (art) und Schrift (schrift.js). `state.schema` und `state.symbole` wählen,
+// `effektiverSkin()` macht daraus den einen Skin, den der Rest des Codes kennt. Ein Symbolsatz bringt seine eigenen Farben mit und geht vor.
+let eigen = null;   // vom Benutzer angepasster Skin (anpassen.js), Id 'eigen'; erscheint nicht in SKINS
+export const setEigenerSkin = (s) => { eigen = s ? { ...s, id: 'eigen' } : null; };
+export const skinById = (id) => (id === 'eigen' && eigen) || SKINS.find((s) => s.id === id) || SKINS[0];
+/** Farb-Schemata: Grundzeichnung plus alle Paletten. */
+export const SCHEMATA = SKINS.filter((s) => !s.art);
+/** Symbolsätze: Grundzeichnung plus alle Zeichensätze. */
+export const SYMBOLSAETZE = SKINS.filter((s) => s.art || s.id === 'landblick');
+/** Der wirksame Skin: Symbolsatz (≠ landblick) hat Vorrang, sonst das Farb-Schema; `angepasst` setzt den eigenen Skin an die Stelle. */
+export function effektiverSkin(schema, symbole, angepasst = false) {
+  if (angepasst && eigen) return 'eigen';
+  return symbole && symbole !== 'landblick' ? symbole : (schema || 'landblick');
+}
 /** Palette des Skins für die Ansicht oder null (Landblick, Alte Karte). */
 export const tintOf = (id, dark) => { const t = skinById(id).tint; return t ? t[dark ? 'dark' : 'light'] : null; };
 export const wantsPatterns = (id) => skinById(id).tint?.patterns !== false;

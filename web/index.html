@@ -47,13 +47,15 @@
           </details>
         <details class="controls" id="ctl-darstellung">
           <summary>Darstellung</summary>
-          <fieldset><legend class="sr-only">Darstellung der Karte</legend>
-            <label><input type="radio" name="skin" value="landblick" checked> Landblick</label>
-            <label><input type="radio" name="skin" value="alte-karte"> Alte Karte</label>
+          <fieldset id="fs-schema"><legend>Farb-Schema</legend>
+            <label><input type="radio" name="schema" value="landblick" checked> Landblick</label>
           </fieldset>
-          <p class="group-hint small muted">Weitere Darstellungen folgen. Die Ebenen bleiben in jeder Darstellung wählbar.</p>
-          <div class="font-pick">
-            <label for="schrift-wahl">Schrift der Beschriftung</label>
+          <fieldset id="fs-symbole"><legend>Symbole</legend>
+            <label><input type="radio" name="symbole" value="landblick" checked> Landblick</label>
+          </fieldset>
+          <div class="font-pick" role="group" aria-labelledby="schrift-titel">
+            <span id="schrift-titel" class="fs-title">Schrift</span>
+            <label class="sr-only" for="schrift-wahl">Schrift der Beschriftung</label>
             <select id="schrift-wahl"><option value="auto">Standard der Darstellung</option></select>
             <div class="font-local">
               <button type="button" id="schrift-lokal" class="btn-small">Schriften dieses Geräts anzeigen</button>
@@ -63,6 +65,22 @@
             </div>
             <p id="schrift-hinweis" class="small muted" aria-live="polite">Mitgelieferte Schriften sind frei (SIL OFL). Geräteschriften bleiben auf diesem Gerät; nichts wird gespeichert.</p>
           </div>
+          <p id="darstellung-hinweis" class="group-hint small muted"></p>
+          <p class="small" id="anpassen-aktiv" hidden>Eigene Darstellung aktiv.</p>
+          <button type="button" id="anpassen-open" class="anpassen-knopf">Anpassen …</button>
+          <dialog id="dlg-anpassen" aria-labelledby="anpassen-kopf">
+            <form id="anpassen-form" method="dialog">
+              <h2 id="anpassen-kopf">Darstellung anpassen</h2>
+              <p class="small muted">Eigene Farben und Symbole auf Grundlage der gewählten Darstellung. Die Auswahl gilt, bis die Seite neu geladen wird.</p>
+              <fieldset><legend id="anpassen-titel">Farben</legend><div id="anpassen-felder" class="anpassen-raster"></div></fieldset>
+              <fieldset><legend>Symbole</legend><div id="anpassen-schalter"></div></fieldset>
+              <div class="anpassen-aktionen">
+                <button type="submit">Übernehmen</button>
+                <button type="button" id="anpassen-reset">Zurücksetzen</button>
+                <button type="button" id="anpassen-zu">Schließen</button>
+              </div>
+            </form>
+          </dialog>
         </details>
         <details class="controls" id="ctl-ebenen">
           <summary>Ebenen</summary>

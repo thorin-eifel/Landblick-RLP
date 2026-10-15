@@ -46,7 +46,7 @@ export function applyBasemap() {
   for (const l of map.getStyle().layers) if (l.id.startsWith('bm-')) map.removeLayer(l.id);
   resetFontMemory();
   const med = !!state.layers.medieval;
-  document.documentElement.dataset.karte = med ? (state.skin === 'alte-karte' ? 'mittelalter' : 'zeichnung') : '';
+  document.documentElement.dataset.karte = med ? ((state.symbole ?? state.skin) === 'alte-karte' ? 'mittelalter' : 'zeichnung') : '';
   document.documentElement.dataset.skin = skinById(state.skin).id;
   const flavor = !med && document.documentElement.dataset.ansicht === 'dunkel' ? 'dark' : 'grayscale';
   const before = baseAnchor();

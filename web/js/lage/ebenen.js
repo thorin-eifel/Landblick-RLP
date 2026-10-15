@@ -7,8 +7,8 @@ import { pushAir, refreshAir } from './flugverkehr.js';
 import { refresh, render } from './laden.js';
 import { SACRAL_LAYERS } from '../infra.js';
 import { windrose } from './mittelalter.js';
-import { AUTO, BUNDLED, applyFont, cleanFontName, localNames, queryLocalFamilies, setLocalNames } from './schrift.js';
-import { SKINS, skinById } from './skins.js';
+import { initDarstellung } from './darstellung.js';
+import { skinById } from './skins.js';
 import { applyArt } from './zeichensatz.js';
 import { artOf } from './zeichensaetze.js';
 import { applyNatureVisibility } from './natur.js';
@@ -100,28 +100,15 @@ export function wire() {
     if (boxes.some((cb) => cb.dataset.layer === 'licht')) applyLight();
     if (t.checked && boxes.some((cb) => cb.dataset.layer === 'air')) refreshAir();
   });
-  // Darstellung: Radios und Hinweis aus der Liste der Skins (skins.js); Alte Karte schaltet zusätzlich die historischen Ebenen
-  const skinBox = document.querySelector('#ctl-darstellung fieldset');
-  const skinHint = document.querySelector('#ctl-darstellung .group-hint');
-  if (skinBox) {
-    skinBox.replaceChildren(...[...skinBox.querySelectorAll('legend')], ...SKINS.map((s) => {
-      const lab = document.createElement('label'), r = document.createElement('input');
-      r.type = 'radio'; r.name = 'skin'; r.value = s.id; r.checked = s.id === state.skin;
-      lab.append(r, ` ${s.name}`);
-      return lab;
-    }));
-  }
-  const showHint = () => { if (skinHint) skinHint.textContent = `${skinById(state.skin).hinweis}. Die Ebenen bleiben in jeder Darstellung wählbar.`; };
-  showHint();
-  for (const r of document.querySelectorAll('input[name="skin"]')) r.addEventListener('change', () => {
-    if (!r.checked) return;
-    const sk = skinById(r.value);
-    state.skin = sk.id; state.layers.medieval = !!sk.art; showHint();
+  // Darstellung: Farb-Schema, Symbole, Schrift und „Anpassen“ (darstellung.js); der Wechsel läuft hier, weil er die Ebenen mitschaltet
+  const setzeDarstellung = () => {
+    const sk = skinById(state.skin);
+    state.layers.medieval = !!sk.art;
     if (sk.art) applyArt(map, sk.art);   // Zeichensatz: Farben, Schrift, Muster und Symbole neu
     applyLayerFilters(); render(); syncGroups();
     if (state.layers.medieval !== medApplied) syncMedieval(); else { windrose(decorOn()); decor(decorOn()); recolor(); }
-  });
-  initSchriftwahl();
+  };
+  initDarstellung(setzeDarstellung);
   syncGroups();
   const tabs = [...document.querySelectorAll('[role="tab"]')];
   for (const t of tabs) t.addEventListener('click', () => {
@@ -134,44 +121,3 @@ export function wire() {
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshAir(); });
 }
 
-// Darstellung → Schrift: mitgelieferte OFL-Schriften, dazu Schriften dieses Geräts (Liste per Zustimmung oder frei getippt)
-function initSchriftwahl() {
-  const sel = $('#schrift-wahl'), btn = $('#schrift-lokal'), inp = $('#schrift-name'), dl = $('#schrift-liste'), note = $('#schrift-hinweis');
-  if (!sel) return;
-  const group = (label, names, labels = {}) => {
-    const g = document.createElement('optgroup');
-    g.label = label;
-    for (const n of names) { const o = document.createElement('option'); o.value = n; o.textContent = labels[n] ?? n; g.append(o); }
-    return g;
-  };
-  const fill = () => {
-    const keep = state.schrift;
-    sel.replaceChildren(Object.assign(document.createElement('option'), { value: AUTO, textContent: 'Standard der Darstellung' }),
-      group('Mitgeliefert (frei)', BUNDLED.map((b) => b.name), Object.fromEntries(BUNDLED.map((b) => [b.name, b.label]))));
-    if (localNames().length) sel.append(group('Auf diesem Gerät', localNames()));
-    dl.replaceChildren(...localNames().map((n) => Object.assign(document.createElement('option'), { value: n })));
-    sel.value = [...sel.options].some((o) => o.value === keep) ? keep : AUTO;
-  };
-  const choose = (name) => { state.schrift = name; sel.value = name; applyFont(name); };
-  fill();
-  sel.addEventListener('change', () => choose(sel.value));
-  btn.addEventListener('click', async () => {
-    try {
-      const n = (await queryLocalFamilies()).length;
-      fill();
-      note.textContent = n ? `${n} Schriften dieses Geräts verfügbar (Liste „Auf diesem Gerät“).` : 'Keine Geräteschriften gemeldet.';
-    } catch {
-      note.textContent = 'Die Liste ist in diesem Browser nicht freigegeben. Tippen Sie den Namen einer installierten Schrift ins Feld.';
-    }
-  });
-  inp.addEventListener('change', () => {
-    const n = cleanFontName(inp.value);
-    if (!n) return;
-    setLocalNames([...localNames(), n]);
-    fill();
-    const hit = localNames().find((x) => x.toLowerCase() === n.toLowerCase()) ?? n;
-    choose([...sel.options].some((o) => o.value === hit) ? hit : n);
-    note.textContent = `Schrift „${hit}“ gewählt. Ist sie auf diesem Gerät nicht installiert, zeigt der Browser eine Ersatzschrift.`;
-    inp.value = '';
-  });
-}
