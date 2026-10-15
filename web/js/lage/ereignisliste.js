@@ -2,6 +2,8 @@ import { SORTS, filterEvents, sortEvents } from '../eventlist.js';
 import { iconFor } from '../rules.js';
 import { $, TYPE_LABEL, ageEl, fmtDateTime, h, sevBadge } from '../util.js';
 import { GEBIET_LEER, gebietAktiv, kreisWaehlen, kreiseListe, laenderListe, landWaehlen } from '../gebiet.js';
+import { ausschnitt } from './ausschnitt-karte.js';
+import { ereignisseImAusschnitt } from './ausschnitt.js';
 import { showPopup } from './popup.js';
 import { gebietGeaendert } from './zellenlauf.js';
 import { GROUPS, map, mapReady, state } from './zustand.js';
@@ -78,10 +80,10 @@ export function renderEvents(statuses) {
   box.replaceChildren();
   queueMicrotask(() => { panel.scrollTop = top; });
   const types = Object.entries(GROUPS).filter(([g]) => state.layers[g]).flatMap(([, t]) => t);
-  const layered = state.events.filter((f) => types.includes(f.properties.type));
+  const layered = ereignisseImAusschnitt(state.events.filter((f) => types.includes(f.properties.type)), ausschnitt());   // nur der sichtbare Kartenbereich
   const rows = sortEvents(filterEvents(layered, evView), evView.sort, evView.reverse);
   const cnt = panel.querySelector('#ev-count');
-  const countText = rows.length === layered.length ? `${rows.length} Ereignisse` : `${rows.length} von ${layered.length} Ereignissen`;
+  const countText = rows.length === layered.length ? `${rows.length} Ereignisse im Ausschnitt` : `${rows.length} von ${layered.length} Ereignissen im Ausschnitt`;
   if (cnt) cnt.textContent = countText;
   const q = panel.querySelector('#ev-q'); if (q) q.placeholder = `${countText} durchsuchen`;
   const problems = statuses.filter((s) => ['down', 'stale', 'pending'].includes(s.status) && ['autobahn', 'lbm_baustellen', 'mobidata_bw_baustellen', 'mobidata_bw_meldungen', 'lhp_hochwasser', 'nina', 'dwd_warnungen', 'adsblol'].includes(s.id) && (s.id !== 'adsblol' || state.layers.air));
@@ -89,7 +91,7 @@ export function renderEvents(statuses) {
     box.append(h('div', { class: 'card-f' }, h('span', { class: 'stale-note' }, `${s.name}: ${s.status === 'down' ? `nicht erreichbar seit ${fmtDateTime(s.failing_since ?? s.last_attempt)}` : s.status === 'pending' ? 'noch kein Abruf' : 'veraltet'}`)));
   }
   if (!rows.length) {
-    box.append(h('div', { class: 'empty' }, layered.length ? 'Kein Ereignis passt zu den Filtern.' : 'Keine Ereignisse in diesem Zeitfenster und dieser Auswahl.'));
+    box.append(h('div', { class: 'empty' }, layered.length ? 'Kein Ereignis passt zu den Filtern.' : 'Im sichtbaren Kartenausschnitt liegt kein Ereignis (Zeitfenster und Ebenen beachten). Karte verschieben oder herauszoomen.'));
     return;
   }
   const tbody = h('tbody');

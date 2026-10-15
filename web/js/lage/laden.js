@@ -88,5 +88,12 @@ export function render() {
 
 setzeAenderungsfunktion(render);
 
+/** Detailfenster nach Kartenbewegung neu füllen: nur, was im Ausschnitt liegt (ausschnitt.js). Entprellt. */
+let tAusschnitt = 0;
+export function detailNachBewegung() {
+  clearTimeout(tAusschnitt);
+  tAusschnitt = setTimeout(() => { renderEvents(state.statuses); renderGewaesser(); renderUmwelt(); }, 250);
+}
+
 export let timer;
 export const debounced = () => { clearTimeout(timer); timer = setTimeout(refresh, 800); };

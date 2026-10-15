@@ -117,3 +117,5 @@ Die Barrierefreiheit ist geprüft, aber nicht von Dritten abgenommen. Fehlt etwa
 ## 3.9 Prüfzugang für Entwickler
 
 Die Adresse `…/#debug` schaltet einen Prüfzugang frei, den die Tests und die Messungen benutzen (zum Beispiel der Befehl `zellen`, der die geladenen Dateien und Fehler auflistet). Er verändert keine Daten und ist nicht für den Alltag gedacht.
+
+**Detailfenster und Kartenausschnitt.** Ereignisse, Gewässer sowie Luft und Strahlung im Detailfenster zeigen nur Einträge im sichtbaren Kartenbereich. Wer verschiebt oder zoomt, sieht die Liste nachziehen. Für alle Meldungen: herauszoomen. Wetter und Tankstellen sind nicht an den Ausschnitt gebunden.
