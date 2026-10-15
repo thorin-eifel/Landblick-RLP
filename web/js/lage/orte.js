@@ -1,6 +1,6 @@
 import { INFRA_MEDIEVAL, infraFeatures, sakralAn } from '../infra.js';
 import { getJSON } from '../util.js';
-import { MED } from './mittelalter.js';
+import { MED, MED_FONT } from './mittelalter.js';
 import { loadView } from './zellenlauf.js';
 import { map, mapReady, state } from './zustand.js';
 
@@ -99,7 +99,7 @@ export function applyInfraVisibility() {
     map.setFilter(id, med && id === 'inf-brueck' ? ['all', kindIn, ['==', ['get', 'old'], 1]] : kindIn);      // um 1450 nur alte Brücken
     map.setLayoutProperty(id, 'icon-image', ['concat', med ? 'med-inf-' : 'inf-', ['get', 'kind']]);
     map.setLayoutProperty(id, 'text-field', ['get', med ? 'labelMed' : 'label']);
-    map.setLayoutProperty(id, 'text-font', [med ? 'Grenze Gotisch Regular' : 'Noto Sans Regular']);
+    map.setLayoutProperty(id, 'text-font', [med ? MED_FONT[0] : 'Noto Sans Regular']);
     map.setLayoutProperty(id, 'text-size', med ? 13 : 11);
     map.setPaintProperty(id, 'text-color', med ? MED.ink : '#1c1c1c');
     map.setPaintProperty(id, 'text-halo-color', med ? MED.halo : '#fff');

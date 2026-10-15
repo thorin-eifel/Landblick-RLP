@@ -70,8 +70,8 @@ test('Bewuchsklassen sind abgebildet', () => {
   for (const g of Object.values(LAND_GROUP)) assert.ok(KEYS.includes(g));
 });
 
-test('Federzeichnung: Straßen ohne Kontur, fein, Nebenwege gestrichelt', () => {
-  const p = tintOf('oxford', false);
+test('Farbpalette mit feiner Linie (inkRoads): Straßen ohne Kontur, Nebenwege gestrichelt', () => {
+  const p = { ...tintOf('mountain-view', false), inkRoads: 0.42, spacing: 0.12 };
   const w = ['interpolate', ['exponential', 1.6], ['zoom'], 6, 1.2, 15, 7];
   const out = skinize([
     { id: 'roads_minor_casing', type: 'line', paint: { 'line-width': 1 } },

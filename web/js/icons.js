@@ -1,3 +1,4 @@
+import { PIG } from './pigmente.js';
 // Karten-Symbole aus den uxwing-SVGs (web/icons, siehe README dort). MapLibre bekommt sie als Bitmaps:
 // Meldungen als runde Plakette in der Stufenfarbe mit hellem oder dunklem Zeichen, Flugzeuge als Zeichen
 // mit Umriss, das sich nach dem Kurs dreht. Pro Stufe ein Bild; beim Wechsel Hell/Dunkel neu gezeichnet.
@@ -149,56 +150,56 @@ export const NATURE_CHIP = { cave: ['hoehle', '#5b4636'], waterfall: ['wasserfal
   castle: ['burg', '#7a2f2f'], ruins: ['burg', '#6f6a62'], archaeological: ['denkmal', '#a0672a'], monastery: ['kloster', '#3f5f8a'], building: ['gebaeude', '#6b4f7a'] };
 // Bildzeichen der Karte „um 1450“: Burg, Ruine, Kloster/Kirche, Fundstelle, Haus. Tinte mit Pergamentfüllung und zinnoberroten Dächern, helle Kontur
 // für den Stand auf jedem Grund. Eigene Zeichnung, keine Vorlage; Bildname med-<Art>.
-const MED_INK = '#3a2614', MED_PAPER = '#efe0b0', MED_STONE = '#d9c68f', MED_ROOF = '#a33a22', MED_WATER = '#8fb0ad';
+
 const medDraw = {
   castle(x, P) {
-    P([[4, 34], [4, 12], [14, 12], [14, 34]], MED_PAPER); P([[26, 34], [26, 12], [36, 12], [36, 34]], MED_PAPER);
-    P([[14, 34], [14, 20], [26, 20], [26, 34]], MED_STONE);
-    P([[3, 12], [9, 3], [15, 12]], MED_ROOF); P([[25, 12], [31, 3], [37, 12]], MED_ROOF);
-    P([[17, 34], [17, 28], [20, 25], [23, 28], [23, 34]], MED_INK);
+    P([[4, 34], [4, 12], [14, 12], [14, 34]], PIG.paper); P([[26, 34], [26, 12], [36, 12], [36, 34]], PIG.paper);
+    P([[14, 34], [14, 20], [26, 20], [26, 34]], PIG.stone);
+    P([[3, 12], [9, 3], [15, 12]], PIG.roof); P([[25, 12], [31, 3], [37, 12]], PIG.roof);
+    P([[17, 34], [17, 28], [20, 25], [23, 28], [23, 34]], PIG.ink);
   },
   ruins(x, P) {
-    P([[9, 34], [9, 15], [14, 19], [18, 9], [22, 20], [27, 13], [31, 34]], MED_STONE);
-    P([[18, 34], [18, 27], [21, 27], [21, 34]], MED_INK);
-    P([[3, 34], [5, 30], [8, 34]], MED_STONE); P([[32, 34], [35, 29], [38, 34]], MED_STONE);
+    P([[9, 34], [9, 15], [14, 19], [18, 9], [22, 20], [27, 13], [31, 34]], PIG.stone);
+    P([[18, 34], [18, 27], [21, 27], [21, 34]], PIG.ink);
+    P([[3, 34], [5, 30], [8, 34]], PIG.stone); P([[32, 34], [35, 29], [38, 34]], PIG.stone);
   },
   monastery(x, P) {
-    P([[5, 34], [5, 21], [26, 21], [26, 34]], MED_PAPER); P([[3, 21], [15, 11], [28, 21]], MED_ROOF);
-    P([[26, 34], [26, 14], [36, 14], [36, 34]], MED_PAPER); P([[25, 14], [31, 3], [37, 14]], MED_ROOF);
-    P([[11, 34], [11, 28], [14, 25], [17, 28], [17, 34]], MED_INK);
-    x.beginPath(); x.moveTo(15, 11); x.lineTo(15, 5); x.moveTo(12.5, 7.5); x.lineTo(17.5, 7.5); x.lineWidth = 2; x.strokeStyle = MED_INK; x.stroke();
+    P([[5, 34], [5, 21], [26, 21], [26, 34]], PIG.paper); P([[3, 21], [15, 11], [28, 21]], PIG.roof);
+    P([[26, 34], [26, 14], [36, 14], [36, 34]], PIG.paper); P([[25, 14], [31, 3], [37, 14]], PIG.roof);
+    P([[11, 34], [11, 28], [14, 25], [17, 28], [17, 34]], PIG.ink);
+    x.beginPath(); x.moveTo(15, 11); x.lineTo(15, 5); x.moveTo(12.5, 7.5); x.lineTo(17.5, 7.5); x.lineWidth = 2; x.strokeStyle = PIG.ink; x.stroke();
   },
   archaeological(x, P) {
-    P([[7, 34], [7, 16], [14, 16], [14, 34]], MED_STONE); P([[26, 34], [26, 16], [33, 16], [33, 34]], MED_STONE);
-    P([[4, 16], [4, 9], [36, 9], [36, 16]], MED_STONE);
+    P([[7, 34], [7, 16], [14, 16], [14, 34]], PIG.stone); P([[26, 34], [26, 16], [33, 16], [33, 34]], PIG.stone);
+    P([[4, 16], [4, 9], [36, 9], [36, 16]], PIG.stone);
   },
-  cave(x, P) { P([[3, 34], [8, 18], [20, 9], [32, 18], [37, 34]], MED_STONE); P([[15, 34], [15, 26], [20, 21], [25, 26], [25, 34]], MED_INK); },
+  cave(x, P) { P([[3, 34], [8, 18], [20, 9], [32, 18], [37, 34]], PIG.stone); P([[15, 34], [15, 26], [20, 21], [25, 26], [25, 34]], PIG.ink); },
   waterfall(x, P) {
-    P([[4, 8], [36, 8], [36, 16], [4, 16]], MED_STONE);
-    for (const a of [10, 18, 26]) P([[a, 16], [a + 5, 16], [a + 5, 31], [a, 31]], MED_WATER);
-    P([[6, 34], [12, 29], [28, 29], [34, 34]], MED_WATER);
+    P([[4, 8], [36, 8], [36, 16], [4, 16]], PIG.stone);
+    for (const a of [10, 18, 26]) P([[a, 16], [a + 5, 16], [a + 5, 31], [a, 31]], PIG.water);
+    P([[6, 34], [12, 29], [28, 29], [34, 34]], PIG.water);
   },
   viewpoint(x, P) {
-    P([[14, 34], [14, 14], [26, 14], [26, 34]], MED_PAPER);
-    P([[12, 14], [12, 7], [16, 7], [16, 10], [19, 10], [19, 7], [22, 7], [22, 10], [25, 10], [25, 7], [28, 7], [28, 14]], MED_PAPER);
-    P([[18, 34], [18, 27], [20, 25], [22, 27], [22, 34]], MED_INK);
+    P([[14, 34], [14, 14], [26, 14], [26, 34]], PIG.paper);
+    P([[12, 14], [12, 7], [16, 7], [16, 10], [19, 10], [19, 7], [22, 7], [22, 10], [25, 10], [25, 7], [28, 7], [28, 14]], PIG.paper);
+    P([[18, 34], [18, 27], [20, 25], [22, 27], [22, 34]], PIG.ink);
   },
   spring(x, P) {
-    P([[5, 28], [9, 23], [20, 21], [31, 23], [35, 28], [28, 33], [12, 33]], MED_WATER);
-    P([[20, 5], [24, 12], [20, 17], [16, 12]], MED_WATER);
+    P([[5, 28], [9, 23], [20, 21], [31, 23], [35, 28], [28, 33], [12, 33]], PIG.water);
+    P([[20, 5], [24, 12], [20, 17], [16, 12]], PIG.water);
   },
-  rock(x, P) { P([[4, 34], [7, 22], [15, 13], [25, 12], [33, 21], [36, 34]], MED_STONE); P([[24, 34], [27, 28], [32, 26], [37, 34]], MED_STONE); },
+  rock(x, P) { P([[4, 34], [7, 22], [15, 13], [25, 12], [33, 21], [36, 34]], PIG.stone); P([[24, 34], [27, 28], [32, 26], [37, 34]], PIG.stone); },
   volcano(x, P) {
-    P([[3, 34], [15, 13], [25, 13], [37, 34]], MED_STONE); P([[15, 13], [18, 10], [22, 10], [25, 13]], MED_ROOF);
+    P([[3, 34], [15, 13], [25, 13], [37, 34]], PIG.stone); P([[15, 13], [18, 10], [22, 10], [25, 13]], PIG.roof);
     P([[19, 8], [17, 4], [21, 1], [25, 4], [22, 8]], '#e6dfcc');
   },
   peak(x, P, pass) {
-    P([[2, 34], [14, 11], [22, 24], [28, 15], [38, 34]], MED_STONE);
-    if (pass === 'ink') { x.beginPath(); for (const [a, b, c, d] of [[14, 14, 18, 30], [16, 17, 22, 32], [28, 18, 32, 31], [30, 21, 35, 32]]) { x.moveTo(a, b); x.lineTo(c, d); } x.lineWidth = 1.2; x.strokeStyle = MED_INK; x.stroke(); }
+    P([[2, 34], [14, 11], [22, 24], [28, 15], [38, 34]], PIG.stone);
+    if (pass === 'ink') { x.beginPath(); for (const [a, b, c, d] of [[14, 14, 18, 30], [16, 17, 22, 32], [28, 18, 32, 31], [30, 21, 35, 32]]) { x.moveTo(a, b); x.lineTo(c, d); } x.lineWidth = 1.2; x.strokeStyle = PIG.ink; x.stroke(); }
   },
   building(x, P) {
-    P([[7, 34], [7, 20], [33, 20], [33, 34]], MED_PAPER); P([[4, 20], [20, 7], [36, 20]], MED_ROOF);
-    P([[17, 34], [17, 27], [20, 24], [23, 27], [23, 34]], MED_INK); P([[10, 24], [14, 24], [14, 28], [10, 28]], MED_INK);
+    P([[7, 34], [7, 20], [33, 20], [33, 34]], PIG.paper); P([[4, 20], [20, 7], [36, 20]], PIG.roof);
+    P([[17, 34], [17, 27], [20, 24], [23, 27], [23, 34]], PIG.ink); P([[10, 24], [14, 24], [14, 28], [10, 28]], PIG.ink);
   },
 };
 export function registerMedieval(map, colors = null) {
@@ -207,8 +208,8 @@ export function registerMedieval(map, colors = null) {
   const mk = (fn, size = S) => { const c = document.createElement('canvas'); c.width = size; c.height = size; const x = c.getContext('2d', { willReadFrequently: true }); x.scale(size / S, size / S); x.lineJoin = 'round'; x.lineCap = 'round'; fn(x); return x.getImageData(0, 0, size, size); };
   const polyPass = (x, pass) => (pts, fill) => {
     x.beginPath(); pts.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); x.closePath();
-    if (pass === 'halo') { x.lineWidth = 5; x.strokeStyle = MED_PAPER; x.stroke(); x.fillStyle = MED_PAPER; x.fill(); }
-    else { x.fillStyle = fill; x.fill(); x.lineWidth = 1.6; x.strokeStyle = MED_INK; x.stroke(); }
+    if (pass === 'halo') { x.lineWidth = 5; x.strokeStyle = PIG.paper; x.stroke(); x.fillStyle = PIG.paper; x.fill(); }
+    else { x.fillStyle = fill; x.fill(); x.lineWidth = 1.6; x.strokeStyle = PIG.ink; x.stroke(); }
   };
   for (const [kind, draw] of Object.entries(medDraw)) {
     put(map, `med-${kind}`, mk((x) => {
@@ -221,15 +222,15 @@ export function registerMedieval(map, colors = null) {
   const ringCol = { yellow: '#d9a520', orange: '#c8661c', red: '#a33a22', black: '#2b1d10' };
   const oct = (cx, cy, r) => Array.from({ length: 8 }, (_, i) => [cx + Math.cos((i * Math.PI) / 4) * r, cy + Math.sin((i * Math.PI) / 4) * r]);
   const pict = {
-    baustelle: (P) => { P([[19, 13], [22, 13], [22, 31], [19, 31]], '#8a6a3c'); P([[10, 8], [30, 8], [30, 16], [10, 16]], MED_STONE); },
-    sperrung: (P) => { P([[9, 14], [12, 14], [12, 31], [9, 31]], '#8a6a3c'); P([[28, 14], [31, 14], [31, 31], [28, 31]], '#8a6a3c'); P([[7, 17], [33, 17], [33, 23], [7, 23]], MED_ROOF); },
-    stau: (P) => { P([[7, 18], [19, 18], [19, 27], [7, 27]], '#8a6a3c'); P([[22, 18], [34, 18], [34, 27], [22, 27]], '#8a6a3c'); for (const cx of [11, 16, 26, 31]) P(oct(cx, 29, 3), MED_PAPER); },
+    baustelle: (P) => { P([[19, 13], [22, 13], [22, 31], [19, 31]], '#8a6a3c'); P([[10, 8], [30, 8], [30, 16], [10, 16]], PIG.stone); },
+    sperrung: (P) => { P([[9, 14], [12, 14], [12, 31], [9, 31]], '#8a6a3c'); P([[28, 14], [31, 14], [31, 31], [28, 31]], '#8a6a3c'); P([[7, 17], [33, 17], [33, 23], [7, 23]], PIG.roof); },
+    stau: (P) => { P([[7, 18], [19, 18], [19, 27], [7, 27]], '#8a6a3c'); P([[22, 18], [34, 18], [34, 27], [22, 27]], '#8a6a3c'); for (const cx of [11, 16, 26, 31]) P(oct(cx, 29, 3), PIG.paper); },
   };
   for (const [n, draw] of Object.entries(pict)) {
     for (const [lv, col] of Object.entries(ringCol)) {
       put(map, `ico-${n}-${lv}`, mk((x) => {
         x.translate((S - 40) / 2, (S - 40) / 2);
-        x.beginPath(); x.arc(20, 20, 19, 0, Math.PI * 2); x.fillStyle = MED_PAPER; x.fill(); x.lineWidth = 1.4; x.strokeStyle = MED_INK; x.stroke();
+        x.beginPath(); x.arc(20, 20, 19, 0, Math.PI * 2); x.fillStyle = PIG.paper; x.fill(); x.lineWidth = 1.4; x.strokeStyle = PIG.ink; x.stroke();
         x.beginPath(); x.arc(20, 20, 16.2, 0, Math.PI * 2); x.lineWidth = 3.2; x.strokeStyle = col; x.stroke();
         x.save(); x.beginPath(); x.arc(20, 20, 14.2, 0, Math.PI * 2); x.clip(); x.translate(20, 20); x.scale(0.78, 0.78); x.translate(-20, -20);
         draw(polyPass(x, 'ink')); x.restore();
@@ -241,7 +242,7 @@ export function registerMedieval(map, colors = null) {
     const col = lv === 'info' ? '#3f6b72' : colors[lv];
     put(map, `ico-pegel-${lv}`, mk((x) => {
       x.translate((S - 40) / 2, (S - 40) / 2);
-      for (const [pass, w, c] of [['halo', 7, MED_PAPER], ['ink', 2.8, col]]) {
+      for (const [pass, w, c] of [['halo', 7, PIG.paper], ['ink', 2.8, col]]) {
         x.beginPath();
         for (const y of [12, 21, 30]) { x.moveTo(3, y); x.quadraticCurveTo(9, y - 7, 15, y); x.quadraticCurveTo(21, y + 7, 27, y); x.quadraticCurveTo(33, y - 7, 38, y); }
         x.lineWidth = w; x.strokeStyle = c; x.stroke(); void pass;
@@ -250,11 +251,11 @@ export function registerMedieval(map, colors = null) {
     // Drache von oben (Kopf nach Norden, Fledermausflügel mit Zacken, Schwanz mit Pfeilspitze): rechte Hälfte, die linke wird gespiegelt
     const half = [[20, 1.5], [21.6, 3.2], [23.2, 2.6], [22.3, 5.2], [22, 9.5], [23.6, 12.5], [30, 8.2], [38.2, 6.2], [35.2, 11.4], [38.6, 17.6], [33.4, 16.8], [34.6, 23.4], [28.4, 20.6], [23, 21.4], [22.4, 27.5], [21.4, 32.5], [24.4, 34.2], [20, 39]];
     const bird = [...half, ...half.slice(1, -1).reverse().map(([a, b]) => [40 - a, b])];
-    for (const [prefix, col2] of [['plane-', MED_INK], ['heli-', MED_INK], ['mplane-', MED_ROOF], ['mheli-', MED_ROOF]]) {
+    for (const [prefix, col2] of [['plane-', PIG.ink], ['heli-', PIG.ink], ['mplane-', PIG.roof], ['mheli-', PIG.roof]]) {
       put(map, `${prefix}${lv}`, mk((x) => {
         x.translate((S - 40) / 2, (S - 40) / 2);
         const P = (stroke, w, fill) => { x.beginPath(); bird.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); x.closePath(); if (stroke) { x.lineWidth = w; x.strokeStyle = stroke; x.stroke(); } if (fill) { x.fillStyle = fill; x.fill(); } };
-        P(MED_PAPER, 6, MED_PAPER); P(MED_INK, 1.2, col2);
+        P(PIG.paper, 6, PIG.paper); P(PIG.ink, 1.2, col2);
       }, PLANE_PX));
     }
   }

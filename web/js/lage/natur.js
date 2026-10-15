@@ -1,4 +1,4 @@
-import { MED } from './mittelalter.js';
+import { MED, MED_FONT } from './mittelalter.js';
 import { HALO } from './stil.js';
 import { map, mapReady, state } from './zustand.js';
 
@@ -84,7 +84,7 @@ export function applyNatureVisibility() {
   for (const id of NAT_LAYERS) {
     if (!map.getLayer(id)) continue;
     map.setLayoutProperty(id, 'icon-image', ['concat', med ? 'med-' : 'nat-', ['get', 'kind']]);
-    map.setLayoutProperty(id, 'text-font', [med ? 'Grenze Gotisch Regular' : 'Noto Sans Regular']);
+    map.setLayoutProperty(id, 'text-font', [med ? MED_FONT[0] : 'Noto Sans Regular']);
     map.setLayoutProperty(id, 'text-size', med ? 13 : 11);
     if (med) { map.setPaintProperty(id, 'text-color', MED.ink); map.setPaintProperty(id, 'text-halo-color', MED.halo); }
   }
@@ -96,7 +96,7 @@ export function applyNatureVisibility() {
     map.setLayoutProperty(id, 'visibility', (id === 'her-t1' ? herKinds.length > 0 : state.layers.herBuilding) ? 'visible' : 'none');
     // historische Karte: eigene Bildzeichen, Schrift und Tinte statt Plaketten
     map.setLayoutProperty(id, 'icon-image', ['concat', med ? 'med-' : 'nat-', ['get', 'kind']]);
-    map.setLayoutProperty(id, 'text-font', [med ? 'Grenze Gotisch Regular' : 'Noto Sans Regular']);
+    map.setLayoutProperty(id, 'text-font', [med ? MED_FONT[0] : 'Noto Sans Regular']);
     map.setLayoutProperty(id, 'text-size', med ? 13 : 11);
     map.setPaintProperty(id, 'text-color', med ? MED.ink : '#1c1c1c');
     map.setPaintProperty(id, 'text-halo-color', med ? MED.halo : '#fff');

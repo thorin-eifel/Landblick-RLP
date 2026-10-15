@@ -2,7 +2,9 @@
 // Hügel- und Siedlungszeichen, Wellen an Flüssen, dazu Papierkorn und Titelschild. Alles eigene Zeichnung, erzeugt im Browser auf Canvas.
 // Nichts davon läuft, solange die Karte im normalen Stil steht. Aufrufer: lage.js (applyBasemap, syncMedieval).
 import { FAUNA_DRAWINGS, paintFauna, FAUNA_SIZE } from './fauna.js';
-export const MED = { ink: '#3a2614', paper: '#efe0b0', stone: '#d9c68f', roof: '#a33a22', water: '#58726a', wash: 'rgba(239,224,176,0.82)' };
+// Farben des Zeichensatzes; zeichensatz.js ersetzt die Werte beim Wechsel (Alte Karte, Federzeichnung). fauna: Seeungeheuer und Drachen zeichnen.
+export const MED = { ink: '#3a2614', paper: '#efe0b0', stone: '#d9c68f', roof: '#a33a22', water: '#58726a', wash: 'rgba(239,224,176,0.82)',
+  hillFill: 'rgba(239,224,176,0.7)', hillFillFine: 'rgba(239,224,176,0.8)', bldTint: 'rgba(122,85,48,0.28)', fauna: true };
 
 // Wiederholbarer Zufall, damit Zeichnungen bei jedem Laden gleich aussehen
 function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -102,7 +104,7 @@ const church = (x, px, py, s = 1) => {
 const tower = (x, px, py, w, h) => { shape(x, [[px, py], [px, py - h], [px + w, py - h], [px + w, py]], MED.stone); shape(x, [[px - 1.5, py - h], [px + w / 2, py - h - w * 0.9], [px + w + 1.5, py - h]], MED.roof); };
 const symbols = {
   hill(x) {
-    shape(x, [[4, 32], [8, 22], [14, 15], [22, 12], [30, 16], [36, 24], [40, 32]], 'rgba(239,224,176,0.7)', 1.4);
+    shape(x, [[4, 32], [8, 22], [14, 15], [22, 12], [30, 16], [36, 24], [40, 32]], MED.hillFill, 1.4);
     ink(x, 1.1); for (const [a, b, c, d] of [[22, 14, 24, 28], [26, 15, 29, 29], [30, 18, 34, 30], [18, 16, 19, 26]]) line(x, a, b, c, d);
   },
   wave(x) { x.strokeStyle = MED.water; x.lineWidth = 1.8; for (const y of [14, 24, 34]) { x.beginPath(); x.moveTo(8, y); x.quadraticCurveTo(14, y - 6, 20, y); x.quadraticCurveTo(26, y + 6, 32, y); x.stroke(); } },
@@ -135,7 +137,7 @@ function drawSymbols(map) {
 // Gebäudegrundrisse wie im Stich: schräge Strichlage in Tinte, unregelmäßig im Abstand; der Umriss kommt als eigene Linienebene
 function drawBuildingHatch(map) {
   const T2 = 12, [, x] = canvas(T2, T2);
-  x.fillStyle = 'rgba(122,85,48,0.28)'; x.fillRect(0, 0, T2, T2);
+  x.fillStyle = MED.bldTint; x.fillRect(0, 0, T2, T2);
   x.strokeStyle = MED.ink; x.lineWidth = 2.7; x.lineCap = 'butt';
   for (const c of [0, 6, 12, 18, 24]) { x.beginPath(); x.moveTo(c + 1, -1); x.lineTo(-1, c + 1); x.stroke(); }
   put(map, 'med-bldg', x.getImageData(0, 0, T2, T2));
@@ -148,7 +150,7 @@ function drawFineHill(map) {
   const pt = (p0, p1, p2, p3, t) => { const u = 1 - t; return [u * u * u * p0[0] + 3 * u * u * t * p1[0] + 3 * u * t * t * p2[0] + t * t * t * p3[0], u * u * u * p0[1] + 3 * u * u * t * p1[1] + 3 * u * t * t * p2[1] + t * t * t * p3[1]]; };
   for (let t = 0; t <= 1; t += 0.02) top.push(pt(a, b, c, d, t)); for (let t = 0.02; t <= 1; t += 0.02) top.push(pt(d, e, f, g, t));
   x.beginPath(); top.forEach(([px, py], i) => (i ? x.lineTo(px, py) : x.moveTo(px, py))); x.quadraticCurveTo(50, 78, a[0], a[1]); x.closePath();
-  x.fillStyle = 'rgba(239,224,176,0.8)'; x.fill();
+  x.fillStyle = MED.hillFillFine; x.fill();
   x.save(); x.clip();
   x.strokeStyle = MED.ink; x.lineCap = 'round';
   for (let i = 0; i < 84; i++) { // Strichlage: von der Kammlinie nach unten rechts, rechts dichter und länger
@@ -246,6 +248,7 @@ export function registerFauna(map) {
 }
 export const FAUNA_SOURCE = 'med-fauna';
 export function faunaLayers() {
+  if (!MED.fauna) return [];
   const size = ['interpolate', ['linear'], ['zoom'], 13, 0.8, 15.5, 1.7];
   return [{ id: 'med-fauna', type: 'symbol', source: FAUNA_SOURCE, minzoom: 13,
     layout: { 'icon-image': ['get', 'img'], 'icon-size': size, 'icon-allow-overlap': true, 'icon-ignore-placement': true },

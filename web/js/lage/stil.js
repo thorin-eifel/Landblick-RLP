@@ -63,7 +63,7 @@ export const LAND = {
 // Tinte der Signaturen (Rgba), Bilder lp-<klasse>-<light|dark> aus icons.js registerLandPatterns()
 export const PAT_MIN_ZOOM = 12;
 export const PROTECTED = { light: '#2e7d3c', dark: '#7fd18a' };
-export const CLIFF = { light: '#000000', dark: '#dedad2', med: '#3a2614' }; // dunkles Steingrau bzw. helles Grau, bewusst kein Braun: Höhenlinien sind braun
+export const CLIFF = { light: '#000000', dark: '#dedad2', med: '#3a2614', medWall: '#b39d73' }; // dunkles Steingrau bzw. helles Grau, bewusst kein Braun: Höhenlinien sind braun
 export const CLIFF_SCREE = { light: '#6f675b', dark: '#8d8578', med: '#7a5530' };   // Geröllband am Fuß der Wand
 export const QUARRY = { light: ['#8a6d3b', '#4a3a1c'], dark: ['#d9b56b', '#f0dcae'] };
 export const LAND_KINDS = {
@@ -189,7 +189,7 @@ export function cliffLayers(k, dark, ticks, dgm) {
   // Gleiche Zeichnung für beide Quellen. Die OSM-Linie kennt weder Wandfläche noch Wandhöhe; sie wird deshalb wie eine 10-m-Wand gezeichnet:
   // Wandband rechts der Linie (dort liegt die Abbruchseite), Oberkante, Fallstriche. Breite, Strichlänge und -abstand wachsen mit dem Zoom
   // (Meter, nicht Pixel), wie bei den Kacheln aus dem Geländemodell. Einsatz bei Zoom 13, Striche ab 14.
-  const wallColor = k === 'med' ? '#b39d73' : dark ? '#625c52' : '#c7bca4';
+  const wallColor = k === 'med' ? CLIFF.medWall : dark ? '#625c52' : '#c7bca4';
   const bandW = ['interpolate', ['linear'], ['zoom'], 13, 3, 14, 5, 15, 8, 16, 12, 17, 20, 18, 34];
   const bandOff = ['interpolate', ['linear'], ['zoom'], 13, 1.5, 14, 2.5, 15, 4, 16, 6, 17, 10, 18, 17];
   const out = [
@@ -212,7 +212,7 @@ export function cliffLayers(k, dark, ticks, dgm) {
   return [
     ...out,
     { id: 'land-cliff-wand-dgm', type: 'fill', ...wall('wand'), minzoom: 13,
-      paint: { 'fill-color': k === 'med' ? '#b39d73' : dark ? '#625c52' : '#c7bca4', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.2], 'fill-antialias': true } },
+      paint: { 'fill-color': k === 'med' ? CLIFF.medWall : dark ? '#625c52' : '#c7bca4', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.2], 'fill-antialias': true } },
     { id: 'land-cliff-schraffur-dgm', type: 'line', ...wall('schraffur'), minzoom: 14, layout: round,
       paint: { 'line-color': CLIFF[k], 'line-opacity': 0.9, 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 0.5, 17, 0.9, 19, 1.4] } },
     { id: 'land-cliff-dgm', type: 'line', ...wall('kante'), minzoom: 13, layout: round, filter: ['>=', ['get', 'drop'], 5],

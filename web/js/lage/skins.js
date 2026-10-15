@@ -1,9 +1,11 @@
 // Darstellungen (Skins) der Basiskarte.
 //
-// Ein Skin ist ein Eintrag der Liste SKINS. Landblick ist die Grundzeichnung (keine Nachbearbeitung), Alte Karte ist die
-// historische Zeichnung (mittelalter.js, medievalize). Alle weiteren sind Paletten: skinize() färbt die fertige Layerliste
-// um (Boden, Wasser, Bewuchs, Straßen nach Klasse, Gebäude, Schrift), Geometrie und Ebenenschalter bleiben unberührt.
-// Jede Palette gibt es für hell und dunkel; Alte Karte ignoriert die Ansicht.
+// Ein Skin ist ein Eintrag der Liste SKINS. Es gibt zwei Methoden, beide nebeneinander:
+//   tint  Farbpalette: skinize() färbt die fertige Layerliste um (Boden, Wasser, Bewuchs, Straßen nach Klasse, Gebäude, Schrift);
+//         Geometrie und Ebenen bleiben. Jede Palette gibt es für hell und dunkel.
+//   art   Zeichensatz (zeichensaetze.js): tauscht Texturen, Symbole, Schrift und Zierde (mittelalter.js medievalize, medieval.js),
+//         dazu die eigenen Farben des Satzes. Zeichensätze kennen nur hell (`dunkel: false`).
+// Landblick ist die Grundzeichnung ohne beides. Ein Skin darf tint und art tragen; art hat dann Vorrang.
 //
 // Namen: Stilrichtungen, benannt nach dem Ort, an dem bekannte Kartenanbieter sitzen. Es sind eigene Zeichnungen in der Anmutung
 // der jeweiligen Gattung, keine Nachbauten von Produkten, ohne Markennamen, Zeichen oder Schriften Dritter.
@@ -19,7 +21,7 @@ const road = (hw, major, mid, minor, other, rail) => ({ hw, major, mid, minor, o
 
 export const SKINS = [
   { id: 'landblick', name: 'Landblick', hinweis: 'Grundzeichnung von Landblick', tint: null },
-  { id: 'alte-karte', name: 'Alte Karte', hinweis: 'Pergament und Tinte, um 1450', tint: null, dunkel: false },
+  { id: 'alte-karte', name: 'Alte Karte', hinweis: 'Pergament, Tinte und Fabelwesen, um 1450 (Zeichensatz, nur hell)', tint: null, art: 'alte-karte', dunkel: false },
   { id: 'mountain-view', name: 'Mountain View', hinweis: 'Straßenkarte: ruhige Flächen, Straßen nach Klasse',
     tint: {
       light: { bg: '#e8e6e1', earth: '#f2efe9', water: '#a8d4e6', edge: '#8abbd1', waterInk: '#2f6f96', ink: '#3c4043', halo: 'rgba(255,255,255,0.92)',
@@ -65,17 +67,8 @@ export const SKINS = [
         forest: '#2a4025', green: '#31492a', scrub: '#34462a', farm: '#38341f', wet: '#254a40', rock: '#403c30', landOp: 0.95, bld: ['#4a3430', 1],
         roads: road(['#b85a22', '#4a1d08'], ['#a08c20', '#3d3408'], ['#6a6430', '#221f0e'], ['#4e4a38', '#221f0e'], ['#423e30', '#221f0e'], '#5c5846') },
       patterns: false } },
-  { id: 'oxford', name: 'Oxford', hinweis: 'Federzeichnung: Pergamentton, Tusche, feine Linien, an handgezeichnete Fantasy-Karten angelehnt; dunkel als Nachtblatt',
-    tint: {
-      light: { bg: '#e9e0c6', earth: '#f4edd8', water: '#d6dfd8', edge: '#3d4a52', waterInk: '#3d4a52', ink: '#2a2118', halo: 'rgba(244,237,216,0.92)',
-        forest: '#d5dbc0', green: '#e6e7cd', scrub: '#dfdfc2', farm: '#eee5c8', wet: '#d3dcc9', rock: '#dcd3bd', landOp: 0.7, bld: ['#cdbf9f', 0.85],
-        roads: road(['#5a4a38', '#5a4a38'], ['#5a4a38', '#5a4a38'], ['#6b5a45', '#6b5a45'], ['#6b5a45', '#6b5a45'], ['#7a6850', '#7a6850'], '#7a6850'),
-        inkRoads: 0.42, spacing: 0.12 },
-      dark: { bg: '#1e1812', earth: '#2a2218', water: '#27333a', edge: '#9fb2bb', waterInk: '#9fb2bb', ink: '#eadfc4', halo: 'rgba(42,34,24,0.92)',
-        forest: '#353a28', green: '#3b3d2a', scrub: '#3a3a2a', farm: '#403824', wet: '#33402f', rock: '#43392b', landOp: 0.7, bld: ['#4a3e2c', 0.85],
-        roads: road(['#cdbd9c', '#cdbd9c'], ['#cdbd9c', '#cdbd9c'], ['#b6a785', '#b6a785'], ['#b6a785', '#b6a785'], ['#9d8f70', '#9d8f70'], '#9d8f70'),
-        inkRoads: 0.42, spacing: 0.12 },
-      patterns: true } },
+  { id: 'oxford', name: 'Oxford', hinweis: 'Federzeichnung: schwarze Tusche auf hellem Papier, gezeichnete Bäume, Hügel und Häuser (Zeichensatz, nur hell)',
+    tint: null, art: 'federzeichnung', dunkel: false },
 ];
 
 export const DEFAULT_SKIN = 'landblick';

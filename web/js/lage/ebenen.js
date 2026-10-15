@@ -8,6 +8,8 @@ import { refresh, render } from './laden.js';
 import { SACRAL_LAYERS } from '../infra.js';
 import { windrose } from './mittelalter.js';
 import { SKINS, skinById } from './skins.js';
+import { applyArt } from './zeichensatz.js';
+import { artOf } from './zeichensaetze.js';
 import { applyNatureVisibility } from './natur.js';
 import { applyInfra, applyInfraVisibility, applyRoutesVisibility, applyStopsVisibility } from './orte.js';
 import { applyBlitzVisibility, applyFlow, applyLegends, applyRadarVisibility, applyWind } from './wetterkarte.js';
@@ -63,6 +65,7 @@ export function wire() {
     if (!enableSound(e.target.checked)) e.target.checked = false;
   });
   let medApplied = false, autoHeritage = false;
+  const decorOn = () => !!state.layers.medieval && !!artOf(skinById(state.skin).art)?.decor;   // Titelschild und Windrose nur, wo der Zeichensatz sie führt
   const setLayer = (name, on) => { const cb = document.querySelector(`input[data-layer="${name}"]`); if (cb) cb.checked = on; state.layers[name] = on; };
   const syncMedieval = () => {
     if (state.layers.medieval === medApplied) return;
@@ -72,7 +75,7 @@ export function wire() {
     if (medApplied && !HER.some((n) => state.layers[n])) { for (const n of HER) setLayer(n, true); autoHeritage = true; }
     else if (!medApplied && autoHeritage) { for (const n of HER) setLayer(n, false); autoHeritage = false; }
     if (!medApplied) autoHeritage = false;
-    windrose(medApplied); decor(medApplied); applyLegends();
+    windrose(decorOn()); decor(decorOn()); applyLegends();
     applyLayerFilters(); syncGroups(); recolor(); applyInfra();
   };
   const syncGroups = () => { // Themenschalter: an, wenn alle Ebenen des Themas an sind; „gemischt“, wenn nur einige
@@ -111,9 +114,11 @@ export function wire() {
   showHint();
   for (const r of document.querySelectorAll('input[name="skin"]')) r.addEventListener('change', () => {
     if (!r.checked) return;
-    state.skin = skinById(r.value).id; state.layers.medieval = state.skin === 'alte-karte'; showHint();
+    const sk = skinById(r.value);
+    state.skin = sk.id; state.layers.medieval = !!sk.art; showHint();
+    if (sk.art) applyArt(map, sk.art);   // Zeichensatz: Farben, Schrift, Muster und Symbole neu
     applyLayerFilters(); render(); syncGroups();
-    if (state.layers.medieval !== medApplied) syncMedieval(); else recolor();
+    if (state.layers.medieval !== medApplied) syncMedieval(); else { windrose(decorOn()); decor(decorOn()); recolor(); }
   });
   syncGroups();
   const tabs = [...document.querySelectorAll('[role="tab"]')];
