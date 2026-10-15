@@ -12,8 +12,11 @@ export function windowFilter(features, within, nowMs) {
   const horizon = nowMs + WINDOW_HOURS[within] * 3600 * 1000;
   return features.filter((f) => {
     const p = f.properties;
-    const end = p.valid_to ? ms(p.valid_to) : Infinity;
-    const start = ms(p.valid_from || p.first_seen);
+    // Unlesbare Zeitangaben (NaN) verbergen kein Ereignis: Ende offen, Beginn = jetzt. Sonst verschwände es still aus Karte und Liste.
+    const endRaw = p.valid_to ? ms(p.valid_to) : Infinity;
+    const end = Number.isNaN(endRaw) ? Infinity : endRaw;
+    const startRaw = ms(p.valid_from || p.first_seen);
+    const start = Number.isNaN(startRaw) ? nowMs : startRaw;
     return end >= nowMs && start <= horizon;
   });
 }
@@ -22,12 +25,13 @@ export function windowFilter(features, within, nowMs) {
 export function deriveStatus(src, nowMs) {
   if (!src) return null;
   if (src.status === 'disabled') return { ...src };
-  const lastOk = src.last_success ? ms(src.last_success) : null;
+  const lastRaw = src.last_success ? ms(src.last_success) : null;
+  const lastOk = Number.isNaN(lastRaw) ? null : lastRaw;   // unlesbarer Zeitstempel zählt wie „nie erfolgreich“
   const ageS = lastOk === null ? null : Math.round((nowMs - lastOk) / 1000);
   let status;
   if (lastOk === null) status = src.last_attempt ? 'down' : 'pending';
   else if (src.consecutive_failures >= 3) status = 'down';
-  else if (ageS > 3 * src.interval_s) status = 'stale';
+  else if (Number.isFinite(src.interval_s) && ageS > 3 * src.interval_s) status = 'stale';   // ohne Intervall gibt es kein Altersurteil
   else if (src.consecutive_failures > 0) status = 'degraded';
   else status = 'ok';
   return { ...src, status, age_s: ageS };
@@ -41,7 +45,8 @@ export function overall(sources) {
 
 // Ist der Export selbst veraltet (Sammelrechner aus, Upload klemmt)?
 export function exportAgeMin(generatedAt, nowMs) {
-  return generatedAt ? Math.round((nowMs - ms(generatedAt)) / 60000) : Infinity;
+  const age = generatedAt ? Math.round((nowMs - ms(generatedAt)) / 60000) : Infinity;
+  return Number.isNaN(age) ? Infinity : age;   // unlesbarer Zeitstempel gilt als veraltet, nicht als aktuell
 }
 export const exportStale = (generatedAt, nowMs) => exportAgeMin(generatedAt, nowMs) > EXPORT_STALE_MIN;
 

@@ -214,3 +214,78 @@ def test_tiles_fehlen_zaehlt_mitgelieferte(srv, tmp_path):
     assert app.tiles_fehlen()
     app.pack_dirs = [res.resolve()]
     assert not app.tiles_fehlen()
+
+
+def _raw_get(port, path):
+    """Roher Pfad ohne Normalisierung (wie curl --path-as-is); urllib würde '..' nicht entfernen, http.client schickt ihn unverändert."""
+    import http.client
+    c = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+    c.request("GET", path, headers={"Host": f"127.0.0.1:{port}"})
+    r = c.getresponse(); body = r.read(); c.close()
+    return r.status, body
+
+
+def test_traversal_erreicht_zugang_und_datenbank_nicht(srv):
+    """Befund H1: /data/../zugang.json lag vorher innerhalb des Datenordners und wurde ausgeliefert."""
+    app, port, _ = srv
+    (app.data_dir / "zugang.json").write_text('{"TANKERKOENIG_API_KEY": "geheim"}')
+    (app.data_dir / "osint.sqlite").write_bytes(b"SQLite format 3\0")
+    (app.data_dir / "data").mkdir(exist_ok=True); (app.data_dir / "data" / "ok.json").write_text("{}")
+    for p in ("/data/../zugang.json", "/data/%2e%2e/zugang.json", "/tiles/../osint.sqlite", "/tiles/..%2fzugang.json", "/data/..%2fosint.sqlite"):
+        st, body = _raw_get(port, p)
+        assert st == 404 and b"geheim" not in body and b"SQLite" not in body, p
+    assert _raw_get(port, "/data/ok.json")[0] == 200
+
+
+def test_datenordner_wird_aufgeloest(tmp_path):
+    """Befund M1: relativer oder über Symlink angegebener Datenordner darf Dateien nicht aussperren."""
+    import os
+    real = tmp_path / "real"; (real / "data").mkdir(parents=True)
+    link = tmp_path / "link"; link.symlink_to(real, target_is_directory=True)
+    web = tmp_path / "web"; web.mkdir(); (web / "index.html").write_text("x")
+    app = desktop.App(link, web, tmp_path / "pm", tmp_path)
+    assert app.data_dir == real.resolve()
+
+
+def test_data_verzeichnis_wird_nicht_aufgelistet(srv):
+    app, port, _ = srv
+    (app.data_dir / "data").mkdir(exist_ok=True)
+    assert _raw_get(port, "/data/")[0] == 404
+    assert _raw_get(port, "/tiles/")[0] == 404
+
+
+def test_work_ueberlebt_timeout_und_exportfehler(tmp_path, monkeypatch):
+    """Befund H2: TimeoutExpired oder Exportfehler beendet den Takt nicht."""
+    import subprocess
+    web = tmp_path / "web"; web.mkdir()
+    app = desktop.App(tmp_path / "d", web, tmp_path / "pm", tmp_path)
+    monkeypatch.setattr(app, "tiles_fehlen", lambda: False)
+    monkeypatch.setattr(app, "start_nachladen", lambda: True)
+    monkeypatch.setattr(app, "start_later", lambda: None)
+    calls = []
+
+    def fake_run(args, progress=None, timeout=1800):
+        calls.append(args[0])
+        n = len(calls)
+        if n == 1:
+            raise subprocess.TimeoutExpired(args, timeout)       # Sammler hängt
+        if n == 3:
+            return 1                                              # Export scheitert
+        return 0
+
+    class Stop(BaseException):
+        pass
+
+    sleeps = []
+
+    def fake_sleep(s):
+        sleeps.append(s)
+        if len(sleeps) >= 3:
+            raise Stop
+
+    monkeypatch.setattr(app, "_run", fake_run)
+    monkeypatch.setattr(desktop.time, "sleep", fake_sleep)
+    with pytest.raises(Stop):
+        app.work()
+    assert len(sleeps) == 3 and calls.count("app.collect") >= 2
+    assert app.job.snapshot()["phase"] in ("ready", "error")

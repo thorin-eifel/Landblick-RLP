@@ -4,6 +4,14 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unreleased]
 
+### Behoben (Code-Review)
+- Desktop-Server lieferte per `/data/../zugang.json` oder `/tiles/../osint.sqlite` Zugangsdaten und Datenbank aus (Pfadprüfung gegen den ganzen Datenordner). Erlaubt ist jetzt nur `data/` bzw. `tiles/`, Verzeichnisse werden nicht mehr aufgelistet, der Datenordner wird aufgelöst (Symlink, relativer Pfad). `app/desktop.py`, Tests `tests/test_desktop.py`.
+- Sammel-Takt der Desktop-App endete dauerhaft nach einem Timeout oder einem Exportfehler. Jetzt wird der Fehler gemeldet und im nächsten Takt neu versucht; nach dem ersten Export bleibt die Karte offen.
+- Tankerkönig: die Reihenfolge der Abfragepunkte läuft über einen Zeiger statt über die Uhr, damit bei 300-s-Takt (Desktop) keine Punkte ausfallen. Zeiger rückt auch nach Fehlschlag weiter.
+- `fetch_text` lehnt Weiterleitungen (3xx) ab statt deren Rumpf als Antwort zu nehmen.
+- Karte: Art `anbau` wird aus den Zellen in die Karte gesetzt; ein fehlgeschlagener Erstabruf ersetzt keine vorhandenen Daten mehr; die Statuszeile nennt, wenn der Ausschnitt mehr Zellen braucht als geladen werden; neueres Manifest während eines laufenden Abrufs führt zum Nachladen.
+- Regeln: unlesbare Zeitangaben verbergen Ereignisse nicht und täuschen keine Aktualität vor (`windowFilter`, `deriveStatus`, `exportStale`); `cssColor` behält Alpha.
+
 ### Dokumentation
 - Handbuch: neues Kapitel 11 „Darstellung und Skins“ (Aufbau des Kartenstils, Farbquellen, Zeichen, CSS und SVG, Befund für Themen).
 

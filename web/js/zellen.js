@@ -40,13 +40,12 @@ const itemKey = (kind, it) => it.id ?? it.properties?.id ?? it.station_id ?? `${
 
 export class ZellenSpeicher {
   /**
-   * @param {{fetchJSON: (path: string) => Promise<any>, parallel?: number, retryMs?: number, maxCells?: number, now?: () => number}} o
+   * @param {{fetchJSON: (path: string) => Promise<any>, parallel?: number, retryMs?: number, now?: () => number}} o
    */
-  constructor({ fetchJSON, parallel = 6, retryMs = 30000, maxCells = 80, now = Date.now }) {
+  constructor({ fetchJSON, parallel = 6, retryMs = 30000, now = Date.now }) {
     this.fetchJSON = fetchJSON;
     this.parallel = parallel;
     this.retryMs = retryMs;
-    this.maxCells = maxCells;
     this.now = now;
     this.files = {};          // rel → { sha256, bytes, kind, cell } aus dem Manifest
     this.held = new Map();    // rel → { state, sha, data, err, at }
@@ -77,7 +76,8 @@ export class ZellenSpeicher {
     for (const rel of rels) {
       const h = this.held.get(rel), sha = this.files[rel].sha256;
       if (h?.state === 'ok' && h.sha === sha) continue;
-      if (h?.state === 'loading') { jobs.push(h.promise); continue; }
+      if (h?.state === 'loading' && h.sha === sha) { jobs.push(h.promise); continue; }
+      if (h?.state === 'loading') { jobs.push(h.promise.then(() => { const c = this.held.get(rel); return c?.sha === sha ? c.promise : this._load(rel, sha); })); continue; }   // Manifest ist inzwischen neuer als der laufende Abruf
       if (h?.state === 'error' && h.sha === sha && this.now() - h.at < this.retryMs) continue;
       jobs.push(this._load(rel, sha));
     }
@@ -123,6 +123,12 @@ export class ZellenSpeicher {
     }
     if (dropped) this.version++;
     return dropped;
+  }
+
+  /** Gibt es zu dieser Art mindestens eine Datei mit Inhalt? (Fehlgeschlagene Erstabrufe halten keine Daten.) */
+  hasData(kind) {
+    for (const [rel, h] of this.held) if (rel.endsWith(`/${kind}.json`) && h.data != null) return true;
+    return false;
   }
 
   /** Gehaltene Zellen mit Zustand, für Statusanzeige und Prüfzugang. */

@@ -88,6 +88,17 @@ def select_slice(points: list[dict[str, Any]], per_run: int, slot_s: int, epoch:
     return [points[(start + i) % len(points)] for i in range(per_run)]
 
 
+CURSOR_KEY = "tankerkoenig:cursor"
+
+
+def take_from(points: list[dict[str, Any]], per_run: int, start: int) -> list[dict[str, Any]]:
+    """per_run Punkte ab Position start (reihum). Zählt Läufe statt Uhrzeit: bleibt vollständig, auch wenn die Läufe nicht im
+    Intervall kommen (Desktop-App: Takt 300 s bei Intervall 120 s ließ bei der Uhr-Rechnung Punkte aus)."""
+    if per_run <= 0 or per_run >= len(points):
+        return points
+    return [points[(start + i) % len(points)] for i in range(per_run)]
+
+
 class TankerkoenigCollector(Collector):
     pause_s = 60.0   # nur relevant, wenn params.points_per_run > 1 (Betreiber: ein Request je Minute)
 
@@ -99,7 +110,15 @@ class TankerkoenigCollector(Collector):
         stations: dict[str, Station] = {}
         meas: dict[tuple[str, str], Measurement] = {}
         allp = query_points(self.entry.params)
-        points = select_slice(allp, int(self.entry.params.get("points_per_run", 1)), self.entry.intervall, time.time())
+        per_run = int(self.entry.params.get("points_per_run", 1))
+        row = await asyncio.to_thread(self.storage.cache_get, CURSOR_KEY)
+        nxt = (row or {}).get("payload", {}).get("next")
+        if not isinstance(nxt, int) or nxt < 0:
+            nxt = int(time.time() // max(self.entry.intervall, 1)) * max(per_run, 1)   # erster Lauf: wie bisher nach der Uhr
+        nxt %= max(len(allp), 1)
+        points = take_from(allp, per_run, nxt)
+        if points is not allp:   # Zeiger auch bei Fehlschlag weiterrücken: ein dauerhaft kaputter Punkt darf die anderen nicht aufhalten
+            await asyncio.to_thread(self.storage.cache_put, CURSOR_KEY, self.entry.id, {"next": (nxt + per_run) % len(allp)})
         failed = 0
         for n, p in enumerate(points):
             if n and self.pause_s:

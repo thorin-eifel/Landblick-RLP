@@ -6,7 +6,7 @@
  * Format:   Grenzen als { w, s, e, n } in Grad. Ohne Grenzen (Karte noch nicht bereit) bleibt alles sichtbar.
  */
 
-/** Liegt der Punkt im Ausschnitt? Ohne Ausschnitt oder ohne Koordinaten: Punkt ohne Lage bleibt sichtbar, mit Ausschnitt ist er es nicht. */
+/** Liegt der Punkt im Ausschnitt? Ohne Ausschnitt (Karte nicht bereit): immer ja. Mit Ausschnitt: ein Punkt ohne gültige Koordinaten liegt nie darin. */
 export function imAusschnitt(b, lon, lat) {
   if (!b) return true;
   if (!Number.isFinite(lon) || !Number.isFinite(lat)) return false;

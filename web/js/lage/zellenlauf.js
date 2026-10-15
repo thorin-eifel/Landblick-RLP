@@ -16,9 +16,9 @@ import { map, mapReady, state } from './zustand.js';
 export const EVENTS_MIN_ZOOM = KIND_MIN_ZOOM.events;
 const MARGIN_ZOOM = 9;       // ab hier eine Zelle Rand rund um den Ausschnitt mitladen (darunter wäre der Rand mehr als der Ausschnitt)
 const MAX_CELLS = 60;        // Obergrenze gleichzeitig gehaltener Zellen; die Mitte des Ausschnitts hat Vorrang
-const FIELD = { events: 'base', gewaesser: 'gew', umwelt: 'env', haltestellen: 'stops', landmarks: 'landmarks', infrastruktur: 'infra', routen: 'routen', sakral: 'sakral', kraftstoff: 'fuel' };
+const FIELD = { events: 'base', gewaesser: 'gew', umwelt: 'env', haltestellen: 'stops', landmarks: 'landmarks', infrastruktur: 'infra', routen: 'routen', sakral: 'sakral', kraftstoff: 'fuel', anbau: 'anbau' };
 
-let lastKey = '', running = Promise.resolve(), onChange = () => {};
+let gekappt = 0, lastKey = '', running = Promise.resolve(), onChange = () => {};
 export const setzeAenderungsfunktion = (fn) => { onChange = fn; };
 
 state.gebiet = { ...GEBIET_LEER };
@@ -27,7 +27,7 @@ state.gebiet = { ...GEBIET_LEER };
 export async function ladeIndex() {
   const [man, start] = await Promise.all([getJSON('data/manifest.json').catch(() => null), getJSON('data/start.json').catch(() => null)]);
   if (!man?.files || !start?.cells) return !!state.zellen;   // einmal gelaufen: letzten guten Stand behalten
-  if (!state.zellen) state.zellen = new ZellenSpeicher({ fetchJSON: getJSON, maxCells: MAX_CELLS });
+  if (!state.zellen) state.zellen = new ZellenSpeicher({ fetchJSON: getJSON });
   state.zellen.setManifest(man);
   state.start = start;
   return true;
@@ -41,7 +41,9 @@ function viewCells() {
   const b = map.getBounds(), z = map.getZoom(), c = map.getCenter();
   const ids = cellsInBounds({ w: b.getWest(), s: b.getSouth(), e: b.getEast(), n: b.getNorth() }, z >= MARGIN_ZOOM ? 1 : 0);
   const mid = (id) => { const [x, y] = id.split('_').map(Number); return (x / 2 + 0.25 - c.lng) ** 2 + (y / 2 + 0.25 - c.lat) ** 2; };
-  return ids.filter((id) => state.zellen.has(id)).sort((a, b2) => mid(a) - mid(b2)).slice(0, MAX_CELLS);
+  const alle = ids.filter((id) => state.zellen.has(id)).sort((a, b2) => mid(a) - mid(b2));
+  gekappt = Math.max(0, alle.length - MAX_CELLS);   // Statuszeile nennt, dass der Rand des Ausschnitts fehlt
+  return alle.slice(0, MAX_CELLS);
 }
 
 function wantedKinds(z) {
@@ -54,9 +56,10 @@ export function setzeStatuszeile() {
   const s = state.zellen.status();
   const parts = [];
   if (s.loading) parts.push(`${s.loading} Datei${s.loading > 1 ? 'en' : ''} laden`);
+  if (gekappt) parts.push(`${gekappt} Zellen am Rand nicht geladen, näher heranzoomen`);
   if (s.error) parts.push(`${s.error} Datei${s.error > 1 ? 'en' : ''} nicht erreichbar`);
   el.textContent = parts.length ? parts.join(', ') : '';
-  el.dataset.state = s.error ? 'error' : s.loading ? 'loading' : 'ok';
+  el.dataset.state = s.error ? 'error' : s.loading ? 'loading' : gekappt ? 'loading' : 'ok';
   el.title = s.errors.map((e) => `${e.rel}: ${e.err}`).join('\n');
 }
 
@@ -97,6 +100,7 @@ export function applyCells(force = false) {
   const held = new Set([...zs.held.keys()].map((rel) => rel.split('/')[2].replace('.json', '')));
   for (const kind of Object.keys(KIND_KEY)) {
     if (!held.has(kind) || !FIELD[kind]) continue;
+    if (!zs.hasData(kind)) continue;   // alle Dateien der Art fehlgeschlagen: letzten guten Stand stehen lassen, die Statuszeile zeigt den Fehler
     let p = anreichern(kind, zs.merged(kind), src, now);
     if (kind === 'events') {
       const feats = p.features.filter((f) => gebietPasst(f.properties, state.gebiet));

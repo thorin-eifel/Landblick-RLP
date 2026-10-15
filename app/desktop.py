@@ -75,7 +75,7 @@ class App:
                  pack_dirs: list[Path] | None = None) -> None:
         # pack_dirs: mitgelieferte, nur lesbare Ordner (Installer-Ressourcen) mit tiles/*.pmtiles und data/suche_geo.json
         self.pack_dirs = [d.resolve() for d in (pack_dirs or [])]
-        self.data_dir, self.web_dir, self.pmtiles, self.repo_dir = data_dir, web_dir.resolve(), pmtiles, repo_dir
+        self.data_dir, self.web_dir, self.pmtiles, self.repo_dir = data_dir.resolve(), web_dir.resolve(), pmtiles, repo_dir
         self.job = Job()
         self.nachladen = Job()                 # Nachladepaket im Hintergrund, getrennt vom Aufbau: die App läuft währenddessen
         self.nachlade_thread: threading.Thread | None = None
@@ -217,16 +217,23 @@ class App:
             self.start_nachladen()
             first = True
             while True:
-                self.job.set("collect", "Daten werden abgerufen", 70)
-                # Erster Lauf: alle Quellen außer den langsamen (erstlauf: spaeter), danach nur, was fällig ist
-                if self._run(["app.collect", "--once" if first else "--due", "--skip-later"], self.progress_path) != 0:
-                    log.warning("Sammelzyklus mit Fehlern beendet")
-                self.job.set("export", "Daten werden aufbereitet", 90)
-                if self._run(["app.export", "--out", str(self.data_dir / "data")]) != 0:
-                    raise RuntimeError("Export fehlgeschlagen")
-                self.job.set("ready", "Bereit", 100)
-                self.start_later()
-                first = False
+                try:
+                    self.job.set("collect", "Daten werden abgerufen", 70)
+                    # Erster Lauf: alle Quellen außer den langsamen (erstlauf: spaeter), danach nur, was fällig ist
+                    if self._run(["app.collect", "--once" if first else "--due", "--skip-later"], self.progress_path) != 0:
+                        log.warning("Sammelzyklus mit Fehlern beendet")
+                    self.job.set("export", "Daten werden aufbereitet", 90)
+                    if self._run(["app.export", "--out", str(self.data_dir / "data")]) != 0:
+                        raise RuntimeError("Export fehlgeschlagen")
+                    self.job.set("ready", "Bereit", 100)
+                    self.start_later()
+                    first = False
+                except (subprocess.SubprocessError, OSError, RuntimeError) as err:
+                    # Ein hängender Sammler oder ein einzelner Exportfehler beendet den Takt nicht: sichtbar melden, nächster Versuch nach CYCLE_S.
+                    # Die zuletzt exportierten Dateien bleiben stehen, das Frontend markiert sie über das Alter als veraltet.
+                    log.exception("Zyklus fehlgeschlagen, nächster Versuch in %d s", CYCLE_S)
+                    # Vor dem ersten Export gibt es noch nichts anzuzeigen (Einrichtungsseite zeigt den Fehler); danach bleibt die Karte offen.
+                    self.job.set("error" if first else "ready", "Zyklus fehlgeschlagen, neuer Versuch folgt", pct=100 if not first else None, error=str(err)[:300])
                 time.sleep(CYCLE_S)
         except Exception as err:   # sichtbar machen, nicht verschlucken
             log.exception("Aufbau abgebrochen")
@@ -287,17 +294,25 @@ def make_handler(app: App, port_box: list[int]):
             self.wfile.write(b)
 
         def translate_path(self, path: str) -> str:
-            """/data/ nur aus dem Datenordner (nie Beispieldaten eines anderen Ortes), /tiles/ erst dort, dann aus der App."""
+            """/data/ nur aus dem Datenordner (nie Beispieldaten eines anderen Ortes), /tiles/ erst dort, dann aus der App.
+            Erlaubt ist je Präfix nur der Unterordner (data/ bzw. tiles/), nie der ganze Datenordner: dort liegen zugang.json und die
+            Datenbank. Der Pfad wird aufgelöst und gegen den aufgelösten Unterordner geprüft; Verzeichnisse gibt es nur im App-Ordner."""
             p = urllib.parse.unquote(urllib.parse.urlsplit(path).path)
+            if "\x00" in p:
+                return str(app.web_dir / "__nicht_da__")
             if p.startswith("/data/"):
                 roots = [app.data_dir] + (app.pack_dirs if p == "/data/suche_geo.json" else [])   # nur der feste Suchindex kommt aus dem Installer
+                sub = "data"
             elif p.startswith("/tiles/"):
                 roots = [app.data_dir, *app.pack_dirs, app.web_dir]
+                sub = "tiles"
             else:
-                roots = [app.web_dir]
+                roots, sub = [app.web_dir], ""
             for root in roots:
+                base = (root / sub).resolve() if sub else root.resolve()
                 cand = (root / p.lstrip("/")).resolve()
-                if (cand == root or root in cand.parents) and (cand.is_file() or cand.is_dir()):
+                inside = cand == base or base in cand.parents
+                if inside and (cand.is_file() or (cand.is_dir() and root == app.web_dir)):
                     return str(cand)
             return str(app.web_dir / "__nicht_da__")
 
