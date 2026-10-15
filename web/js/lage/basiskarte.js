@@ -12,6 +12,7 @@ import { placeLgb } from './lgb.js';
 import { skinize, skinById, tintOf, wantsPatterns } from './skins.js';
 import { BUILDING_OPACITY_LEGEND, LABEL_SKIP, LAND, cliffLayers, hangLayers, labelsAndBuildings, ortsnamenUebersicht, landUseLayers, mainRoad, roadsFromDetail, signLayers, waterEdges } from './stil.js';
 import { applyFlow, applyLegends, fillTempLegend, placeRadar } from './wetterkarte.js';
+import { applyFont, resetFontMemory } from './schrift.js';
 import { BUILDING_KLASSEN } from '../gebaeude-farben.js';
 import { basemapOk, coreOk, flow, gebOk, hangOk, light, klippenOk, map, mapReady, reliefOk, ringOk, state } from './zustand.js';
 
@@ -43,6 +44,7 @@ function fillFlaechenLegenden(dark) {
 export function applyBasemap() {
   if (!basemapOk) { applyRelief(); placeRadar(); return; }
   for (const l of map.getStyle().layers) if (l.id.startsWith('bm-')) map.removeLayer(l.id);
+  resetFontMemory();
   const med = !!state.layers.medieval;
   document.documentElement.dataset.karte = med ? (state.skin === 'alte-karte' ? 'mittelalter' : 'zeichnung') : '';
   document.documentElement.dataset.skin = skinById(state.skin).id;
@@ -104,6 +106,7 @@ export function applyBasemap() {
   applyRelief();
   placeRadar();
   placeLgb();   // LGB-Ebenen bleiben über der neu gebauten Basis, unter Straßen und Beschriftung
+  applyFont();   // gewählte Schrift auf die neu gebauten Beschriftungen
 }
 
 // Gewässer blau, damit Mosel, Sauer und Seen auch auf der grauen Basiskarte und über dem Relief sofort lesbar sind

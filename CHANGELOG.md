@@ -8,6 +8,7 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 - Handbuch: neues Kapitel 11 „Darstellung und Skins“ (Aufbau des Kartenstils, Farbquellen, Zeichen, CSS und SVG, Befund für Themen).
 
 ### Hinzugefügt
+- Schriftwahl unter „Darstellung“ (`web/js/lage/schrift.js`): acht mitgelieferte OFL-Schriften (Lora, Alegreya, Cinzel, IM Fell English, Almendra, Uncial Antiqua, Pirata One, Caveat als woff2 in `web/fonts/woff2`, über MapLibre `font-faces`) plus Schriften des Geräts (Liste per `queryLocalFonts()` nach Zustimmung oder getippter Name). Wirkt auf alle Beschriftungs-Layer, „Standard“ behält die Schrift der Darstellung. Nichts wird gespeichert. Test: `tests/js/schrift.test.mjs`.
 - Darstellungen (Skins) in zwei Methoden, beide nebeneinander: Farbpaletten (`web/js/lage/skins.js`: Mountain View, Cupertino, Amsterdam, Olathe, Ostfildern, je hell und dunkel) und Zeichensätze (`zeichensaetze.js`, `zeichensatz.js`: tauschen Flächenmuster, Hügel-, Wellen- und Siedlungszeichen, Schrift und Zierde; Alte Karte und neu Oxford als Federzeichnung, nur hell). Auswahl unter „Darstellung“ (`state.skin`, `html[data-skin]`). Eigene Zeichnungen in der Anmutung der Gattung, keine Nachbauten von Produkten oder Werken. Tests: `tests/js/skins.test.mjs`, `tests/js/zeichensaetze.test.mjs`.
 
 ### Behoben

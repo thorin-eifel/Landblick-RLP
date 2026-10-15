@@ -7,6 +7,7 @@ import { buildRainLegend } from '../legend.js';
 import { createLight } from '../licht.js';
 import { FAUNA_SOURCE, faunaPoints, registerFauna, registerMedievalPatterns } from '../medieval.js';
 import { ping as pingSound, silence as silenceSound, sizzle as sizzleSound, zap as zapSound } from '../ping-sound.js';
+import { initFont } from './schrift.js';
 import { RELIEF_ATTRIBUTION, demTile, glyphsUrl, setupRelief } from '../relief.js';
 import { createRipples } from '../ripples.js';
 import { SWEEP_GREEN, createSweep } from '../sweep.js';
@@ -73,6 +74,7 @@ export async function initMap() {
     maxBounds: RLP_RAHMEN,   // um Rheinland-Pfalz zentriert: ganz herausgezoomt sitzt das Land mittig, egal wo der Start liegt
   }));
   map.touchZoomRotate.disableRotation();
+  initFont();
   zentriereLand(map);
   map.addControl(new NavigationControl({ showCompass: false }), 'top-right');
   if (document.fullscreenEnabled || document.webkitFullscreenEnabled) map.addControl(new FullscreenControl({ container: document.querySelector('.map-wrap') }), 'top-right');      // Karte samt Cartouche, Windrose und Legende

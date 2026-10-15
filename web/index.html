@@ -52,6 +52,17 @@
             <label><input type="radio" name="skin" value="alte-karte"> Alte Karte</label>
           </fieldset>
           <p class="group-hint small muted">Weitere Darstellungen folgen. Die Ebenen bleiben in jeder Darstellung wählbar.</p>
+          <div class="font-pick">
+            <label for="schrift-wahl">Schrift der Beschriftung</label>
+            <select id="schrift-wahl"><option value="auto">Standard der Darstellung</option></select>
+            <div class="font-local">
+              <button type="button" id="schrift-lokal" class="btn-small">Schriften dieses Geräts anzeigen</button>
+              <label class="sr-only" for="schrift-name">Name einer installierten Schrift</label>
+              <input type="text" id="schrift-name" list="schrift-liste" maxlength="80" placeholder="oder Schriftname tippen" autocomplete="off" spellcheck="false">
+              <datalist id="schrift-liste"></datalist>
+            </div>
+            <p id="schrift-hinweis" class="small muted" aria-live="polite">Mitgelieferte Schriften sind frei (SIL OFL). Geräteschriften bleiben auf diesem Gerät; nichts wird gespeichert.</p>
+          </div>
         </details>
         <details class="controls" id="ctl-ebenen">
           <summary>Ebenen</summary>

@@ -7,6 +7,7 @@ import { pushAir, refreshAir } from './flugverkehr.js';
 import { refresh, render } from './laden.js';
 import { SACRAL_LAYERS } from '../infra.js';
 import { windrose } from './mittelalter.js';
+import { AUTO, BUNDLED, applyFont, cleanFontName, localNames, queryLocalFamilies, setLocalNames } from './schrift.js';
 import { SKINS, skinById } from './skins.js';
 import { applyArt } from './zeichensatz.js';
 import { artOf } from './zeichensaetze.js';
@@ -120,6 +121,7 @@ export function wire() {
     applyLayerFilters(); render(); syncGroups();
     if (state.layers.medieval !== medApplied) syncMedieval(); else { windrose(decorOn()); decor(decorOn()); recolor(); }
   });
+  initSchriftwahl();
   syncGroups();
   const tabs = [...document.querySelectorAll('[role="tab"]')];
   for (const t of tabs) t.addEventListener('click', () => {
@@ -130,4 +132,46 @@ export function wire() {
   setInterval(refreshAir, AIR_POLL_MS); // Flüge: kleine Datei alle 15 s, nur bei eingeschalteter Ebene und sichtbarem Tab
   setInterval(() => { if (!document.hidden && state.layers.air) pushAir(); }, 1000); // weiterrücken und Stand-Anzeige
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshAir(); });
+}
+
+// Darstellung → Schrift: mitgelieferte OFL-Schriften, dazu Schriften dieses Geräts (Liste per Zustimmung oder frei getippt)
+function initSchriftwahl() {
+  const sel = $('#schrift-wahl'), btn = $('#schrift-lokal'), inp = $('#schrift-name'), dl = $('#schrift-liste'), note = $('#schrift-hinweis');
+  if (!sel) return;
+  const group = (label, names, labels = {}) => {
+    const g = document.createElement('optgroup');
+    g.label = label;
+    for (const n of names) { const o = document.createElement('option'); o.value = n; o.textContent = labels[n] ?? n; g.append(o); }
+    return g;
+  };
+  const fill = () => {
+    const keep = state.schrift;
+    sel.replaceChildren(Object.assign(document.createElement('option'), { value: AUTO, textContent: 'Standard der Darstellung' }),
+      group('Mitgeliefert (frei)', BUNDLED.map((b) => b.name), Object.fromEntries(BUNDLED.map((b) => [b.name, b.label]))));
+    if (localNames().length) sel.append(group('Auf diesem Gerät', localNames()));
+    dl.replaceChildren(...localNames().map((n) => Object.assign(document.createElement('option'), { value: n })));
+    sel.value = [...sel.options].some((o) => o.value === keep) ? keep : AUTO;
+  };
+  const choose = (name) => { state.schrift = name; sel.value = name; applyFont(name); };
+  fill();
+  sel.addEventListener('change', () => choose(sel.value));
+  btn.addEventListener('click', async () => {
+    try {
+      const n = (await queryLocalFamilies()).length;
+      fill();
+      note.textContent = n ? `${n} Schriften dieses Geräts verfügbar (Liste „Auf diesem Gerät“).` : 'Keine Geräteschriften gemeldet.';
+    } catch {
+      note.textContent = 'Die Liste ist in diesem Browser nicht freigegeben. Tippen Sie den Namen einer installierten Schrift ins Feld.';
+    }
+  });
+  inp.addEventListener('change', () => {
+    const n = cleanFontName(inp.value);
+    if (!n) return;
+    setLocalNames([...localNames(), n]);
+    fill();
+    const hit = localNames().find((x) => x.toLowerCase() === n.toLowerCase()) ?? n;
+    choose([...sel.options].some((o) => o.value === hit) ? hit : n);
+    note.textContent = `Schrift „${hit}“ gewählt. Ist sie auf diesem Gerät nicht installiert, zeigt der Browser eine Ersatzschrift.`;
+    inp.value = '';
+  });
 }
