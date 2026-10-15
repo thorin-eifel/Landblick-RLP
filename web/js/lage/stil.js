@@ -176,7 +176,7 @@ export function hangLayers(dark, on, visible) {
   const col = dark ? { ab15: '#8a7a4a', ab25: '#9a6a3a', ab35: '#b04a3a' } : { ab15: '#e6d27a', ab25: '#d98a3a', ab35: '#b3342a' };
   return ['ab15', 'ab25', 'ab35'].map((c) => ({ id: `land-hang-${c}`, type: 'fill', source: 'hang', 'source-layer': c, minzoom: 14,
     layout: { visibility: visible ? 'visible' : 'none' },
-    paint: { 'fill-color': col[c], 'fill-opacity': c === 'ab15' ? 0.16 : c === 'ab25' ? 0.2 : 0.24, 'fill-antialias': true } }));
+    paint: { 'fill-color': col[c], 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 14, c === 'ab15' ? 0.16 : c === 'ab25' ? 0.2 : 0.24, 16, c === 'ab15' ? 0.16 : c === 'ab25' ? 0.2 : 0.24, 17.5, 0], 'fill-antialias': true } }));   // ab Zoom 16 ausblenden: im Hausmaßstab sind die Hangflächen grob und stören
 }
 
 // k: 'light', 'dark' oder 'med' (Alte Karte: Tinte, Pergament; dieselbe Zeichnung wie in Landblick)

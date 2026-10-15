@@ -68,11 +68,11 @@ export function applyBasemap() {
   waterEdges(styled, dark);
   // Hangneigung ergänzt die Schummerung: über Höhenfärbung, Schummerung (relief.js legt sie davor) und Vegetation, vor der ersten Wasserebene (Säume, Rand, Fläche), dahinter die Höhenlinien (relief.js)
   {
-    // Gebäude rücken unter Schummerung, Hangneigung und Höhenlinien (ein Haus kann am Hang stehen), bleiben aber über der Vegetation; Wasser liegt darüber
+    // Gebäude liegen über Schummerung und Hangneigung (Dächer sind flach: kein Schatten, keine Hangflecken auf Häusern), unter Höhenlinien und Wasser
     const isBld = (x) => /^buildings(-line)?$/.test(x.id), bld = styled.filter(isBld);
     for (let i = styled.length - 1; i >= 0; i--) if (isBld(styled[i])) styled.splice(i, 1);
     const wi = styled.findIndex((x) => /^water(_stream_casing|_river_casing|_edge)?$/.test(x.id));
-    styled.splice(wi < 0 ? styled.length : wi, 0, ...bld, ...hangLayers(dark, hangOk, state.layers.hang));
+    styled.splice(wi < 0 ? styled.length : wi, 0, ...hangLayers(dark, hangOk, state.layers.hang), ...bld);
   }
   styled.push(...peakLayers(dark, map.hasImage('peak-tri')));   // Gipfel oben auf den Beschriftungen des Stils
   const tint = tintOf(state.skin, dark);
