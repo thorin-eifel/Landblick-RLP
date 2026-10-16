@@ -6,10 +6,10 @@ import { map, mapReady, state } from './zustand.js';
 const PX = 56;
 const draw = {
   solar(x) {   // Sonne über Modulfläche
-    x.fillStyle = '#fff'; x.strokeStyle = '#fff'; x.lineWidth = 3;
+    x.fillStyle = '#fde047'; x.strokeStyle = '#fde047'; x.lineWidth = 3;   // gelbe Sonne auf blauem Grund, dazu weiße Module
     x.beginPath(); x.arc(28, 18, 6, 0, Math.PI * 2); x.fill();
     for (let a = 0; a < 8; a++) { const t = (a * Math.PI) / 4; x.beginPath(); x.moveTo(28 + Math.cos(t) * 9.5, 18 + Math.sin(t) * 9.5); x.lineTo(28 + Math.cos(t) * 13, 18 + Math.sin(t) * 13); x.stroke(); }
-    x.beginPath(); x.moveTo(10, 50); x.lineTo(15, 33); x.lineTo(41, 33); x.lineTo(46, 50); x.closePath(); x.fill();
+    x.fillStyle = '#fff'; x.beginPath(); x.moveTo(10, 50); x.lineTo(15, 33); x.lineTo(41, 33); x.lineTo(46, 50); x.closePath(); x.fill();
     x.strokeStyle = ENERGIE_COLOR.solar; x.lineWidth = 1.6;
     x.beginPath(); x.moveTo(28, 33); x.lineTo(28, 50); x.moveTo(12.5, 41.5); x.lineTo(43.5, 41.5); x.stroke();
   },

@@ -4,7 +4,7 @@
 // Dieses Modul ist rein (keine Karte, kein DOM) und per Test prüfbar: tests/js/energie.test.mjs. Die Kartenanbindung steht in lage/energie.js.
 export const ENERGIE_SWITCH = { enSolar: 'solar', enPlant: 'plant', enSub: 'substation', enTrafo: 'transformer', enLine: 'line' };
 export const ENERGIE_WORD = { solar: 'Solarpark', plant: 'Kraftwerk', substation: 'Umspannwerk', transformer: 'Transformator', line: 'Hochspannungsleitung' };
-export const ENERGIE_COLOR = { solar: '#a16207', plant: '#7c2d12', substation: '#5b21b6', transformer: '#9d174d' };
+export const ENERGIE_COLOR = { solar: '#2f4ba8', plant: '#7c2d12', substation: '#5b21b6', transformer: '#9d174d' };
 export const LINE_COLOR = { 110: '#b45309', 220: '#c2410c', 380: '#be123c' };
 export const SOURCE_WORD = { gas: 'Gas', coal: 'Kohle', oil: 'Öl', hydro: 'Wasserkraft', nuclear: 'Kernkraft', biomass: 'Biomasse', waste: 'Müllverbrennung', geothermal: 'Erdwärme', battery: 'Batteriespeicher', other: '' };
 export const STATE_WORD = { netz: 'am Netz', genehmigt: 'genehmigt, nicht gebaut', beantragt: 'beantragt' };
