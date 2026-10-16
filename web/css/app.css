@@ -741,3 +741,24 @@ body.einrichtung .klein { font-size: .8rem; }
 .ctx-liste { display: grid; grid-template-columns: max-content 1fr; gap: 2px var(--space-3); margin: var(--space-2) 0; font-size: var(--fs-sm); }
 .ctx-liste dt { color: var(--fg-muted); font-size: var(--fs-xs); padding-top: 2px; }
 .ctx-liste dd { margin: 0; overflow-wrap: anywhere; }
+
+/* Messwerkzeug (js/lage/messen.js): Knopf in der Zoomleiste, Feld unten mittig über der Karte */
+.messen-knopf { display: flex; align-items: center; justify-content: center; width: 29px; height: 29px; padding: 0; border: 0; background: transparent; color: var(--fg); cursor: pointer; }
+.messen-knopf .ico { margin: 0; width: 1.2em; height: 1.2em; }
+.messen-knopf:hover { background: color-mix(in oklab, var(--fg) 8%, transparent); }
+.messen-knopf.an { background: #c026d3; color: #fff; }
+.messen-knopf:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: -2px; }
+.messen-aktiv .maplibregl-canvas { cursor: crosshair; }
+.messen-box { position: absolute; bottom: 2.6rem; left: 50%; transform: translateX(-50%); z-index: 3; width: min(22rem, calc(100% - 2rem)); padding: var(--space-3);
+  background: var(--float-bg); backdrop-filter: var(--float-blur); -webkit-backdrop-filter: var(--float-blur); border: 1px solid var(--border); border-radius: var(--radius-lg, 10px); box-shadow: var(--shadow-md); }
+.messen-box[hidden] { display: none; }
+.messen-kopf { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+.messen-werte p { margin: 0; }
+.messen-werte .messen-haupt { font-size: 1.15em; font-weight: 600; color: #86198f; }
+:root[data-ansicht="dunkel"] .messen-werte .messen-haupt { color: #f0abfc; }
+.messen-warn { margin: var(--space-1) 0 0; color: #b45309; }
+.messen-hinweis { margin: var(--space-2) 0; }
+.messen-tasten { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.messen-box button { font: inherit; padding: 2px 8px; border: 1px solid var(--border-strong, var(--border)); border-radius: 6px; background: var(--surface, transparent); color: inherit; cursor: pointer; }
+.messen-box button:disabled { opacity: .45; cursor: default; }
+.messen-box button:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: 1px; }

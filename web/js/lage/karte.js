@@ -4,6 +4,7 @@ import { createFlow, registerArrow } from '../fluss.js';
 import { MIL_COLOUR, iconStatus, registerIcons, registerMedieval, registerSigns } from '../icons.js';
 import { registerInfra } from '../infra.js';
 import { ENERGIE_LAYER_IDS, registerEnergie } from './energie.js';
+import { initMessen, messenAktiv } from './messen.js';
 import { buildRainLegend } from '../legend.js';
 import { createLight } from '../licht.js';
 import { FAUNA_SOURCE, faunaPoints, registerFauna, registerMedievalPatterns } from '../medieval.js';
@@ -83,6 +84,7 @@ export async function initMap() {
   map.addControl(new NavigationControl({ showCompass: false }), 'top-right');
   if (document.fullscreenEnabled || document.webkitFullscreenEnabled) map.addControl(new FullscreenControl({ container: document.querySelector('.map-wrap') }), 'top-right');      // Karte samt Cartouche, Windrose und Legende
   map.addControl(new ScaleControl({ unit: 'metric' }), 'bottom-right');
+  initMessen();
   setPopup(new Popup({ closeButton: true, maxWidth: '320px' }));
 
   await new Promise((res) => map.on('load', res));
@@ -194,6 +196,7 @@ export async function initMap() {
     map.on('mouseleave', id, () => (map.getCanvas().style.cursor = ''));
   }
   map.on('click', (e) => {
+    if (messenAktiv()) return;   // Messwerkzeug an: Klicks setzen Punkte, keine Popups
     const order = ['air-sym', 'air-circle', ...SYMBOL_LAYERS, ...INFRA_LAYER_IDS, 'en-sym', 'routes-hit', 'en-line-hit', 'en-area-fill', 'ev-point', 'env-sym', 'env-circle', 'tank-sym', 'tank-circle', 'st-sym', 'st-circle', 'ev-line', 'ev-fill'];
     const hit = map.queryRenderedFeatures(e.point, { layers: order.filter((l) => map.getLayer(l)) })[0];
     if (!hit) return;

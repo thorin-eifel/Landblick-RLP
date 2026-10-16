@@ -4,8 +4,12 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unreleased]
 
+### Neu (Messen)
+- Messwerkzeug in der Zoomleiste (Lineal): Punkte anklicken ergibt Strecke mit Abschnittslängen; den ersten Punkt erneut anklicken oder „Schließen“ ergibt Fläche (m², ha, km²) und Umfang, ab drei Punkten schon als Vorschau. Kreuzen sich die Kanten, steht eine Warnung dabei. Ohne Maus: „Punkt in Kartenmitte“, Rücktaste, Eingabe, Esc. Werte lassen sich kopieren. Kugelrechnung, Abweichung unter 0,5 %; keine Vermessung. Nichts wird gespeichert oder gesendet.
+
 ### Neu (Geographie → Energie)
 - Eigene Gruppe **Energie** mit sechs Schaltern: Windräder (aus „Orte und Einrichtungen“ hierher verschoben), Solarparks, Kraftwerke, Umspannwerke, Transformatoren, Hochspannungsleitungen (`wturb`, `enSolar`, `enPlant`, `enSub`, `enTrafo`, `enLine`). Jeder Schalter hat ein eigenes Zeichen (Temaki, CC0; Solar eigene Zeichnung).
+- Tankstellen mit Preisen (`tank`) und Ladesäulen (`charge`) gehören jetzt ebenfalls zu Energie; die Gruppe „Verkehr und Tanken“ heißt „Verkehr“. Schalternamen und Daten bleiben unverändert.
 - Quellen: `sgdnord_energie` (Raumordnungskataster ROK25 Online der SGD Nord, dl-de/by-2.0, täglich): Windräder (am Netz, genehmigt, beantragt) mit Nennleistung, Nabenhöhe und Gesamthöhe, Solarparks mit Umriss und Leistung. Betreiber, Typ und Aktenlinks werden nicht übernommen. `osm_energie` (ODbL, wöchentlich): Kraftwerke, Solarparks, Umspannwerke, Transformatoren und Leitungen ab 110 kV. Amtliche Windräder und Solarparks ersetzen OSM-Einträge im Umkreis von 150 m bzw. 400 m.
 - Neue Ausgabe `energie.json` und Zellenart `energie` (ab Zoom 9, Leitungen laufen über Zellgrenzen). Geplante Windräder erscheinen blasser; Popup nennt Stand, Maße und Quelle.
 - Lücke: Der Süden (SGD Süd) bietet keinen vergleichbaren offenen Dienst; dort kommt alles aus OpenStreetMap. Die amtlichen Wasserkraftdaten sind nicht verwendbar.

@@ -37,7 +37,7 @@ Die Schalter der Karte stehen in drei Menüs. *Ereignisse* zeigt, was gerade pas
 | **Warnungen und Gefahren** | Warnungen (NINA, DWD), Hochwasser, Blitze, Brandverdacht (Satellit), Erdbeben, erhöhte Strahlung |
 | **Wetter und Luft** | Regenradar mit Tropfen-Animation, Wind in 10 m Höhe, Wind im Gelände (Schätzung für Täler), Wetterstationen (DWD, KMI), Luftqualität |
 | **Wasserstände** | Pegel der Flüsse, Wasserbewegung |
-| **Verkehr und Tanken** | Straßenverkehr und Baustellen, ÖPNV-Verspätungen, Luftverkehr, Tankstellen mit Preisen |
+| **Verkehr** | Straßenverkehr und Baustellen, ÖPNV-Verspätungen, Luftverkehr |
 
 **Menü Geographie**
 
@@ -48,7 +48,7 @@ Die Schalter der Karte stehen in drei Menüs. *Ereignisse* zeigt, was gerade pas
 | **Straßen und Bahn** | das Straßennetz der Karte nach Art, Bahnstrecken, Haltestellen, Straßenschilder, Brücken und Tunnel |
 | **Grenzen und Schutzgebiete** | Staats-, Landes-, Kreis- und Gemeindegrenzen, Naturschutzgebiete, Nationalparks, Militärgelände |
 | **Orte und Einrichtungen** | Notfallpunkte, Schulen und Rathäuser, Ladesäulen, Wehre und Schleusen |
-| **Energie** | Windräder, Solarparks, Kraftwerke, Umspannwerke, Transformatoren, Hochspannungsleitungen ab 110 kV (110, 220 und 380 kV in drei Farben) |
+| **Energie** | Windräder, Solarparks, Kraftwerke, Umspannwerke, Transformatoren, Hochspannungsleitungen ab 110 kV (110, 220 und 380 kV in drei Farben), Tankstellen mit Preisen, Ladesäulen für E-Autos |
 | **Natur** | Berggipfel (mit Höhe), Höhlen, Wasserfälle und Quellen, Aussichtspunkte, Felsen und Vulkane |
 | **Kultur und Geschichte** | Burgen, Ausgrabungen, Klöster, historische Gebäude, Kirchen, Friedhöfe |
 
