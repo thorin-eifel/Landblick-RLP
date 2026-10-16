@@ -4,6 +4,11 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unreleased]
 
+### Geändert (Anordnung)
+- Das Messfeld sitzt jetzt in der Steuerleiste oben rechts (folgt ihr bei jeder Breite) statt unten über der Kartenmitte und dem Maßstab. Auf schmalen Schirmen ist es kompakter.
+- Breite Schirme: Das Menü links lässt unten Platz für Höhenlegende bzw. Windrose und scrollt innen, statt sie zu überdecken.
+- Schmale Schirme (bis 1000 px): Eine geöffnete Menügruppe nimmt die ganze Zeile, die übrigen bleiben in einer Reihe (vorher rutschte „Freizeit“ neben die offene Gruppe). Bis 640 px steht der Maßstab oben links statt zwischen den Legenden.
+
 ### Geändert (Burgen)
 - Burg und Ruine teilen das Zeichen, unterscheiden sich jetzt aber deutlich in der Farbe: Burg und Schloss karminrot, Ruine moosgrün (vorher dunkelrot und grau).
 

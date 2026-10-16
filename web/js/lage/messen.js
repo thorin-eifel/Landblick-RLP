@@ -1,4 +1,4 @@
-// Messwerkzeug auf der Karte: Punkte anklicken ergibt eine Strecke; den ersten Punkt erneut anklicken (oder „Schließen“) ergibt eine Fläche mit Umfang.
+// Messwerkzeug auf der Karte (Feld sitzt unter den Zoomknöpfen, nicht über der Kartenmitte): Punkte anklicken ergibt eine Strecke; den ersten Punkt erneut anklicken (oder „Schließen“) ergibt eine Fläche mit Umfang.
 // Bedienung ohne Maus: Knopf „Punkt in Kartenmitte“, Rücktaste (zurück), Eingabe (schließen), Esc (beenden). Rechnung: ../messen.js.
 // Während das Werkzeug an ist, öffnen Klicks keine Popups (karte.js fragt messenAktiv()). Nichts wird gespeichert oder gesendet.
 import { messenFeatures, summary } from '../messen.js';
@@ -70,14 +70,14 @@ export function initMessen() {
   const group = el('div', { class: 'maplibregl-ctrl maplibregl-ctrl-group' }, btn);
   map.addControl({ onAdd: () => group, onRemove: () => group.remove() }, 'top-right');
   const b = (m, label, title) => el('button', { type: 'button', 'data-m': m, title }, label);
-  panel = el('section', { class: 'messen-box', 'aria-label': 'Messen', hidden: '' },
+  panel = el('section', { class: 'maplibregl-ctrl messen-box', 'aria-label': 'Messen', hidden: '' },
     el('div', { class: 'messen-kopf' }, el('strong', {}, 'Messen'), b('ende', 'Beenden', 'Messen beenden (Esc)')),
     el('div', { class: 'messen-werte', role: 'status', 'aria-live': 'polite' }),
     el('p', { class: 'messen-warn small' }),
     el('p', { class: 'messen-hinweis small muted' }, 'Ersten Punkt erneut anklicken schließt die Fläche. Kugelrechnung, Abweichung unter 0,5 %; keine Vermessung.'),
     el('div', { class: 'messen-tasten' }, b('mitte', 'Punkt in Kartenmitte', 'Punkt in die Mitte des Kartenausschnitts setzen'), b('zurueck', 'Zurück', 'Letzten Punkt entfernen (Rücktaste)'),
       b('schliessen', 'Schließen', 'Fläche schließen (Eingabetaste)'), b('neu', 'Neu', 'Alle Punkte löschen'), b('kopieren', 'Kopieren', 'Werte in die Zwischenablage')));
-  map.getContainer().parentElement.append(panel);
+  map.addControl({ onAdd: () => panel, onRemove: () => panel.remove() }, 'top-right');   // in der Steuerleiste oben rechts: folgt ihr bei jeder Fensterbreite und hält die Kartenmitte frei
   btn.addEventListener('click', () => toggle(!aktiv));
   panel.addEventListener('click', (e) => {
     const m = e.target.closest('button')?.dataset.m;

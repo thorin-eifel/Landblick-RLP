@@ -742,14 +742,14 @@ body.einrichtung .klein { font-size: .8rem; }
 .ctx-liste dt { color: var(--fg-muted); font-size: var(--fs-xs); padding-top: 2px; }
 .ctx-liste dd { margin: 0; overflow-wrap: anywhere; }
 
-/* Messwerkzeug (js/lage/messen.js): Knopf in der Zoomleiste, Feld unten mittig über der Karte */
+/* Messwerkzeug (js/lage/messen.js): Knopf und Feld in der Steuerleiste oben rechts (folgen ihr bei jeder Breite, die Kartenmitte bleibt frei) */
 .messen-knopf { display: flex; align-items: center; justify-content: center; width: 29px; height: 29px; padding: 0; border: 0; background: transparent; color: var(--fg); cursor: pointer; }
 .messen-knopf .ico { margin: 0; width: 1.2em; height: 1.2em; }
 .messen-knopf:hover { background: color-mix(in oklab, var(--fg) 8%, transparent); }
-.messen-knopf.an { background: #c026d3; color: #fff; }
+.maplibregl-ctrl-group button.messen-knopf.an { background: #c026d3; color: #fff; }
 .messen-knopf:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: -2px; }
 .messen-aktiv .maplibregl-canvas { cursor: crosshair; }
-.messen-box { position: absolute; bottom: 2.6rem; left: 50%; transform: translateX(-50%); z-index: 3; width: min(22rem, calc(100% - 2rem)); padding: var(--space-3);
+.messen-box { width: 16rem; max-width: calc(100vw - 4rem); padding: var(--space-3); box-sizing: border-box;
   background: var(--float-bg); backdrop-filter: var(--float-blur); -webkit-backdrop-filter: var(--float-blur); border: 1px solid var(--border); border-radius: var(--radius-lg, 10px); box-shadow: var(--shadow-md); }
 .messen-box[hidden] { display: none; }
 .messen-kopf { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
@@ -762,3 +762,25 @@ body.einrichtung .klein { font-size: .8rem; }
 .messen-box button { font: inherit; padding: 2px 8px; border: 1px solid var(--border-strong, var(--border)); border-radius: 6px; background: var(--surface, transparent); color: inherit; cursor: pointer; }
 .messen-box button:disabled { opacity: .45; cursor: default; }
 .messen-box button:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: 1px; }
+
+/* Schwebende Teile: die Kartenmitte bleibt frei.
+   Breit (ab 1001 px): das Menü links hält Abstand zur Höhenlegende bzw. Windrose unten links, statt sie zu überdecken; es scrollt innen.
+   Schmal (bis 1000 px): das Menü steht über der Karte; eine geöffnete Gruppe nimmt die ganze Zeile, die übrigen bleiben in einer Reihe darüber.
+   Sehr schmal: das Messfeld wird kompakter (kein Hinweistext, kleinere Tasten). */
+:root { --legend-reserve: 9.5rem; }
+@media (min-width: 1001px) {
+  .page-lage .lage > .card:first-child .card-h { max-height: calc(100% - 2 * var(--float-gap) - var(--legend-reserve)); }
+  html[data-karte="mittelalter"] { --legend-reserve: 13rem; }
+}
+@media (max-width: 1000px) {
+  .card-h > details.controls[open] { flex: 1 0 100%; }
+}
+@media (max-width: 640px) {
+  .messen-box { width: 12.5rem; padding: var(--space-2); }
+  .messen-hinweis { display: none; }
+  .messen-box button { padding: 1px 6px; font-size: var(--fs-xs); }
+}
+@media (max-width: 640px) {
+  /* Maßstab wandert nach oben links, damit er unten nicht mit den beiden Legenden um den Platz streitet */
+  .map-wrap .maplibregl-ctrl-bottom-right { top: var(--space-2); bottom: auto; left: var(--space-2); transform: none; }
+}
