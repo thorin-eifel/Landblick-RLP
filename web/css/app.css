@@ -556,21 +556,19 @@ html[data-ansicht="dunkel"] .brand .logo-dunkel { display: block; }
 .layer-group > summary { padding: 5px 0; }
 
 /* Werkzeugleiste unten mittig (js/lage/karte.js): Zoom, Vollbild, Messen und Maßstab in einer Glasleiste nach Art des macOS-Docks.
-   Kacheln mit Rundung, beim Darüberfahren wachsen sie und die Nachbarn ein Stück mit. Der Maßstab ist ein Teil der Leiste. */
+   Kacheln mit Rundung, beim Darüberfahren nur heller (keine Bewegung). Der Maßstab ist ein Teil der Leiste. */
 .map-wrap > .map-dock { position: absolute; left: 50%; bottom: var(--float-gap, 1rem); transform: translateX(-50%); z-index: 4; display: flex; align-items: flex-end; gap: 6px;
   padding: 7px 9px; width: max-content; max-width: calc(100% - 1rem); box-sizing: border-box; margin: 0;
   background: var(--glass-fill-strong, var(--float-bg)); backdrop-filter: var(--glass-blur, var(--float-blur)); -webkit-backdrop-filter: var(--glass-blur, var(--float-blur));
   border: 1px solid var(--glass-edge, var(--border)); border-radius: 22px; box-shadow: var(--glass-inset, none), var(--glass-shadow, var(--shadow-md)); }
 .map-dock button { width: 40px; height: 40px; margin: 0; padding: 0; border: 0; border-radius: 11px; background: color-mix(in oklab, var(--fg) 7%, transparent); color: var(--fg);
-  cursor: pointer; transform-origin: 50% 100%; transition: transform .14s ease-out, background-color .14s; display: flex; align-items: center; justify-content: center; }
-.map-dock button:hover, .map-dock button:focus-visible { transform: translateY(-5px) scale(1.28); background: color-mix(in oklab, var(--fg) 13%, transparent); z-index: 1; }
-.map-dock button:has(+ button:hover), .map-dock button:hover + button { transform: translateY(-2px) scale(1.1); }
+  cursor: pointer; transition: background-color .14s; display: flex; align-items: center; justify-content: center; }
+.map-dock button:hover { background: color-mix(in oklab, var(--fg) 13%, transparent); }
 .map-dock button:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: 1px; }
 .map-dock button.messen-knopf.an { background: #c026d3; color: #fff; }
 .map-dock .dock-sep { align-self: center; width: 1px; height: 26px; background: var(--border-strong, var(--border)); margin: 0 2px; flex: none; }
 .map-dock .maplibregl-ctrl-scale { align-self: center; margin: 0 4px 0 2px; padding: 1px 6px; background: transparent; color: var(--fg); border-color: var(--fg-muted); font-size: var(--fs-xs);
   border-width: 2px; border-top: 0; line-height: 1.3; box-sizing: content-box; white-space: nowrap; }
-@media (prefers-reduced-motion: reduce) { .map-dock button { transition: none; } .map-dock button:hover, .map-dock button:focus-visible { transform: none; } }
 /* Ist das Detailfeld offen, steht die Zeichenerklärung links davon und reicht sonst an die Leiste heran: sie rückt über die Leiste */
 @media (min-width: 1001px) { .lage:not(.side-min) .relief-legend.map-legend { margin-bottom: 4.5rem; } }
 
