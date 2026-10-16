@@ -21,7 +21,7 @@ test('Ebenenbudget: unter Zoom 8 nichts, bei Ortszoom alles', () => {
   assert.deepEqual(kindsForZoom(7.5), []);
   assert.deepEqual(kindsForZoom(8), ['events', 'gewaesser', 'umwelt']);
   assert.ok(!kindsForZoom(8).includes('haltestellen'));
-  assert.equal(kindsForZoom(15).length, 10);
+  assert.equal(kindsForZoom(15).length, 11);
 });
 
 test('ensure lädt nur Dateien aus dem Manifest, begrenzt parallel, und merged entfernt Dubletten über Zellkanten', async () => {

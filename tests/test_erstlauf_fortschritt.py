@@ -17,8 +17,8 @@ def fake(id_, later=False, ok=True, delay=0.0, name=None):
 
 def test_registry_marks_overpass_sources_as_later(registry):
     later = {e.id for e in registry.entries if e.erstlauf == "spaeter"}
-    assert later == {"osm_natur", "osm_infra", "osm_anbau", "osm_routen", "osm_tankstellen_lu"}
-    assert all(e.collector.startswith("osm_") for e in registry.entries if e.id in later)
+    assert later == {"osm_natur", "osm_infra", "osm_anbau", "osm_routen", "osm_tankstellen_lu", "sgdnord_energie", "osm_energie"}
+    assert all(e.collector.startswith(("osm_", "rlp_")) for e in registry.entries if e.id in later)
 
 
 def test_select_collectors_filters():

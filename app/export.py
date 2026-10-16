@@ -7,7 +7,7 @@ Parameter:  --out PFAD   Zielordner (Standard web/data)
             --db PFAD    Datenbank (Standard $OSINT_DB_PATH oder data/osint.sqlite)
 Beispiel:   python -m app.export --out web/data
 Zellen:     standardmäßig zusätzlich manifest.json, start.json und z/<x>_<y>/<art>.json (app/export_cells.py); --no-cells schaltet das ab
-Dateien:    meta.json events.json aircraft.json gewaesser.json wetter.json umwelt.json indizes.json kraftstoff.json themen.json radar.json radar.png blitz.json blitz.png wind.json haltestellen.json landmarks.json infrastruktur.json routen.json anbau.json sakral.json suche.json status.json sources.json
+Dateien:    meta.json events.json aircraft.json gewaesser.json wetter.json umwelt.json indizes.json kraftstoff.json themen.json radar.json radar.png blitz.json blitz.png wind.json haltestellen.json landmarks.json infrastruktur.json energie.json routen.json anbau.json sakral.json suche.json status.json sources.json
 Schreiben:  je Datei erst *.tmp, dann Umbenennen — kein halbes JSON im Zielordner.
 Datenschutz: Die Dateien enthalten nur Ereignisse, Messwerte und Quellenstatus.
 """
@@ -51,6 +51,7 @@ def build_all(storage: Storage, registry: Registry) -> dict[str, Any]:
         "routen.json": payloads.routen_payload(storage, registry),
         "anbau.json": payloads.anbau_payload(storage, registry),
         "sakral.json": payloads.sakral_payload(storage, registry),
+        "energie.json": payloads.energie_payload(storage, registry),
         "suche.json": payloads.suche_payload(storage, registry),
         "status.json": payloads.status_payload(storage, registry),
         "sources.json": payloads.sources_payload(registry),

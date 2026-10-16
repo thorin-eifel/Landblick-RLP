@@ -180,7 +180,7 @@ export function registerInfra(map) {
 // Eigenschaften je Objekt für die Karte: Beschriftung nur bei Wache, Krankenhaus und benanntem Windrad
 export function infraFeatures(items) {
   return { type: 'FeatureCollection', features: (items ?? []).map((i) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [i.lon, i.lat] },
-    properties: { kind: i.kind, old: i.old ?? 0, name: i.name || '', label: i.name || (['wind', 'fire_station', 'hospital'].includes(i.kind) ? INFRA_WORD[i.kind] : ''), labelMed: ['cross', 'shrine', 'border', 'well'].includes(i.kind) ? '' : ['watermill', 'windmill', 'ford', 'gallows'].includes(i.kind) ? INFRA_WORD_MED[i.kind] : i.kind === 'wind' ? (i.name || INFRA_WORD_MED.wind) : ['church', 'chapel', 'bridge', 'ferry'].includes(i.kind) ? (i.name || (i.kind === 'ferry' ? INFRA_WORD_MED.ferry : '')) : (i.name || INFRA_WORD_MED[i.kind] || ''), kw: i.kw ?? null, points: i.points ?? null } })) };
+    properties: { kind: i.kind, old: i.old ?? 0, name: i.name || '', label: i.name || (['wind', 'fire_station', 'hospital'].includes(i.kind) ? INFRA_WORD[i.kind] : ''), labelMed: ['cross', 'shrine', 'border', 'well'].includes(i.kind) ? '' : ['watermill', 'windmill', 'ford', 'gallows'].includes(i.kind) ? INFRA_WORD_MED[i.kind] : i.kind === 'wind' ? (i.name || INFRA_WORD_MED.wind) : ['church', 'chapel', 'bridge', 'ferry'].includes(i.kind) ? (i.name || (i.kind === 'ferry' ? INFRA_WORD_MED.ferry : '')) : (i.name || INFRA_WORD_MED[i.kind] || ''), kw: i.kw ?? null, points: i.points ?? null, plan: i.state && i.state !== 'netz' ? 1 : 0, state: i.state ?? '', hub: i.hub ?? null, top: i.top ?? null, place: i.place ?? '', src: i.src ?? 'osm' } })) };
 }
 
 // Text für das Popup: Art, Sachwert, Herkunft. Reiner Text, kein HTML.
@@ -188,6 +188,12 @@ export function infraText(p) {
   const bits = [INFRA_WORD[p.kind] ?? p.kind];
   if (p.name && !['aed', 'cross', 'shrine', 'picnic', 'shelter'].includes(p.kind)) bits.push(p.name);
   if (p.kind === 'wind' && p.kw) bits.push(p.kw >= 1000 ? `${(p.kw / 1000).toLocaleString('de-DE', { maximumFractionDigits: 1 })} MW` : `${p.kw} kW`);
+  if (p.kind === 'wind') {
+    if (p.state && p.state !== 'netz') bits.push(p.state === 'genehmigt' ? 'genehmigt, nicht gebaut' : 'beantragt');
+    if (p.hub) bits.push(`Nabe ${p.hub} m`);
+    if (p.top) bits.push(`Gesamthöhe ${p.top} m`);
+    if (p.place) bits.push(p.place);
+  }
   if (p.kind === 'charging' && p.points) bits.push(`${p.points} Ladepunkt${p.points === 1 ? '' : 'e'}`);
   return bits.join(' · ');
 }

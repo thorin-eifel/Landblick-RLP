@@ -12,5 +12,5 @@ tanken.svg ist eine eigene Zeichnung (CTW), nicht von uxwing; sie liegt im Repos
 Menüzeichen (web/icons/menu/, im Repository, weil frei weitergebbar):
 Maki (Mapbox, CC0 1.0, https://github.com/mapbox/maki), Temaki (OpenStreetMap-Editor iD, CC0 1.0, https://github.com/ideditor/temaki)
 und OpenStreetMap Carto (CC0 1.0, hoehle.svg). Eigene Zeichnungen (CTW): autobahn, bundesstrasse, landstrasse, nebenstrasse,
-grenze-staat, grenze-land, grenze-kreis, grenze-gemeinde. Regel: jedes Zeichen steht im Menü und in den Reitern nur einmal,
+grenze-staat, grenze-land, grenze-kreis, grenze-gemeinde, solar (Energie; kraftwerk, umspannwerk, transformator, leitung aus Temaki). Regel: jedes Zeichen steht im Menü und in den Reitern nur einmal,
 tests/js/icons-eindeutig.test.mjs prüft das. Neue Schalter bekommen ein neues Zeichen, keine Wiederverwendung.

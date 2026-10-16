@@ -85,3 +85,8 @@
 .ico-m-wein { --ico: url(../icons/menu/wein.svg); }
 .ico-m-wiese { --ico: url(../icons/menu/wiese.svg); }
 .ico-m-windrad { --ico: url(../icons/menu/windrad.svg); }
+.ico-m-kraftwerk { --ico: url(../icons/menu/kraftwerk.svg); }
+.ico-m-leitung { --ico: url(../icons/menu/leitung.svg); }
+.ico-m-solar { --ico: url(../icons/menu/solar.svg); }
+.ico-m-transformator { --ico: url(../icons/menu/transformator.svg); }
+.ico-m-umspannwerk { --ico: url(../icons/menu/umspannwerk.svg); }

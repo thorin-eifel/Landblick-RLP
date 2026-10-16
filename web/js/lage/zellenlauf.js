@@ -7,6 +7,7 @@
 // Stufen:  Zoom < 7: keine Zellen, nur Dichte-Ebene (Zählwerte je Zelle) und Warnband-Punkte aus dem Startpaket.
 //          Zoom ≥ 7: Zellen im Ausschnitt plus Rand (ab Zoom 9), Arten nach Ebenenbudget (zellen.js KIND_MIN_ZOOM).
 // Fehler:  Eine Zelle, die nicht kommt, steht in der Statuszeile ("1 Zelle fehlt"); die übrigen bleiben. Nach 30 s ein neuer Versuch.
+import { energieAn } from '../energie.js';
 import { sakralAn } from '../infra.js';
 import { getJSON } from '../util.js';
 import { GEBIET_LEER, gebietPasst, gebietAktiv } from '../gebiet.js';
@@ -16,7 +17,7 @@ import { map, mapReady, state } from './zustand.js';
 export const EVENTS_MIN_ZOOM = KIND_MIN_ZOOM.events;
 const MARGIN_ZOOM = 9;       // ab hier eine Zelle Rand rund um den Ausschnitt mitladen (darunter wäre der Rand mehr als der Ausschnitt)
 const MAX_CELLS = 60;        // Obergrenze gleichzeitig gehaltener Zellen; die Mitte des Ausschnitts hat Vorrang
-const FIELD = { events: 'base', gewaesser: 'gew', umwelt: 'env', haltestellen: 'stops', landmarks: 'landmarks', infrastruktur: 'infra', routen: 'routen', sakral: 'sakral', kraftstoff: 'fuel', anbau: 'anbau' };
+const FIELD = { events: 'base', gewaesser: 'gew', umwelt: 'env', haltestellen: 'stops', landmarks: 'landmarks', infrastruktur: 'infra', routen: 'routen', sakral: 'sakral', energie: 'energie', kraftstoff: 'fuel', anbau: 'anbau' };
 
 let gekappt = 0, lastKey = '', running = Promise.resolve(), onChange = () => {};
 export const setzeAenderungsfunktion = (fn) => { onChange = fn; };
@@ -47,7 +48,7 @@ function viewCells() {
 }
 
 function wantedKinds(z) {
-  return kindsForZoom(z).filter((k) => k !== 'sakral' || sakralAn(state.layers));
+  return kindsForZoom(z).filter((k) => (k !== 'sakral' || sakralAn(state.layers)) && (k !== 'energie' || energieAn(state.layers)));
 }
 
 export function setzeStatuszeile() {

@@ -50,7 +50,7 @@ export function applyInfra() {
         layout: { 'icon-image': ['concat', 'inf-', ['get', 'kind']], 'icon-size': ['interpolate', ['linear'], ['zoom'], 9.5, 0.5, 14, 0.8], 'icon-allow-overlap': false, 'icon-padding': 2,
           'symbol-sort-key': ['match', ['get', 'kind'], 'hospital', 0, 'fire_station', 1, 'wind', 2, 'aed', 3, 4],
           'text-field': ['get', 'label'], 'text-font': ['Noto Sans Regular'], 'text-size': 11, 'text-offset': [0, 1.2], 'text-anchor': 'top', 'text-max-width': 9, 'text-optional': true },
-        paint: { 'text-color': '#1c1c1c', 'text-halo-color': '#fff', 'text-halo-width': 1.8, 'text-opacity': ['step', ['zoom'], 0, 12, 1] } }, 'radius-fill');
+        paint: { 'text-color': '#1c1c1c', 'text-halo-color': '#fff', 'text-halo-width': 1.8, 'text-opacity': ['step', ['zoom'], 0, 12, 1], 'icon-opacity': ['case', ['==', ['get', 'plan'], 1], 0.55, 1] } }, 'radius-fill');
     }
   }
   infraKey = key;

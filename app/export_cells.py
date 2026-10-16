@@ -4,7 +4,7 @@ Zweck:      Das Frontend lädt zuerst `start.json` (klein), liest daraus und aus
             und holt nur die Zellen im Bildausschnitt nach (`z/<x>_<y>/<art>.json`). Zellraster: app/cells.py (0,5 Grad).
 Dateien:    manifest.json              Version, Zellenliste, je Datei Größe und Prüfsumme, Warnungen zu Größenbudgets
             start.json                 Startpaket: Meta, Warnband, Quellenzustand, Zählwerte je Zelle (unter 2 MB)
-            z/<x>_<y>/<art>.json       Arten: events, gewaesser, umwelt, haltestellen, landmarks, infrastruktur, sakral, routen, anbau, kraftstoff
+            z/<x>_<y>/<art>.json       Arten: events, gewaesser, umwelt, haltestellen, landmarks, infrastruktur, sakral, energie, routen, anbau, kraftstoff
 Kontrakt:   Jede Zellendatei trägt `source`/`sources` (Betreiber, Lizenz, Namensnennung), `stand` (wann sich der Inhalt zuletzt
             geändert hat) und `cell`. Zeitabhängiges (Alter, Status "veraltet", Abrufzeit je Lauf) steht NICHT in den Zellen,
             sonst änderte sich jede Datei bei jedem Lauf und der inkrementelle Upload wäre sinnlos. Das Alter rechnet das Frontend
@@ -58,6 +58,11 @@ def _cells_anbau(item: dict[str, Any]) -> set[cellmod.Cell]:
     return cellmod.cells_for_geometry(item.get("geometry"))
 
 
+def _cells_energie(item: dict[str, Any]) -> set[cellmod.Cell]:
+    """Punkte (Kraftwerk, Umspannwerk, Solarpark) nach Koordinate, Leitungen nach allen berührten Zellen."""
+    return _cells_route(item) if item.get("lines") else _cells_point(item)
+
+
 # Art -> (Schlüssel der Liste in der Nutzlast, Zellenzuordnung)
 KINDS: dict[str, tuple[str, Callable[[dict[str, Any]], set[cellmod.Cell]]]] = {
     "events": ("features", _cells_feature),
@@ -67,6 +72,7 @@ KINDS: dict[str, tuple[str, Callable[[dict[str, Any]], set[cellmod.Cell]]]] = {
     "landmarks": ("items", _cells_point),
     "infrastruktur": ("items", _cells_point),
     "sakral": ("items", _cells_point),
+    "energie": ("items", _cells_energie),
     "routen": ("items", _cells_route),
     "anbau": ("features", _cells_anbau),
     "kraftstoff": ("stations", _cells_point),
@@ -206,6 +212,7 @@ def flat_payloads(storage: Storage, registry: Registry) -> dict[str, dict[str, A
         "landmarks": payloads.landmarks_payload(storage, registry),
         "infrastruktur": payloads.infrastruktur_payload(storage, registry),
         "sakral": payloads.sakral_payload(storage, registry),
+        "energie": payloads.energie_payload(storage, registry),
         "routen": payloads.routen_payload(storage, registry),
         "anbau": payloads.anbau_payload(storage, registry),
         "kraftstoff": payloads.kraftstoff_payload(storage, registry),

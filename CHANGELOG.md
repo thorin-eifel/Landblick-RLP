@@ -4,6 +4,14 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unreleased]
 
+### Neu (Geographie → Energie)
+- Eigene Gruppe **Energie** mit sechs Schaltern: Windräder (aus „Orte und Einrichtungen“ hierher verschoben), Solarparks, Kraftwerke, Umspannwerke, Transformatoren, Hochspannungsleitungen (`wturb`, `enSolar`, `enPlant`, `enSub`, `enTrafo`, `enLine`). Jeder Schalter hat ein eigenes Zeichen (Temaki, CC0; Solar eigene Zeichnung).
+- Quellen: `sgdnord_energie` (Raumordnungskataster ROK25 Online der SGD Nord, dl-de/by-2.0, täglich): Windräder (am Netz, genehmigt, beantragt) mit Nennleistung, Nabenhöhe und Gesamthöhe, Solarparks mit Umriss und Leistung. Betreiber, Typ und Aktenlinks werden nicht übernommen. `osm_energie` (ODbL, wöchentlich): Kraftwerke, Solarparks, Umspannwerke, Transformatoren und Leitungen ab 110 kV. Amtliche Windräder und Solarparks ersetzen OSM-Einträge im Umkreis von 150 m bzw. 400 m.
+- Neue Ausgabe `energie.json` und Zellenart `energie` (ab Zoom 9, Leitungen laufen über Zellgrenzen). Geplante Windräder erscheinen blasser; Popup nennt Stand, Maße und Quelle.
+- Lücke: Der Süden (SGD Süd) bietet keinen vergleichbaren offenen Dienst; dort kommt alles aus OpenStreetMap. Die amtlichen Wasserkraftdaten sind nicht verwendbar.
+- Geändert: Umspannwerke, Kraftwerke und Leitungen kommen jetzt aus `osm_energie` (nur Übertragungsnetz ab 110 kV), nicht mehr aus `osm_infra`. Die frühere Entscheidung, sie wegzulassen, ist damit aufgehoben.
+- Der OSM-Sammler wurde aus der Entwicklungsumgebung nicht live getestet (Overpass dort nicht erreichbar); Parser und Zusammenführung sind mit Fixtures bzw. synthetischen Daten geprüft.
+
 ### Geändert (Menüzeichen)
 - Jeder Schalter und jeder Reiter hat ein eigenes Zeichen; vorher teilten sich 58 Einträge das Wanderer-Zeichen und zehn Straßen- und Verkehrseinträge das Stau-Zeichen. Neue Zeichen aus Maki, Temaki und OSM Carto (alle CC0) in `web/icons/menu/`, dazu acht eigene für Straßenklassen und Grenzebenen. Der Test `icons-eindeutig` verhindert Doppelungen.
 

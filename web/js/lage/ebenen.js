@@ -12,6 +12,7 @@ import { skinById } from './skins.js';
 import { applyArt } from './zeichensatz.js';
 import { artOf } from './zeichensaetze.js';
 import { applyNatureVisibility } from './natur.js';
+import { applyEnergieVisibility } from './energie.js';
 import { applyInfra, applyInfraVisibility, applyRoutesVisibility, applyStopsVisibility } from './orte.js';
 import { applyBlitzVisibility, applyFlow, applyLegends, applyRadarVisibility, applyWind } from './wetterkarte.js';
 import { AIR_POLL_MS, GROUPS, map, mapReady, reliefOk, state } from './zustand.js';
@@ -47,6 +48,7 @@ export function applyLayerFilters() {
   map.setLayoutProperty('tank-label', 'visibility', on(state.layers.tank && state.iconsOk));
   applyInfraVisibility();
   applyRoutesVisibility();
+  applyEnergieVisibility();
   map.setLayoutProperty('tank-circle', 'visibility', on(state.layers.tank && !state.iconsOk));
   applyBaseToggles();
   applyFlow();

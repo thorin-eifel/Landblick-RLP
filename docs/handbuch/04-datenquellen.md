@@ -80,6 +80,8 @@ Kennung in der ersten Spalte, die Intervalle sind Soll-Abstände. „Risiko“ i
 | `gtfs_rt_de` | ÖPNV Echtzeit | DELFI e. V. / gtfs.de (Daten der Verkehrsverbünde und der DB) | CC BY-SA 4.0 (Namensnennung, Weitergabe unter gleichen Bedingungen), ohne Gewähr | 10 min | niedrig | nein | ja |
 | `osm_natur` | Landmarken | OpenStreetMap-Mitwirkende; Abfrage über die Overpass API (overpass-api.de) | ODbL 1.0 (© OpenStreetMap-Mitwirkende) | 168 h | niedrig | nein | ja |
 | `osm_infra` | Infrastruktur | OpenStreetMap-Mitwirkende; Abfrage über die Overpass API (overpass-api.de) | ODbL 1.0 (© OpenStreetMap-Mitwirkende) | 168 h | niedrig | nein | ja |
+| `sgdnord_energie` | Wind und Solar (SGD Nord) | Struktur- und Genehmigungsdirektion Nord, Obere Landesplanungsbehörde (Raumordnungskataster ROK25 Online); Bereitstellung über das Geoportal Rheinland-Pfalz | Datenlizenz Deutschland Namensnennung 2.0 (dl-de/by-2.0) | 24 h | niedrig | ja | ja |
+| `osm_energie` | Energie | OpenStreetMap-Mitwirkende; Abfrage über die Overpass API (overpass-api.de) | ODbL 1.0 (© OpenStreetMap-Mitwirkende) | 168 h | niedrig | nein | ja |
 | `osm_anbau` | Anbauflächen | OpenStreetMap-Mitwirkende; Abfrage über die Overpass API (overpass-api.de) | ODbL 1.0 (© OpenStreetMap-Mitwirkende) | 168 h | niedrig | nein | ja |
 | `osm_routen` | Routen | OpenStreetMap-Mitwirkende; Abfrage über die Overpass API (overpass-api.de) | ODbL 1.0 (© OpenStreetMap-Mitwirkende) | 168 h | niedrig | nein | ja |
 | `meteolux` | MeteoLux Findel | Administration de la navigation aérienne (ANA) / MeteoLux | CC0 1.0 | 10 min | niedrig | ja | ja |
@@ -109,6 +111,6 @@ Kennung in der ersten Spalte, die Intervalle sind Soll-Abstände. „Risiko“ i
 | `lgb_wms` | LGB Daten (Browser) | Landesamt für Geologie und Bergbau Rheinland-Pfalz (LGB) | Datenlizenz Deutschland – Namensnennung – Version 2.0 (dl-de/by-2-0) | — | mittel | nein | ja |
 | `landesdaten_wms` | Landesdaten (Browser) | Landesstellen Rheinland-Pfalz (Landesamt für Vermessung und Geobasisinformationen, Landesamt für Umwelt, Ministerium, LBM, DLR u. a.) | je Dienst, überwiegend Datenlizenz Deutschland – Namensnennung – Version 2.0 (dl-de/by-2-0); daneben dl-de/zero-2-0, CC BY 3.0/4.0, ODbL 1.0 | — | mittel | nein | ja |
 
-47 Quellen im Register, davon 45 aktiv.
+49 Quellen im Register, davon 47 aktiv.
 
 <!-- quellen:ende -->

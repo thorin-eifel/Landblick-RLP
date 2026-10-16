@@ -183,13 +183,23 @@
             </div>
           </details>
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Orte und Einrichtungen ganz ein- oder ausblenden"> <span>Orte und Einrichtungen</span></label></summary>
-            <p class="group-hint small muted">Notfallpunkte, Schulen, Ladesäulen, Windräder, Wehre</p>
+            <p class="group-hint small muted">Notfallpunkte, Schulen, Ladesäulen, Wehre</p>
             <div class="layer-list">
               <label title="Defibrillator, Feuerwache, Krankenhaus"><input type="checkbox" data-layer="emerg"> <span class="ico ico-m-notfall" aria-hidden="true"></span>Notfallpunkte</label>
               <label><input type="checkbox" data-layer="civic"> <span class="ico ico-m-rathaus" aria-hidden="true"></span>Schulen und Rathäuser</label>
               <label><input type="checkbox" data-layer="charge"> <span class="ico ico-m-laden" aria-hidden="true"></span>Ladesäulen für E-Autos</label>
-              <label><input type="checkbox" data-layer="wturb"> <span class="ico ico-m-windrad" aria-hidden="true"></span>Windräder</label>
               <label><input type="checkbox" data-layer="wehr"> <span class="ico ico-m-wehr" aria-hidden="true"></span>Wehre, Schleusen und Fähranleger</label>
+            </div>
+          </details>
+          <details class="layer-group" id="grp-energie"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Energie ganz ein- oder ausblenden"> <span>Energie</span></label></summary>
+            <p class="group-hint small muted">Windräder, Solarparks, Kraftwerke, Umspannwerke, Transformatoren und Hochspannungsleitungen ab 110 kV. Windräder und Solarparks im Norden von Rheinland-Pfalz aus dem Raumordnungskataster, der Rest aus OpenStreetMap</p>
+            <div class="layer-list">
+              <label><input type="checkbox" data-layer="wturb"> <span class="ico ico-m-windrad" aria-hidden="true"></span>Windräder</label>
+              <label><input type="checkbox" data-layer="enSolar"> <span class="ico ico-m-solar" aria-hidden="true"></span>Solarparks</label>
+              <label><input type="checkbox" data-layer="enPlant"> <span class="ico ico-m-kraftwerk" aria-hidden="true"></span>Kraftwerke</label>
+              <label><input type="checkbox" data-layer="enSub"> <span class="ico ico-m-umspannwerk" aria-hidden="true"></span>Umspannwerke</label>
+              <label><input type="checkbox" data-layer="enTrafo"> <span class="ico ico-m-transformator" aria-hidden="true"></span>Transformatoren</label>
+              <label title="110, 220 und 380 kV; Mittelspannung und Erdkabel fehlen"><input type="checkbox" data-layer="enLine"> <span class="ico ico-m-leitung" aria-hidden="true"></span>Hochspannungsleitungen</label>
             </div>
           </details>
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Natur ganz ein- oder ausblenden"> <span>Natur</span></label></summary>

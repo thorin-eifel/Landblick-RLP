@@ -13,12 +13,12 @@
 
 export const KIND_KEY = {
   events: 'features', gewaesser: 'stations', umwelt: 'stations', haltestellen: 'stops', landmarks: 'items',
-  infrastruktur: 'items', sakral: 'items', routen: 'items', anbau: 'features', kraftstoff: 'stations',
+  infrastruktur: 'items', sakral: 'items', energie: 'items', routen: 'items', anbau: 'features', kraftstoff: 'stations',
 };
 
 // Welche Arten ab welcher Zoomstufe geladen werden (Ebenenbudget). Darunter zeigt die Karte nur Zählwerte aus dem Startpaket.
 export const KIND_MIN_ZOOM = {
-  events: 8, gewaesser: 8, umwelt: 8, kraftstoff: 9, haltestellen: 10, landmarks: 10, infrastruktur: 11, routen: 10, anbau: 11, sakral: 11,
+  events: 8, gewaesser: 8, umwelt: 8, kraftstoff: 9, haltestellen: 10, landmarks: 10, infrastruktur: 11, routen: 10, anbau: 11, sakral: 11, energie: 9,
 };
 
 export const cellId = (lon, lat) => `${Math.floor(lon * 2)}_${Math.floor(lat * 2)}`;

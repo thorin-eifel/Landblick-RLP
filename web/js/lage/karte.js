@@ -3,6 +3,7 @@ import { PMTiles, Protocol } from '../../vendor/pmtiles/pmtiles.js';
 import { createFlow, registerArrow } from '../fluss.js';
 import { MIL_COLOUR, iconStatus, registerIcons, registerMedieval, registerSigns } from '../icons.js';
 import { registerInfra } from '../infra.js';
+import { ENERGIE_LAYER_IDS, registerEnergie } from './energie.js';
 import { buildRainLegend } from '../legend.js';
 import { createLight } from '../licht.js';
 import { FAUNA_SOURCE, faunaPoints, registerFauna, registerMedievalPatterns } from '../medieval.js';
@@ -105,7 +106,7 @@ export async function initMap() {
   state.signsOk = registerSigns(map);
   registerArrow(map);
   state.iconsOk = await registerIcons(map, palette());
-  try { registerMedieval(map); registerMedievalPatterns(map); registerFauna(map); registerInfra(map); map.addSource(FAUNA_SOURCE, { type: 'geojson', data: faunaPoints() }); } catch (err) { console.warn('Zeichen der historischen Karte fehlen:', err); }
+  try { registerMedieval(map); registerMedievalPatterns(map); registerFauna(map); registerInfra(map); registerEnergie(map); map.addSource(FAUNA_SOURCE, { type: 'geojson', data: faunaPoints() }); } catch (err) { console.warn('Zeichen der historischen Karte fehlen:', err); }
   if (!state.iconsOk) $('.map-note')?.append(` · Symbole nicht geladen, Ersatzdarstellung (${iconStatus.errors[0] ?? 'Dateien fehlen'})`);
   // Rückfall ohne Icons (Dateien fehlen): die früheren Kreise
   map.addLayer({ id: 'ev-point', type: 'circle', source: 'events', filter: ['==', ['geometry-type'], 'Point'],
@@ -188,15 +189,15 @@ export async function initMap() {
     'text-size': 11, 'text-offset': [0, 1.2], 'text-anchor': 'top', 'text-optional': true },
     paint: { 'text-color': '#8a3d06', 'text-halo-color': '#fff', 'text-halo-width': 1.8 } });
 
-  for (const id of ['ev-fill', 'ev-outline', 'ev-line', 'ev-point', ...SYMBOL_LAYERS, 'air-circle', 'air-sym', 'st-circle', 'st-sym', 'env-circle', 'env-sym', 'tank-circle', 'tank-sym', ...INFRA_LAYER_IDS, 'routes-hit']) {
+  for (const id of ['ev-fill', 'ev-outline', 'ev-line', 'ev-point', ...SYMBOL_LAYERS, 'air-circle', 'air-sym', 'st-circle', 'st-sym', 'env-circle', 'env-sym', 'tank-circle', 'tank-sym', ...INFRA_LAYER_IDS, 'routes-hit', 'en-sym', 'en-line-hit']) {
     map.on('mouseenter', id, () => (map.getCanvas().style.cursor = 'pointer'));
     map.on('mouseleave', id, () => (map.getCanvas().style.cursor = ''));
   }
   map.on('click', (e) => {
-    const order = ['air-sym', 'air-circle', ...SYMBOL_LAYERS, ...INFRA_LAYER_IDS, 'routes-hit', 'ev-point', 'env-sym', 'env-circle', 'tank-sym', 'tank-circle', 'st-sym', 'st-circle', 'ev-line', 'ev-fill'];
+    const order = ['air-sym', 'air-circle', ...SYMBOL_LAYERS, ...INFRA_LAYER_IDS, 'en-sym', 'routes-hit', 'en-line-hit', 'en-area-fill', 'ev-point', 'env-sym', 'env-circle', 'tank-sym', 'tank-circle', 'st-sym', 'st-circle', 'ev-line', 'ev-fill'];
     const hit = map.queryRenderedFeatures(e.point, { layers: order.filter((l) => map.getLayer(l)) })[0];
     if (!hit) return;
-    showPopup(hit.properties, hit.layer.id === 'routes-hit' ? 'route' : hit.layer.id.startsWith('inf-') ? 'infra' : hit.layer.id.startsWith('tank-') ? 'tank' : hit.layer.id.startsWith('st-') ? 'station' : hit.layer.id.startsWith('env-') ? 'env' : 'event', e.lngLat);
+    showPopup(hit.properties, hit.layer.id === 'routes-hit' ? 'route' : hit.layer.id.startsWith('inf-') ? 'infra' : hit.layer.id.startsWith('en-') ? 'energie' : hit.layer.id.startsWith('tank-') ? 'tank' : hit.layer.id.startsWith('st-') ? 'station' : hit.layer.id.startsWith('env-') ? 'env' : 'event', e.lngLat);
   });
 
   map.fitBounds(RLP_BBOX, { padding: 24, animate: false });   // Start: ganz Rheinland-Pfalz, mittig (das Gebiet steht fest, es gibt keinen gewählten Mittelpunkt)

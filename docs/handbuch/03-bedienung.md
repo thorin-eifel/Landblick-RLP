@@ -47,7 +47,8 @@ Die Schalter der Karte stehen in drei Menüs. *Ereignisse* zeigt, was gerade pas
 | **Wald, Wiesen und Felder** | Wald, Wiesen, Busch und Heide, Äcker, Obst und Wein, Feuchtgebiete, Fels und Strand |
 | **Straßen und Bahn** | das Straßennetz der Karte nach Art, Bahnstrecken, Haltestellen, Straßenschilder, Brücken und Tunnel |
 | **Grenzen und Schutzgebiete** | Staats-, Landes-, Kreis- und Gemeindegrenzen, Naturschutzgebiete, Nationalparks, Militärgelände |
-| **Orte und Einrichtungen** | Notfallpunkte, Schulen und Rathäuser, Ladesäulen, Windräder, Wehre und Schleusen |
+| **Orte und Einrichtungen** | Notfallpunkte, Schulen und Rathäuser, Ladesäulen, Wehre und Schleusen |
+| **Energie** | Windräder, Solarparks, Kraftwerke, Umspannwerke, Transformatoren, Hochspannungsleitungen ab 110 kV (110, 220 und 380 kV in drei Farben) |
 | **Natur** | Berggipfel (mit Höhe), Höhlen, Wasserfälle und Quellen, Aussichtspunkte, Felsen und Vulkane |
 | **Kultur und Geschichte** | Burgen, Ausgrabungen, Klöster, historische Gebäude, Kirchen, Friedhöfe |
 
