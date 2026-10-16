@@ -5,7 +5,8 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 ## [Unreleased]
 
 ### Geändert (Anordnung)
-- Das Messfeld sitzt jetzt in der Steuerleiste oben rechts (folgt ihr bei jeder Breite) statt unten über der Kartenmitte und dem Maßstab. Auf schmalen Schirmen ist es kompakter.
+- Zoom, Vollbild, Messen und Maßstab sitzen in einer Werkzeugleiste unten mittig nach Art des macOS-Docks (Glasleiste, Kacheln wachsen beim Darüberfahren, ohne Animation bei „reduzierte Bewegung“). Bis 640 px Breite steht sie über den beiden Legenden. Ist das Detailfeld offen, rückt die Zeichenerklärung über die Leiste. Auf der Karte um 1450 entfällt der Maßstab wie bisher.
+- Das Messfeld sitzt oben rechts (folgt dem Detailfeld bei jeder Breite) statt unten über der Kartenmitte und dem Maßstab. Auf schmalen Schirmen ist es kompakter.
 - Breite Schirme: Das Menü links lässt unten Platz für Höhenlegende bzw. Windrose und scrollt innen, statt sie zu überdecken.
 - Schmale Schirme (bis 1000 px): Eine geöffnete Menügruppe nimmt die ganze Zeile, die übrigen bleiben in einer Reihe (vorher rutschte „Freizeit“ neben die offene Gruppe). Bis 640 px steht der Maßstab oben links statt zwischen den Legenden.
 
@@ -13,7 +14,7 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 - Burg und Ruine teilen das Zeichen, unterscheiden sich jetzt aber deutlich in der Farbe: Burg und Schloss karminrot, Ruine moosgrün (vorher dunkelrot und grau).
 
 ### Neu (Messen)
-- Messwerkzeug in der Zoomleiste (Lineal): Punkte anklicken ergibt Strecke mit Abschnittslängen; den ersten Punkt erneut anklicken oder „Schließen“ ergibt Fläche (m², ha, km²) und Umfang, ab drei Punkten schon als Vorschau. Kreuzen sich die Kanten, steht eine Warnung dabei. Ohne Maus: „Punkt in Kartenmitte“, Rücktaste, Eingabe, Esc. Werte lassen sich kopieren. Kugelrechnung, Abweichung unter 0,5 %; keine Vermessung. Nichts wird gespeichert oder gesendet.
+- Messwerkzeug im Dock (Lineal): Punkte anklicken ergibt Strecke mit Abschnittslängen; den ersten Punkt erneut anklicken oder „Schließen“ ergibt Fläche (m², ha, km²) und Umfang, ab drei Punkten schon als Vorschau. Kreuzen sich die Kanten, steht eine Warnung dabei. Ohne Maus: „Punkt in Kartenmitte“, Rücktaste, Eingabe, Esc. Werte lassen sich kopieren. Kugelrechnung, Abweichung unter 0,5 %; keine Vermessung. Nichts wird gespeichert oder gesendet.
 
 ### Neu (Geographie → Energie)
 - Eigene Gruppe **Energie** mit sechs Schaltern: Windräder (aus „Orte und Einrichtungen“ hierher verschoben), Solarparks, Kraftwerke, Umspannwerke, Transformatoren, Hochspannungsleitungen (`wturb`, `enSolar`, `enPlant`, `enSub`, `enTrafo`, `enLine`). Jeder Schalter hat ein eigenes Zeichen (Temaki, CC0; Solar eigene Zeichnung).

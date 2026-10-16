@@ -81,10 +81,16 @@ export async function initMap() {
   initFont();
   map.on('moveend', detailNachBewegung);   // Detailfenster folgt dem Kartenausschnitt
   zentriereLand(map);
-  map.addControl(new NavigationControl({ showCompass: false }), 'top-right');
-  if (document.fullscreenEnabled || document.webkitFullscreenEnabled) map.addControl(new FullscreenControl({ container: document.querySelector('.map-wrap') }), 'top-right');      // Karte samt Cartouche, Windrose und Legende
-  map.addControl(new ScaleControl({ unit: 'metric' }), 'bottom-right');
-  initMessen();
+  // Werkzeugleiste unten mittig, wie ein Dock: Zoom, Vollbild, Messen und Maßstab in einer Glasleiste. Die Kartensteuerungen von MapLibre bauen ihre
+  // Knöpfe selbst (onAdd); wir hängen sie nur um, damit Beschriftung, Tastatur und Vollbildwechsel unverändert bleiben.
+  const dock = document.createElement('div');
+  dock.className = 'maplibregl-ctrl map-dock'; dock.setAttribute('role', 'toolbar'); dock.setAttribute('aria-label', 'Kartenwerkzeuge');
+  const sep = () => { const e = document.createElement('span'); e.className = 'dock-sep'; e.setAttribute('aria-hidden', 'true'); return e; };
+  dock.append(...new NavigationControl({ showCompass: false }).onAdd(map).querySelectorAll('button'), sep());
+  if (document.fullscreenEnabled || document.webkitFullscreenEnabled) dock.append(new FullscreenControl({ container: document.querySelector('.map-wrap') }).onAdd(map).querySelector('button'));      // Karte samt Cartouche, Windrose und Legende
+  map.getContainer().parentElement.append(dock);
+  initMessen(dock);
+  dock.append(sep(), new ScaleControl({ unit: 'metric' }).onAdd(map));
   setPopup(new Popup({ closeButton: true, maxWidth: '320px' }));
 
   await new Promise((res) => map.on('load', res));

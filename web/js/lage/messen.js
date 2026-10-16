@@ -1,4 +1,4 @@
-// Messwerkzeug auf der Karte (Feld sitzt unter den Zoomknöpfen, nicht über der Kartenmitte): Punkte anklicken ergibt eine Strecke; den ersten Punkt erneut anklicken (oder „Schließen“) ergibt eine Fläche mit Umfang.
+// Messwerkzeug auf der Karte (Knopf im Dock unten, Feld oben rechts in der Steuerleiste, nichts über der Kartenmitte): Punkte anklicken ergibt eine Strecke; den ersten Punkt erneut anklicken (oder „Schließen“) ergibt eine Fläche mit Umfang.
 // Bedienung ohne Maus: Knopf „Punkt in Kartenmitte“, Rücktaste (zurück), Eingabe (schließen), Esc (beenden). Rechnung: ../messen.js.
 // Während das Werkzeug an ist, öffnen Klicks keine Popups (karte.js fragt messenAktiv()). Nichts wird gespeichert oder gesendet.
 import { messenFeatures, summary } from '../messen.js';
@@ -64,11 +64,10 @@ function toggle(on) {
   reset();
 }
 
-export function initMessen() {
+export function initMessen(dock) {
   const btn = el('button', { type: 'button', class: 'messen-knopf', title: 'Entfernung und Fläche messen', 'aria-label': 'Messen: Entfernung und Fläche', 'aria-pressed': 'false' }, el('span', { class: 'ico ico-m-lineal', 'aria-hidden': 'true' }));
   knopf = btn;
-  const group = el('div', { class: 'maplibregl-ctrl maplibregl-ctrl-group' }, btn);
-  map.addControl({ onAdd: () => group, onRemove: () => group.remove() }, 'top-right');
+  dock.append(btn);   // Knopf sitzt im Dock (karte.js); das Messfeld bleibt in der Steuerleiste oben rechts
   const b = (m, label, title) => el('button', { type: 'button', 'data-m': m, title }, label);
   panel = el('section', { class: 'maplibregl-ctrl messen-box', 'aria-label': 'Messen', hidden: '' },
     el('div', { class: 'messen-kopf' }, el('strong', {}, 'Messen'), b('ende', 'Beenden', 'Messen beenden (Esc)')),

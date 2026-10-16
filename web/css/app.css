@@ -555,10 +555,24 @@ html[data-ansicht="dunkel"] .brand .logo-dunkel { display: block; }
 .layer-group + .layer-group > summary { border-top: 1px solid var(--border); }
 .layer-group > summary { padding: 5px 0; }
 
-/* Maßstab: unten mittig, durchscheinend */
-.map-wrap .maplibregl-ctrl-bottom-right { right: auto; left: 50%; transform: translateX(-50%); bottom: var(--float-gap, 1rem); }
-.map-wrap .maplibregl-ctrl-scale { margin: 0; background: color-mix(in oklab, var(--bg-elevated, #fff) 45%, transparent); color: var(--fg); border-color: var(--fg-muted);
-  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); font-size: var(--fs-xs); }
+/* Werkzeugleiste unten mittig (js/lage/karte.js): Zoom, Vollbild, Messen und Maßstab in einer Glasleiste nach Art des macOS-Docks.
+   Kacheln mit Rundung, beim Darüberfahren wachsen sie und die Nachbarn ein Stück mit. Der Maßstab ist ein Teil der Leiste. */
+.map-wrap > .map-dock { position: absolute; left: 50%; bottom: var(--float-gap, 1rem); transform: translateX(-50%); z-index: 4; display: flex; align-items: flex-end; gap: 6px;
+  padding: 7px 9px; width: max-content; max-width: calc(100% - 1rem); box-sizing: border-box; margin: 0;
+  background: var(--glass-fill-strong, var(--float-bg)); backdrop-filter: var(--glass-blur, var(--float-blur)); -webkit-backdrop-filter: var(--glass-blur, var(--float-blur));
+  border: 1px solid var(--glass-edge, var(--border)); border-radius: 22px; box-shadow: var(--glass-inset, none), var(--glass-shadow, var(--shadow-md)); }
+.map-dock button { width: 40px; height: 40px; margin: 0; padding: 0; border: 0; border-radius: 11px; background: color-mix(in oklab, var(--fg) 7%, transparent); color: var(--fg);
+  cursor: pointer; transform-origin: 50% 100%; transition: transform .14s ease-out, background-color .14s; display: flex; align-items: center; justify-content: center; }
+.map-dock button:hover, .map-dock button:focus-visible { transform: translateY(-5px) scale(1.28); background: color-mix(in oklab, var(--fg) 13%, transparent); z-index: 1; }
+.map-dock button:has(+ button:hover), .map-dock button:hover + button { transform: translateY(-2px) scale(1.1); }
+.map-dock button:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: 1px; }
+.map-dock button.messen-knopf.an { background: #c026d3; color: #fff; }
+.map-dock .dock-sep { align-self: center; width: 1px; height: 26px; background: var(--border-strong, var(--border)); margin: 0 2px; flex: none; }
+.map-dock .maplibregl-ctrl-scale { align-self: center; margin: 0 4px 0 2px; padding: 1px 6px; background: transparent; color: var(--fg); border-color: var(--fg-muted); font-size: var(--fs-xs);
+  border-width: 2px; border-top: 0; line-height: 1.3; box-sizing: content-box; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .map-dock button { transition: none; } .map-dock button:hover, .map-dock button:focus-visible { transform: none; } }
+/* Ist das Detailfeld offen, steht die Zeichenerklärung links davon und reicht sonst an die Leiste heran: sie rückt über die Leiste */
+@media (min-width: 1001px) { .lage:not(.side-min) .relief-legend.map-legend { margin-bottom: 4.5rem; } }
 
 /* Gewässerbaum im Pegel-Panel */
 .gnode > summary { cursor: pointer; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--line-soft); list-style-position: inside; }
@@ -641,7 +655,7 @@ html[data-karte="mittelalter"] .lage > .card:last-child a { color: #7a1c14; }
 html[data-karte="mittelalter"] .lage > .card:last-child button:focus-visible, html[data-karte="mittelalter"] .lage > .card:first-child :focus-visible { outline-color: #7a1c14; }
 
 /* Im Altmodus ist der Maßstab Teil der Windrose */
-html[data-karte="mittelalter"] .map-wrap .maplibregl-ctrl-scale { display: none; }
+html[data-karte="mittelalter"] .map-wrap .maplibregl-ctrl-scale, html[data-karte="mittelalter"] .map-dock .dock-sep:last-of-type { display: none; }
 
 /* Im Altmodus sitzt die Windrose dort, wo sonst die Höhenlegende steht */
 html[data-karte="mittelalter"] #relief-legend { display: none; }
@@ -743,11 +757,7 @@ body.einrichtung .klein { font-size: .8rem; }
 .ctx-liste dd { margin: 0; overflow-wrap: anywhere; }
 
 /* Messwerkzeug (js/lage/messen.js): Knopf und Feld in der Steuerleiste oben rechts (folgen ihr bei jeder Breite, die Kartenmitte bleibt frei) */
-.messen-knopf { display: flex; align-items: center; justify-content: center; width: 29px; height: 29px; padding: 0; border: 0; background: transparent; color: var(--fg); cursor: pointer; }
-.messen-knopf .ico { margin: 0; width: 1.2em; height: 1.2em; }
-.messen-knopf:hover { background: color-mix(in oklab, var(--fg) 8%, transparent); }
-.maplibregl-ctrl-group button.messen-knopf.an { background: #c026d3; color: #fff; }
-.messen-knopf:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: -2px; }
+.messen-knopf .ico { margin: 0; width: 1.35em; height: 1.35em; }
 .messen-aktiv .maplibregl-canvas { cursor: crosshair; }
 .messen-box { width: 16rem; max-width: calc(100vw - 4rem); padding: var(--space-3); box-sizing: border-box;
   background: var(--float-bg); backdrop-filter: var(--float-blur); -webkit-backdrop-filter: var(--float-blur); border: 1px solid var(--border); border-radius: var(--radius-lg, 10px); box-shadow: var(--shadow-md); }
@@ -781,6 +791,7 @@ body.einrichtung .klein { font-size: .8rem; }
   .messen-box button { padding: 1px 6px; font-size: var(--fs-xs); }
 }
 @media (max-width: 640px) {
-  /* Maßstab wandert nach oben links, damit er unten nicht mit den beiden Legenden um den Platz streitet */
-  .map-wrap .maplibregl-ctrl-bottom-right { top: var(--space-2); bottom: auto; left: var(--space-2); transform: none; }
+  /* Dock über den beiden Legenden unten, nicht dazwischen; etwas kleiner */
+  .map-wrap > .map-dock { bottom: calc(var(--float-gap, 1rem) + 5.5rem); padding: 5px 7px; gap: 4px; }
+  .map-dock button { width: 36px; height: 36px; }
 }
