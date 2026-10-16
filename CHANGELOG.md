@@ -8,6 +8,7 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 - Überarbeitetes CSS eingespielt (tokens.css, app.css): ein gemeinsamer Fokusring, Skin-Token für das Pergament-Design, Token für Messen, dvh-Einheiten, tote Werte entfernt, Fingerziele von 44 px bei `pointer: coarse`.
 
 ### Behoben (Vollbild)
+- Behoben: Bei geöffnetem Detailfeld (besonders im Vollbild) sprangen Zeichenerklärung und Höhenpanel mitten ins Bild, weil sie an der Unterkante des Detailfelds hingen. Sie sitzen wieder am unteren Kartenrand.
 - Das Vollbild zeigt jetzt die ganze Lageseite statt nur der Kartenfläche: Menü mit Suche und das Detailfeld bleiben sichtbar (vorher fehlten beide). Die Suchzeile muss dafür nicht mehr umziehen. Schmal gestapelt scrollt die Seite im Vollbild.
 
 ### Geändert (Anordnung)

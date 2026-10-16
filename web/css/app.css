@@ -502,10 +502,10 @@ html[data-ansicht="dunkel"] .brand .logo-dunkel { display: block; }
 .rain-labels { display: grid; grid-template-columns: repeat(15, 1fr); margin-top: 2px; font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
 .rain-labels span { white-space: nowrap; }
 @media (min-width: 1001px) {
-  /* Details offen: Legende links neben der Karte der Details, mit Abstand und auf einer Linie mit deren Unterkante (Abstand wie ringsum).
+  /* Details offen: Legende links neben der Spalte der Details, am unteren Kartenrand (Abstand wie ringsum), nicht an deren Unterkante: die wandert mit dem Inhalt.
      Details ausgeblendet: Legende rechts am Rand. */
-  .relief-legend.map-legend { right: calc(var(--side-w) + 2 * var(--float-gap)); bottom: var(--legend-bottom, var(--float-gap));
-    max-height: min(60%, calc(100% - var(--legend-bottom, var(--float-gap)) - var(--float-gap))); }
+  .relief-legend.map-legend { right: calc(var(--side-w) + 2 * var(--float-gap)); bottom: var(--float-gap);
+    max-height: min(60%, calc(100% - 2 * var(--float-gap) - 4.5rem)); }
   .lage.side-min .relief-legend.map-legend { right: var(--float-gap); bottom: var(--float-gap); max-height: calc(100% - 2 * var(--float-gap)); }
 }
 @media (max-width: 640px) { .relief-legend.map-legend { width: 12rem; } }
@@ -556,6 +556,8 @@ html[data-ansicht="dunkel"] .brand .logo-dunkel { display: block; }
   border-width: 2px; border-top: 0; line-height: 1.3; box-sizing: content-box; white-space: nowrap; }
 /* Ist das Detailfeld offen, steht die Zeichenerklärung links davon und reicht sonst an die Leiste heran: sie rückt über die Leiste */
 @media (min-width: 1001px) { .lage:not(.side-min) .relief-legend.map-legend { margin-bottom: 4.5rem; } }
+/* ab dieser Breite stößt sie nicht mehr an die mittig sitzende Leiste */
+@media (min-width: 1700px) { .lage:not(.side-min) .relief-legend.map-legend { margin-bottom: 0; } }
 
 /* Gewässerbaum im Pegel-Panel */
 .gnode > summary { cursor: pointer; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--line-soft); list-style-position: inside; }
@@ -569,7 +571,7 @@ html[data-ansicht="dunkel"] .brand .logo-dunkel { display: block; }
 /* Höhenpanel: gleicher Abstand von unten wie die Panele rechts (Details und Zeichenerklärung), in jeder Breite */
 .relief-legend:not(.map-legend) { top: auto; bottom: 2.6rem; }
 @media (min-width: 1001px) {
-  .relief-legend:not(.map-legend) { bottom: var(--legend-bottom, var(--float-gap)); }
+  .relief-legend:not(.map-legend) { bottom: var(--float-gap); }
   .lage.side-min .relief-legend:not(.map-legend) { bottom: var(--float-gap); }
 }
 

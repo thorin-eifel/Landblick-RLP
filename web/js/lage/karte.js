@@ -32,7 +32,7 @@ import { INFRA_LAYER_IDS } from './orte.js';
 import { showPopup } from './popup.js';
 import { initKontext } from './kontext.js';
 import { initSearch } from './suche-karte.js';
-import { applyWind, fillTempLegend, showFlowWind, trackLegendBottom } from './wetterkarte.js';
+import { applyWind, fillTempLegend, showFlowWind } from './wetterkarte.js';
 import { CORE_URL, GEB_JAHR, GEB_URL, RING_URL, START_VIEW, SYMBOL_LAYERS, TILES_URL, light, map, gebOk, reduceMotion, reliefOk, ripples, setBasemapOk, setCoreOk, setFlow, setGebOk, setHangOk, setKlippenOk, setLight, setMap, setMapReady, setPopup, setReliefOk, setRingOk, setRipples, setSweep, setWind, setWindLow, state, sweep, wind, windLow } from './zustand.js';
 
 // ------------------------------------------------------------------ Karte
@@ -230,7 +230,6 @@ export async function initMap() {
   const windBar = $('#wind-bar'); if (windBar) fillWindLegend(windBar);
   const windBarLow = $('#wind-bar-low'); if (windBarLow) fillWindLegend(windBarLow, undefined, true);
   fillTempLegend();
-  trackLegendBottom();
   buildRainLegend($('#rain-strip'), $('#rain-labels'));
   setSweep(createSweep(map, { center: state.meta.center, radiusKm: state.meta.radius_km, mil: MIL_COLOUR, reducedMotion: reduceMotion, onPing: (e) => (e.zap ? zapSound(e) : pingSound(e)) }));
   const laserBtn = $('#laser');   // Radarstrahl als Laser: verdampft den Regen, der fällt später wieder herab
