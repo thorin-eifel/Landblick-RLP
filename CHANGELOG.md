@@ -4,6 +4,9 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unreleased]
 
+### Geändert (Design)
+- Überarbeitetes CSS eingespielt (tokens.css, app.css): ein gemeinsamer Fokusring, Skin-Token für das Pergament-Design, Token für Messen, dvh-Einheiten, tote Werte entfernt, Fingerziele von 44 px bei `pointer: coarse`.
+
 ### Behoben (Vollbild)
 - Das Vollbild zeigt jetzt die ganze Lageseite statt nur der Kartenfläche: Menü mit Suche und das Detailfeld bleiben sichtbar (vorher fehlten beide). Die Suchzeile muss dafür nicht mehr umziehen. Schmal gestapelt scrollt die Seite im Vollbild.
 
