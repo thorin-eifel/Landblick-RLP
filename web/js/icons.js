@@ -147,7 +147,7 @@ export const MIL_COLOUR = '#8e44ad';
 // Natürliche Landmarken: Plakette in Artfarbe mit weißem Zeichen (Bild nat-<Art>); Zeichen: OpenStreetMap Carto und Maki (CC0), siehe tools/fetch_icons.sh
 export const NATURE_CHIP = { cave: ['hoehle', '#5b4636'], waterfall: ['wasserfall', '#1f6fb5'], viewpoint: ['fernglas', '#8a3fb0'],
   spring: ['quelle', '#12857f'], rock: ['gebirge', '#8c6b32'], volcano: ['vulkan', '#c0401f'],
-  castle: ['burg', '#7a2f2f'], ruins: ['burg', '#6f6a62'], archaeological: ['denkmal', '#a0672a'], monastery: ['kloster', '#3f5f8a'], building: ['gebaeude', '#6b4f7a'] };
+  castle: ['burg', '#9f1239'], ruins: ['burg', '#4d7c0f'], archaeological: ['denkmal', '#a0672a'], monastery: ['kloster', '#3f5f8a'], building: ['gebaeude', '#6b4f7a'] };
 // Bildzeichen der Karte „um 1450“: Burg, Ruine, Kloster/Kirche, Fundstelle, Haus. Tinte mit Pergamentfüllung und zinnoberroten Dächern, helle Kontur
 // für den Stand auf jedem Grund. Eigene Zeichnung, keine Vorlage; Bildname med-<Art>.
 

@@ -4,6 +4,9 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unreleased]
 
+### Geändert (Burgen)
+- Burg und Ruine teilen das Zeichen, unterscheiden sich jetzt aber deutlich in der Farbe: Burg und Schloss karminrot, Ruine moosgrün (vorher dunkelrot und grau).
+
 ### Neu (Messen)
 - Messwerkzeug in der Zoomleiste (Lineal): Punkte anklicken ergibt Strecke mit Abschnittslängen; den ersten Punkt erneut anklicken oder „Schließen“ ergibt Fläche (m², ha, km²) und Umfang, ab drei Punkten schon als Vorschau. Kreuzen sich die Kanten, steht eine Warnung dabei. Ohne Maus: „Punkt in Kartenmitte“, Rücktaste, Eingabe, Esc. Werte lassen sich kopieren. Kugelrechnung, Abweichung unter 0,5 %; keine Vermessung. Nichts wird gespeichert oder gesendet.
 
