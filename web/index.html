@@ -101,9 +101,9 @@
             <p class="group-hint small muted">Regen, Wind, Stationen und Luftgüte</p>
             <div class="layer-list">
               <label><input type="checkbox" data-layer="radar" checked> <span class="ico ico-regen" aria-hidden="true"></span>Regenradar <span class="live-note small" id="radarnote" aria-live="off"></span></label>
-              <label><input type="checkbox" data-layer="drops" checked> <span class="ico ico-regen" aria-hidden="true"></span>Regentropfen (Animation)</label>
+              <label><input type="checkbox" data-layer="drops" checked> <span class="ico ico-m-regentropfen" aria-hidden="true"></span>Regentropfen (Animation)</label>
               <label title="Strömung in 10 m Höhe"><input type="checkbox" data-layer="wind"> <span class="ico ico-wind" aria-hidden="true"></span>Wind <span class="live-note small" id="windnote" aria-live="off"></span></label>
-              <label><input type="checkbox" data-layer="windlow"> <span class="ico ico-wind" aria-hidden="true"></span>Wind im Gelände <span class="live-note small" id="windlownote" aria-live="off"></span></label>
+              <label><input type="checkbox" data-layer="windlow"> <span class="ico ico-m-gelaende" aria-hidden="true"></span>Wind im Gelände <span class="live-note small" id="windlownote" aria-live="off"></span></label>
               <label><input type="checkbox" data-layer="wxst" checked> <span class="ico ico-temperatur" aria-hidden="true"></span>Wetterstationen (DWD, KMI)</label>
               <label><input type="checkbox" data-layer="airq" checked> <span class="ico ico-luft" aria-hidden="true"></span>Luftqualität</label>
             </div>
@@ -112,7 +112,7 @@
             <p class="group-hint small muted">Wie hoch die Flüsse stehen und wohin das Wasser fließt</p>
             <div class="layer-list">
               <label><input type="checkbox" data-layer="gew" checked> <span class="ico ico-pegel" aria-hidden="true"></span>Pegel (Wasserstand der Flüsse)</label>
-              <label title="Fließrichtung, Stau, Wellen im Wind"><input type="checkbox" data-layer="flow"> <span class="ico ico-wind" aria-hidden="true"></span>Wasserbewegung</label>
+              <label title="Fließrichtung, Stau, Wellen im Wind"><input type="checkbox" data-layer="flow"> <span class="ico ico-m-strom" aria-hidden="true"></span>Wasserbewegung</label>
             </div>
           </details>
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Verkehr und Tanken ganz ein- oder ausblenden"> <span>Verkehr und Tanken</span></label></summary>
@@ -146,78 +146,78 @@
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Wald, Wiesen und Felder ganz ein- oder ausblenden"> <span>Wald, Wiesen und Felder</span></label></summary>
             <p class="group-hint small muted">Wald, Wiesen, Äcker, Wein, Feuchtgebiete und Fels</p>
             <div class="layer-list">
-              <label><input type="checkbox" data-layer="vegForest" checked> <span class="ico ico-natur" aria-hidden="true"></span>Wald</label>
-              <label><input type="checkbox" data-layer="vegMeadow" checked> <span class="ico ico-natur" aria-hidden="true"></span>Wiesen und Parks</label>
-              <label><input type="checkbox" data-layer="vegScrub" checked> <span class="ico ico-natur" aria-hidden="true"></span>Busch und Heide</label>
-              <label><input type="checkbox" data-layer="vegField" checked> <span class="ico ico-natur" aria-hidden="true"></span>Äcker und Gärten</label>
-              <label><input type="checkbox" data-layer="vegVine" checked> <span class="ico ico-natur" aria-hidden="true"></span>Obst und Wein</label>
-              <label><input type="checkbox" data-layer="vegWet" checked> <span class="ico ico-natur" aria-hidden="true"></span>Feuchtgebiete</label>
-              <label><input type="checkbox" data-layer="vegRock" checked> <span class="ico ico-relief" aria-hidden="true"></span>Fels, Sand und Strand</label>
+              <label><input type="checkbox" data-layer="vegForest" checked> <span class="ico ico-m-wald" aria-hidden="true"></span>Wald</label>
+              <label><input type="checkbox" data-layer="vegMeadow" checked> <span class="ico ico-m-wiese" aria-hidden="true"></span>Wiesen und Parks</label>
+              <label><input type="checkbox" data-layer="vegScrub" checked> <span class="ico ico-m-busch" aria-hidden="true"></span>Busch und Heide</label>
+              <label><input type="checkbox" data-layer="vegField" checked> <span class="ico ico-m-garten" aria-hidden="true"></span>Äcker und Gärten</label>
+              <label><input type="checkbox" data-layer="vegVine" checked> <span class="ico ico-m-wein" aria-hidden="true"></span>Obst und Wein</label>
+              <label><input type="checkbox" data-layer="vegWet" checked> <span class="ico ico-m-feucht" aria-hidden="true"></span>Feuchtgebiete</label>
+              <label><input type="checkbox" data-layer="vegRock" checked> <span class="ico ico-m-fels" aria-hidden="true"></span>Fels, Sand und Strand</label>
             </div>
           </details>
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Straßen und Bahn ganz ein- oder ausblenden"> <span>Straßen und Bahn</span></label></summary>
             <p class="group-hint small muted">Straßen nach Art, Haltestellen, Schilder</p>
             <div class="layer-list">
-              <label><input type="checkbox" data-layer="roadHw" checked> <span class="ico ico-stau" aria-hidden="true"></span>Autobahnen und Auffahrten</label>
-              <label><input type="checkbox" data-layer="roadMain" checked> <span class="ico ico-stau" aria-hidden="true"></span>Bundes- und Hauptstraßen</label>
-              <label><input type="checkbox" data-layer="roadMid" checked> <span class="ico ico-stau" aria-hidden="true"></span>Landes- und Kreisstraßen</label>
-              <label><input type="checkbox" data-layer="roadMinor" checked> <span class="ico ico-stau" aria-hidden="true"></span>Nebenstraßen und Zufahrten</label>
-              <label><input type="checkbox" data-layer="roadPath" checked> <span class="ico ico-stau" aria-hidden="true"></span>Wege, Pfade, Fußwege</label>
-              <label><input type="checkbox" data-layer="rail" checked> <span class="ico ico-stau" aria-hidden="true"></span>Bahnstrecken</label>
-              <label><input type="checkbox" data-layer="roadNames" checked> <span class="ico ico-stau" aria-hidden="true"></span>Straßennamen, Schilder, Einbahnpfeile</label>
-              <label><input type="checkbox" data-layer="stops"> <span class="ico ico-bahn" aria-hidden="true"></span>Bahnhöfe und Haltestellen</label>
-              <label><input type="checkbox" data-layer="signs"> <span class="ico ico-stau" aria-hidden="true"></span>Straßenschilder (A, B, L, K)</label>
-              <label><input type="checkbox" data-layer="bruecke"> <span class="ico ico-stau" aria-hidden="true"></span>Benannte Brücken und Tunnel</label>
+              <label><input type="checkbox" data-layer="roadHw" checked> <span class="ico ico-m-autobahn" aria-hidden="true"></span>Autobahnen und Auffahrten</label>
+              <label><input type="checkbox" data-layer="roadMain" checked> <span class="ico ico-m-bundesstrasse" aria-hidden="true"></span>Bundes- und Hauptstraßen</label>
+              <label><input type="checkbox" data-layer="roadMid" checked> <span class="ico ico-m-landstrasse" aria-hidden="true"></span>Landes- und Kreisstraßen</label>
+              <label><input type="checkbox" data-layer="roadMinor" checked> <span class="ico ico-m-nebenstrasse" aria-hidden="true"></span>Nebenstraßen und Zufahrten</label>
+              <label><input type="checkbox" data-layer="roadPath" checked> <span class="ico ico-m-fussweg" aria-hidden="true"></span>Wege, Pfade, Fußwege</label>
+              <label><input type="checkbox" data-layer="rail" checked> <span class="ico ico-m-gleis" aria-hidden="true"></span>Bahnstrecken</label>
+              <label><input type="checkbox" data-layer="roadNames" checked> <span class="ico ico-m-pfeil" aria-hidden="true"></span>Straßennamen, Schilder, Einbahnpfeile</label>
+              <label><input type="checkbox" data-layer="stops"> <span class="ico ico-m-haltestelle" aria-hidden="true"></span>Bahnhöfe und Haltestellen</label>
+              <label><input type="checkbox" data-layer="signs"> <span class="ico ico-m-schild" aria-hidden="true"></span>Straßenschilder (A, B, L, K)</label>
+              <label><input type="checkbox" data-layer="bruecke"> <span class="ico ico-m-bruecke" aria-hidden="true"></span>Benannte Brücken und Tunnel</label>
             </div>
           </details>
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Grenzen und Schutzgebiete ganz ein- oder ausblenden"> <span>Grenzen und Schutzgebiete</span></label></summary>
             <p class="group-hint small muted">Verwaltungsgrenzen, Natur- und Sperrgebiete</p>
             <div class="layer-list">
-              <label><input type="checkbox" data-layer="bndCountry" checked> <span class="ico ico-relief" aria-hidden="true"></span>Staatsgrenzen</label>
-              <label><input type="checkbox" data-layer="bndRegion" checked> <span class="ico ico-relief" aria-hidden="true"></span>Landesgrenzen</label>
-              <label><input type="checkbox" data-layer="bndCounty" checked> <span class="ico ico-relief" aria-hidden="true"></span>Kreisgrenzen</label>
-              <label><input type="checkbox" data-layer="bndLocal"> <span class="ico ico-relief" aria-hidden="true"></span>Gemeindegrenzen</label>
-              <label><input type="checkbox" data-layer="protNature" checked> <span class="ico ico-natur" aria-hidden="true"></span>Naturschutzgebiete und Schutzgebiete</label>
-              <label><input type="checkbox" data-layer="protPark" checked> <span class="ico ico-natur" aria-hidden="true"></span>Nationalparks</label>
-              <label><input type="checkbox" data-layer="protMil" checked> <span class="ico ico-warnung" aria-hidden="true"></span>Militärgelände und Sperrgebiete</label>
+              <label><input type="checkbox" data-layer="bndCountry" checked> <span class="ico ico-m-grenze-staat" aria-hidden="true"></span>Staatsgrenzen</label>
+              <label><input type="checkbox" data-layer="bndRegion" checked> <span class="ico ico-m-grenze-land" aria-hidden="true"></span>Landesgrenzen</label>
+              <label><input type="checkbox" data-layer="bndCounty" checked> <span class="ico ico-m-grenze-kreis" aria-hidden="true"></span>Kreisgrenzen</label>
+              <label><input type="checkbox" data-layer="bndLocal"> <span class="ico ico-m-grenze-gemeinde" aria-hidden="true"></span>Gemeindegrenzen</label>
+              <label><input type="checkbox" data-layer="protNature" checked> <span class="ico ico-m-schutzgebiet" aria-hidden="true"></span>Naturschutzgebiete und Schutzgebiete</label>
+              <label><input type="checkbox" data-layer="protPark" checked> <span class="ico ico-m-nationalpark" aria-hidden="true"></span>Nationalparks</label>
+              <label><input type="checkbox" data-layer="protMil" checked> <span class="ico ico-m-sperrgebiet" aria-hidden="true"></span>Militärgelände und Sperrgebiete</label>
             </div>
           </details>
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Orte und Einrichtungen ganz ein- oder ausblenden"> <span>Orte und Einrichtungen</span></label></summary>
             <p class="group-hint small muted">Notfallpunkte, Schulen, Ladesäulen, Windräder, Wehre</p>
             <div class="layer-list">
-              <label title="Defibrillator, Feuerwache, Krankenhaus"><input type="checkbox" data-layer="emerg"> <span class="ico ico-warnung" aria-hidden="true"></span>Notfallpunkte</label>
-              <label><input type="checkbox" data-layer="civic"> <span class="ico ico-natur" aria-hidden="true"></span>Schulen und Rathäuser</label>
-              <label><input type="checkbox" data-layer="charge"> <span class="ico ico-stau" aria-hidden="true"></span>Ladesäulen für E-Autos</label>
-              <label><input type="checkbox" data-layer="wturb"> <span class="ico ico-wind" aria-hidden="true"></span>Windräder</label>
-              <label><input type="checkbox" data-layer="wehr"> <span class="ico ico-pegel" aria-hidden="true"></span>Wehre, Schleusen und Fähranleger</label>
+              <label title="Defibrillator, Feuerwache, Krankenhaus"><input type="checkbox" data-layer="emerg"> <span class="ico ico-m-notfall" aria-hidden="true"></span>Notfallpunkte</label>
+              <label><input type="checkbox" data-layer="civic"> <span class="ico ico-m-rathaus" aria-hidden="true"></span>Schulen und Rathäuser</label>
+              <label><input type="checkbox" data-layer="charge"> <span class="ico ico-m-laden" aria-hidden="true"></span>Ladesäulen für E-Autos</label>
+              <label><input type="checkbox" data-layer="wturb"> <span class="ico ico-m-windrad" aria-hidden="true"></span>Windräder</label>
+              <label><input type="checkbox" data-layer="wehr"> <span class="ico ico-m-wehr" aria-hidden="true"></span>Wehre, Schleusen und Fähranleger</label>
             </div>
           </details>
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Natur ganz ein- oder ausblenden"> <span>Natur</span></label></summary>
             <p class="group-hint small muted">Berge, Höhlen, Wasserfälle, Aussichten, Felsen</p>
             <div class="layer-list">
-              <label><input type="checkbox" data-layer="natPeak" checked> <span class="ico ico-natur" aria-hidden="true"></span>Berggipfel (mit Höhe)</label>
-              <label><input type="checkbox" data-layer="natCave" checked> <span class="ico ico-natur" aria-hidden="true"></span>Höhlen</label>
-              <label><input type="checkbox" data-layer="natWater" checked> <span class="ico ico-natur" aria-hidden="true"></span>Wasserfälle und Quellen</label>
-              <label><input type="checkbox" data-layer="natView" checked> <span class="ico ico-natur" aria-hidden="true"></span>Aussichtspunkte</label>
-              <label><input type="checkbox" data-layer="natRock" checked> <span class="ico ico-natur" aria-hidden="true"></span>Felsen und Vulkane</label>
+              <label><input type="checkbox" data-layer="natPeak" checked> <span class="ico ico-m-gipfel" aria-hidden="true"></span>Berggipfel (mit Höhe)</label>
+              <label><input type="checkbox" data-layer="natCave" checked> <span class="ico ico-m-hoehle" aria-hidden="true"></span>Höhlen</label>
+              <label><input type="checkbox" data-layer="natWater" checked> <span class="ico ico-m-wasserfall" aria-hidden="true"></span>Wasserfälle und Quellen</label>
+              <label><input type="checkbox" data-layer="natView" checked> <span class="ico ico-m-fernglas" aria-hidden="true"></span>Aussichtspunkte</label>
+              <label><input type="checkbox" data-layer="natRock" checked> <span class="ico ico-m-gebirge" aria-hidden="true"></span>Felsen und Vulkane</label>
             </div>
           </details>
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Kultur und Geschichte ganz ein- oder ausblenden"> <span>Kultur und Geschichte</span></label></summary>
             <p class="group-hint small muted">Burgen, Klöster, Ausgrabungen, Friedhöfe</p>
             <div class="layer-list">
-              <label><input type="checkbox" data-layer="herCastle"> <span class="ico ico-natur" aria-hidden="true"></span>Burgen, Schlösser und Ruinen</label>
-              <label><input type="checkbox" data-layer="herArch"> <span class="ico ico-natur" aria-hidden="true"></span>Ausgrabungen und Fundstellen</label>
-              <label><input type="checkbox" data-layer="herMonastery"> <span class="ico ico-natur" aria-hidden="true"></span>Klöster</label>
-              <label><input type="checkbox" data-layer="herBuilding"> <span class="ico ico-natur" aria-hidden="true"></span>Historische Gebäude</label>
-              <label><input type="checkbox" data-layer="herChurch"> <span class="ico ico-natur" aria-hidden="true"></span>Kirchen</label>
-              <label><input type="checkbox" data-layer="herChapel"> <span class="ico ico-natur" aria-hidden="true"></span>Kapellen</label>
-              <label><input type="checkbox" data-layer="herCross"> <span class="ico ico-natur" aria-hidden="true"></span>Wegkreuze und Bildstöcke</label>
-              <label><input type="checkbox" data-layer="herMill"> <span class="ico ico-natur" aria-hidden="true"></span>Mühlen: Wasser- und Windmühlen</label>
-              <label><input type="checkbox" data-layer="herFord"> <span class="ico ico-natur" aria-hidden="true"></span>Furten, Fähren und alte Brücken</label>
-              <label><input type="checkbox" data-layer="herBorder"> <span class="ico ico-natur" aria-hidden="true"></span>Grenzsteine</label>
-              <label><input type="checkbox" data-layer="herGallows"> <span class="ico ico-natur" aria-hidden="true"></span>Galgen und Richtstätten</label>
-              <label><input type="checkbox" data-layer="herWell"> <span class="ico ico-natur" aria-hidden="true"></span>Brunnen</label>
-              <label><input type="checkbox" data-layer="cemetery"> <span class="ico ico-natur" aria-hidden="true"></span>Friedhöfe</label>
+              <label><input type="checkbox" data-layer="herCastle"> <span class="ico ico-m-burg" aria-hidden="true"></span>Burgen, Schlösser und Ruinen</label>
+              <label><input type="checkbox" data-layer="herArch"> <span class="ico ico-m-fundstelle" aria-hidden="true"></span>Ausgrabungen und Fundstellen</label>
+              <label><input type="checkbox" data-layer="herMonastery"> <span class="ico ico-m-kloster" aria-hidden="true"></span>Klöster</label>
+              <label><input type="checkbox" data-layer="herBuilding"> <span class="ico ico-m-gebaeude" aria-hidden="true"></span>Historische Gebäude</label>
+              <label><input type="checkbox" data-layer="herChurch"> <span class="ico ico-m-kirche" aria-hidden="true"></span>Kirchen</label>
+              <label><input type="checkbox" data-layer="herChapel"> <span class="ico ico-m-kapelle" aria-hidden="true"></span>Kapellen</label>
+              <label><input type="checkbox" data-layer="herCross"> <span class="ico ico-m-wegkreuz" aria-hidden="true"></span>Wegkreuze und Bildstöcke</label>
+              <label><input type="checkbox" data-layer="herMill"> <span class="ico ico-m-muehle" aria-hidden="true"></span>Mühlen: Wasser- und Windmühlen</label>
+              <label><input type="checkbox" data-layer="herFord"> <span class="ico ico-m-furt" aria-hidden="true"></span>Furten, Fähren und alte Brücken</label>
+              <label><input type="checkbox" data-layer="herBorder"> <span class="ico ico-m-grenzstein" aria-hidden="true"></span>Grenzsteine</label>
+              <label><input type="checkbox" data-layer="herGallows"> <span class="ico ico-m-richtstaette" aria-hidden="true"></span>Galgen und Richtstätten</label>
+              <label><input type="checkbox" data-layer="herWell"> <span class="ico ico-m-brunnen" aria-hidden="true"></span>Brunnen</label>
+              <label><input type="checkbox" data-layer="cemetery"> <span class="ico ico-m-friedhof" aria-hidden="true"></span>Friedhöfe</label>
             </div>
           </details>
           <details class="lgb-gruppe" id="lgb-gruppe" hidden><summary>LGB Daten</summary>
@@ -260,13 +260,13 @@
             <p class="group-hint small muted">Fern- und Regionalrouten zum Wandern und Radeln</p>
             <div class="layer-list">
               <label><input type="checkbox" data-layer="hike"> <span class="ico ico-natur" aria-hidden="true"></span>Wanderrouten (Fern- und Regionalwege)</label>
-              <label><input type="checkbox" data-layer="bike"> <span class="ico ico-stau" aria-hidden="true"></span>Radrouten (Fern- und Regionalrouten)</label>
+              <label><input type="checkbox" data-layer="bike"> <span class="ico ico-m-fahrrad" aria-hidden="true"></span>Radrouten (Fern- und Regionalrouten)</label>
             </div>
           </details>
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Rast und Baden ganz ein- oder ausblenden"> <span>Rast und Baden</span></label></summary>
             <p class="group-hint small muted">Rastplätze, Schutzhütten und Badestellen</p>
             <div class="layer-list">
-              <label><input type="checkbox" data-layer="rast"> <span class="ico ico-natur" aria-hidden="true"></span>Rastplätze, Schutzhütten, Badestellen</label>
+              <label><input type="checkbox" data-layer="rast"> <span class="ico ico-m-rast" aria-hidden="true"></span>Rastplätze, Schutzhütten, Badestellen</label>
             </div>
           </details>
           </div>
@@ -354,11 +354,11 @@
       <div class="side-bar"><button type="button" id="side-toggle" aria-expanded="false" aria-controls="side-body"><span class="side-label">Details einblenden</span><span class="side-chev" aria-hidden="true">▸</span></button></div>
       <div id="side-body">
       <div class="tabs" role="tablist" aria-label="Ansicht">
-        <button role="tab" id="tab-events" aria-selected="true" aria-controls="panel-events" title="Ereignisse"><span class="ico ico-warnung" aria-hidden="true"></span><span class="tab-label">Ereignisse</span></button>
-        <button role="tab" id="tab-gew" aria-selected="false" aria-controls="panel-gew" title="Gewässer"><span class="ico ico-pegel" aria-hidden="true"></span><span class="tab-label">Gewässer</span></button>
-        <button role="tab" id="tab-env" aria-selected="false" aria-controls="panel-env" title="Umwelt"><span class="ico ico-luft" aria-hidden="true"></span><span class="tab-label">Umwelt</span></button>
+        <button role="tab" id="tab-events" aria-selected="true" aria-controls="panel-events" title="Ereignisse"><span class="ico ico-m-meldungen" aria-hidden="true"></span><span class="tab-label">Ereignisse</span></button>
+        <button role="tab" id="tab-gew" aria-selected="false" aria-controls="panel-gew" title="Gewässer"><span class="ico ico-m-gewaesser" aria-hidden="true"></span><span class="tab-label">Gewässer</span></button>
+        <button role="tab" id="tab-env" aria-selected="false" aria-controls="panel-env" title="Umwelt"><span class="ico ico-m-umwelt" aria-hidden="true"></span><span class="tab-label">Umwelt</span></button>
         <button role="tab" id="tab-wx" aria-selected="false" aria-controls="panel-wx" title="Wetter"><span class="ico ico-wolken" aria-hidden="true"></span><span class="tab-label">Wetter</span></button>
-        <button role="tab" id="tab-fuel" aria-selected="false" aria-controls="panel-fuel" title="Grenzpendler"><span class="ico ico-stau" aria-hidden="true"></span><span class="tab-label">Grenzpendler</span></button>
+        <button role="tab" id="tab-fuel" aria-selected="false" aria-controls="panel-fuel" title="Grenzpendler"><span class="ico ico-m-auto" aria-hidden="true"></span><span class="tab-label">Grenzpendler</span></button>
       </div>
       <div class="panel" id="panel-events" role="tabpanel" aria-labelledby="tab-events"></div>
       <div class="panel" id="panel-gew" role="tabpanel" aria-labelledby="tab-gew" hidden></div>

@@ -4,6 +4,9 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unreleased]
 
+### Geändert (Menüzeichen)
+- Jeder Schalter und jeder Reiter hat ein eigenes Zeichen; vorher teilten sich 58 Einträge das Wanderer-Zeichen und zehn Straßen- und Verkehrseinträge das Stau-Zeichen. Neue Zeichen aus Maki, Temaki und OSM Carto (alle CC0) in `web/icons/menu/`, dazu acht eigene für Straßenklassen und Grenzebenen. Der Test `icons-eindeutig` verhindert Doppelungen.
+
 ### Geändert (Natur und Freizeit)
 - „Natur und Freizeit“ ist aufgeteilt. **Geographie → Natur** hat fünf Schalter statt einem: Berggipfel, Höhlen, Wasserfälle und Quellen, Aussichtspunkte, Felsen und Vulkane (`natPeak`, `natCave`, `natWater`, `natView`, `natRock`; ersetzen `nature`). Das neue Menü **Freizeit** führt Wanderrouten, Radrouten und Rast und Baden (Rastplätze, Schutzhütten, Badestellen). `web/index.html`, `web/js/lage/natur.js`, `zustand.js`, Handbuch Kapitel 3.3.
 
