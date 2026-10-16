@@ -6,6 +6,7 @@ import { wire } from './lage/ebenen.js';
 import { setupSideToggle } from './lage/panels.js';
 import { initMap } from './lage/karte.js';
 import { refresh } from './lage/laden.js';
+import { zeigeEinheit } from './lage/ereignisliste.js';
 import { ladeIndex, wireView } from './lage/zellenlauf.js';
 import { initLgb } from './lage/lgb.js';
 
@@ -23,6 +24,6 @@ async function main() {
   await initMap();
   initLgb().catch((e) => console.warn('LGB Daten:', e));   // Menü ohne Wirkung auf den Rest: fehlt der Katalog, bleibt die Gruppe verborgen
   await refresh();
-  wireView();
+  wireView(zeigeEinheit);
 }
 main();

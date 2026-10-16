@@ -138,7 +138,7 @@ export function gebietGeaendert() {
 }
 
 /** Karte verdrahten: nach jeder Bewegung nachladen (entprellt), Klick auf eine Dichte-Zahl zoomt in die Zelle. */
-export function wireView() {
+export function wireView(onEinheit = () => false) {
   if (!state.zellen) return;
   let t = 0;
   const later = () => { clearTimeout(t); t = setTimeout(() => loadView(), 250); };
@@ -146,6 +146,7 @@ export function wireView() {
   for (const id of ['dichte-land', 'dichte-kreis']) map.on('click', id, (e) => {
     const f = e.features?.[0];
     if (!f) return;
+    onEinheit(f.properties.id);   // Gebiet setzen und Details öffnen (ereignisliste.js), dann auf die Fläche zoomen
     const [w, s, ea, n] = JSON.parse(f.properties.bbox);
     map.fitBounds([[w, s], [ea, n]], { padding: 40, duration: 600, maxZoom: EVENTS_MIN_ZOOM + 1.5 });
   });

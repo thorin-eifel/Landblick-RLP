@@ -4,6 +4,9 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unreleased]
 
+### Geändert (Übersichtskreise)
+- Klick auf einen Kreis oder ein Land in der Übersicht zoomt wie bisher auf die Fläche, setzt jetzt aber auch den Gebietsfilter auf diese Einheit, klappt das Detailfeld auf und zeigt den Reiter „Ereignisse“. Die Liste nennt so genau die Meldungen des gewählten Kreises; „Zurücksetzen“ hebt den Filter auf. Liegen Ereignisse im Ausschnitt nur in ausgeschalteten Ebenen, sagt die Liste das, statt „kein Ereignis“ zu melden. `gebietAusEinheit()` in `web/js/gebiet.js`, `zeigeEinheit()` in `lage/ereignisliste.js`, Test `tests/js/gebiet.test.mjs`.
+
 ### Behoben (Code-Review)
 - Desktop-Server lieferte per `/data/../zugang.json` oder `/tiles/../osint.sqlite` Zugangsdaten und Datenbank aus (Pfadprüfung gegen den ganzen Datenordner). Erlaubt ist jetzt nur `data/` bzw. `tiles/`, Verzeichnisse werden nicht mehr aufgelistet, der Datenordner wird aufgelöst (Symlink, relativer Pfad). `app/desktop.py`, Tests `tests/test_desktop.py`.
 - Sammel-Takt der Desktop-App endete dauerhaft nach einem Timeout oder einem Exportfehler. Jetzt wird der Fehler gemeldet und im nächsten Takt neu versucht; nach dem ersten Export bleibt die Karte offen.
