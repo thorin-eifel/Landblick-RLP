@@ -87,7 +87,7 @@ export async function initMap() {
   dock.className = 'maplibregl-ctrl map-dock'; dock.setAttribute('role', 'toolbar'); dock.setAttribute('aria-label', 'Kartenwerkzeuge');
   const sep = () => { const e = document.createElement('span'); e.className = 'dock-sep'; e.setAttribute('aria-hidden', 'true'); return e; };
   dock.append(...new NavigationControl({ showCompass: false }).onAdd(map).querySelectorAll('button'), sep());
-  if (document.fullscreenEnabled || document.webkitFullscreenEnabled) dock.append(new FullscreenControl({ container: document.querySelector('.map-wrap') }).onAdd(map).querySelector('button'));      // Karte samt Cartouche, Windrose und Legende
+  if (document.fullscreenEnabled || document.webkitFullscreenEnabled) dock.append(new FullscreenControl({ container: document.querySelector('.lage') }).onAdd(map).querySelector('button'));      // Vollbild für die ganze Lageseite: Karte samt Cartouche, Windrose, Legende, Menü und Detailfeld
   map.getContainer().parentElement.append(dock);
   initMessen(dock);
   dock.append(sep(), new ScaleControl({ unit: 'metric' }).onAdd(map));

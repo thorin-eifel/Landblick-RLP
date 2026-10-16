@@ -660,9 +660,10 @@ html[data-karte="mittelalter"] .map-wrap .maplibregl-ctrl-scale, html[data-karte
 /* Im Altmodus sitzt die Windrose dort, wo sonst die Höhenlegende steht */
 html[data-karte="mittelalter"] #relief-legend { display: none; }
 
-/* Vollbild: die ganze Kartenfläche, nicht nur das Canvas */
-.map-wrap:fullscreen { background: var(--bg, #fff); width: 100%; height: 100%; }
-.map-wrap:fullscreen #map { width: 100%; height: 100%; }
+/* Vollbild: die ganze Lageseite (Karte, Menü, Detailfeld), nicht nur das Canvas. Schmal gestapelt scrollt sie. */
+.lage:fullscreen { background: var(--bg, #fff); width: 100%; height: 100%; overflow: auto; }
+.lage:fullscreen .map-wrap #map { width: 100%; }
+@media (min-width: 1001px) { .lage:fullscreen .map-wrap #map { height: 100%; } }
 
 /* Menü: Kurzzeile unter dem Themenkopf */
 .layer-group .group-hint { margin: 0; padding: 0 0 var(--space-2) var(--space-3); line-height: 1.35; }

@@ -9,11 +9,7 @@ export function initSearch() {
   const input = $('#suche-q'), list = $('#suche-liste'), status = $('#suche-status');
   if (!input || !list || !status) return;
   const clear = () => { searchMarker?.remove(); searchMarker = null; };
-  // Im Vollbild ist nur die Kartenfläche sichtbar: die Suchzeile zieht dorthin um und danach wieder in den Menükopf
-  const form = $('#suche'), home = form?.parentElement, wrap = $('.map-wrap'), after = home?.querySelector('.controls');
-  const place = () => { const fs = document.fullscreenElement ?? document.webkitFullscreenElement; if (fs === wrap) wrap.prepend(form); else if (form.parentElement !== home) home.insertBefore(form, after); };
-  document.addEventListener('fullscreenchange', place);
-  document.addEventListener('webkitfullscreenchange', place);
+  // Vollbild zeigt die ganze Lageseite (Menü mit Suchzeile und Detailfeld bleiben), die Suchzeile muss deshalb nicht umziehen
   mountSearch({
     input, list, status,
     getNear: () => { const c = map.getCenter(); return { lat: c.lat, lon: c.lng }; },

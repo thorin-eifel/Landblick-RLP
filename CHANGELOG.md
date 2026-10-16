@@ -4,6 +4,9 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unreleased]
 
+### Behoben (Vollbild)
+- Das Vollbild zeigt jetzt die ganze Lageseite statt nur der Kartenfläche: Menü mit Suche und das Detailfeld bleiben sichtbar (vorher fehlten beide). Die Suchzeile muss dafür nicht mehr umziehen. Schmal gestapelt scrollt die Seite im Vollbild.
+
 ### Geändert (Anordnung)
 - Zoom, Vollbild, Messen und Maßstab sitzen in einer Werkzeugleiste unten mittig nach Art des macOS-Docks (Glasleiste, Kacheln wachsen beim Darüberfahren, ohne Animation bei „reduzierte Bewegung“). Bis 640 px Breite steht sie über den beiden Legenden. Ist das Detailfeld offen, rückt die Zeichenerklärung über die Leiste. Auf der Karte um 1450 entfällt der Maßstab wie bisher.
 - Das Messfeld sitzt oben rechts (folgt dem Detailfeld bei jeder Breite) statt unten über der Kartenmitte und dem Maßstab. Auf schmalen Schirmen ist es kompakter.
