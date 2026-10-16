@@ -4,6 +4,9 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unreleased]
 
+### Geändert (Menüs)
+- Das Menü „Ebenen“ ist aufgeteilt in **Ereignisse** (was gerade passiert: Warnungen und Gefahren, Wetter und Luft, Wasserstände, Verkehr und Tanken) und **Geographie** (die Landkarte selbst: Gelände und Gebäude, Wald, Wiesen und Felder, Straßen und Bahn, Grenzen und Schutzgebiete, Orte und Einrichtungen, Natur und Freizeit, Kultur und Geschichte, dazu die Zusatzkarten LGB Daten und Landesdaten). Alle 70 Schalter sind erhalten und gleich benannt, bis auf „Pegel (Wasserstand der Flüsse)“ und „Berge und Täler (Schattierung und Farbe)“. Wehre und Schleusen wechseln zu „Orte und Einrichtungen“, Tankstellen bleiben beim Verkehr. `web/index.html`, Handbuch Kapitel 3.3.
+
 ### Geändert (Übersichtskreise)
 - Klick auf einen Kreis oder ein Land in der Übersicht zoomt wie bisher auf die Fläche, setzt jetzt aber auch den Gebietsfilter auf diese Einheit, klappt das Detailfeld auf und zeigt den Reiter „Ereignisse“. Die Liste nennt so genau die Meldungen des gewählten Kreises; „Zurücksetzen“ hebt den Filter auf. Liegen Ereignisse im Ausschnitt nur in ausgeschalteten Ebenen, sagt die Liste das, statt „kein Ereignis“ zu melden. `gebietAusEinheit()` in `web/js/gebiet.js`, `zeigeEinheit()` in `lage/ereignisliste.js`, Test `tests/js/gebiet.test.mjs`.
 

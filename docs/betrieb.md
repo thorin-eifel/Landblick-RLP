@@ -315,7 +315,7 @@ Die Landesdaten kommen von `geobasis-rlp.de/data/dgm1/` (Dateiliste `meta4/dgm1_
 Die Kacheln liegen nicht im Repository (`.gitignore`) und müssen mit auf den Webspace (`web/tiles/dem/`, inkl. `README.txt` als Prüfdatei und `meta.json`). `dem-base/` und `_scratch/` bleiben lokal.
 Höhenlinien rechnet `web/vendor/maplibre-contour` (BSD-3) im Browser in einem Worker (ab Zoom 7, bis 2,5 m Abstand bei Zoom 16); Ziffern kommen aus `web/fonts/` (Noto Sans, OFL).
 Fehlt `tiles/dem/README.txt`, bleibt die Karte ohne Relief und läuft normal. Code: `web/js/relief.js`.
-Im Ebenenmenü (Kartengrundlage) gibt es zwei Schalter: „Schummerung und Höhenfärbung“ (`relief`) und „Höhenlinien“ (`contours`, mit Beschriftung). Beide laufen über dieselben Höhenkacheln und sind einzeln schaltbar; die Lichtquelle am Zeiger hängt an der Schummerung, die Höhe unter dem Zeiger und die Legende an einem von beiden.
+Im Menü Geographie (Gelände und Gebäude) gibt es zwei Schalter: „Berge und Täler (Schattierung und Farbe)“ (`relief`) und „Höhenlinien“ (`contours`, mit Beschriftung). Beide laufen über dieselben Höhenkacheln und sind einzeln schaltbar; die Lichtquelle am Zeiger hängt an der Schummerung, die Höhe unter dem Zeiger und die Legende an einem von beiden.
 Namensnennung steht auf `quellen.html`. Höhenwerte sind Raster (in RLP ca. 6 m, sonst ca. 30 m), keine Vermessung.
 
 Zoom 15 und 16 aus dem 1-m-Raster (optional, setzt den Rohordner der Felswände voraus):
@@ -394,7 +394,7 @@ Ab 1800 px Breite skaliert die Oberfläche über die Schriftgröße der Wurzel (
 
 ## Karte: Aufbau, Straßen, Radar-Sweep
 
-**Layout.** Ab 1001 px Breite füllt die Karte den ganzen Rahmen. Zeitraum/Ebenen (links, einklappbar) und die Liste (rechts) schweben darüber; darunter stehen die Teile untereinander. Kartensteuerung und Höhenlegende weichen den schwebenden Karten aus (`app.css`, letzter Abschnitt).
+**Layout.** Ab 1001 px Breite füllt die Karte den ganzen Rahmen. Zeitraum, Darstellung, Ereignisse und Geographie (links, einklappbar) und die Liste (rechts) schweben darüber; darunter stehen die Teile untereinander. Kartensteuerung und Höhenlegende weichen den schwebenden Karten aus (`app.css`, letzter Abschnitt).
 
 **Grenzen.** Alle Verwaltungsgrenzen der Kacheln (Staat, Land, Kreis, Gemeinde; `BOUNDS` in `stil.js`) sehen gleich aus: Punktlinie in einer Farbe je Ansicht, Schalter wie bisher je Ebene. Die Landesgrenze von Rheinland-Pfalz ist die einzige Ausnahme: rote Linie, 2 px, darunter fünf graue Linien (je 1 px, Abstand 1,5 bis 5,5 px nach außen, Deckkraft fallend) als Verlauf. Die Kacheln tragen keine Eigenschaft, die RLP von anderen Ländern trennt; die Linie kommt deshalb aus `web/geo/rlp.geojson` (BKG VG250, `VG250_LAN`, auf 20 m vereinfacht), gebaut mit `python tools/build_landesgrenze.py --zip <vg250…zip>`. Die Datei ist eine eigene Quelle (`rlp-grenze`) und läuft mit dem Schalter „Landesgrenzen". Abweichung zur OSM-Linie der Kacheln: Zehnermeter, bei Zoom 13 und höher sieht man daneben stellenweise einzelne Punkte der Kachellinie. Fehlt die Datei, bleibt die Karte ohne rote Linie, die gepunktete Landesgrenze aus den Kacheln bleibt. Das Vorzeichen des Verlaufs (negativer `line-offset` = außen) ist an der Karte geprüft; wer die Datei anders orientiert, dreht den Verlauf nach innen.
 

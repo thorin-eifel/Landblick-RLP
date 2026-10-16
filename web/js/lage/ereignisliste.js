@@ -93,7 +93,7 @@ export function renderEvents(statuses) {
   if (!rows.length) {
     const verdeckt = layered.length ? 0 : ereignisseImAusschnitt(state.events, ausschnitt()).length;   // da, aber über ausgeschaltete Ebenen verborgen
     box.append(h('div', { class: 'empty' }, layered.length ? 'Kein Ereignis passt zu den Filtern.'
-      : verdeckt ? `Im Ausschnitt liegen ${verdeckt} Ereignisse in ausgeschalteten Ebenen (Menü Ebenen: Verkehr, Luft und weitere).`
+      : verdeckt ? `Im Ausschnitt liegen ${verdeckt} Ereignisse in ausgeschalteten Ebenen (Menü Ereignisse: Verkehr, Luft und weitere).`
         : 'Im sichtbaren Kartenausschnitt liegt kein Ereignis (Zeitfenster und Ebenen beachten). Karte verschieben oder herauszoomen.'));
     return;
   }

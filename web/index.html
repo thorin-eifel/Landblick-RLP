@@ -82,17 +82,18 @@
             </form>
           </dialog>
         </details>
-        <details class="controls" id="ctl-ebenen">
-          <summary>Ebenen</summary>
-          <div class="layer-groups" role="group" aria-label="Ebenen nach Thema">
-          <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Warnungen und Lage ganz ein- oder ausblenden"> <span>Warnungen und Lage</span></label></summary>
-            <p class="group-hint small muted">Was gerade gilt oder passiert</p>
+        <details class="controls" id="ctl-ereignisse">
+          <summary>Ereignisse</summary>
+          <p class="group-hint small muted">Was gerade passiert: Warnungen, Wetter, Wasserstände, Verkehr</p>
+          <div class="layer-groups" role="group" aria-label="Ereignisse nach Thema">
+          <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Warnungen und Gefahren ganz ein- oder ausblenden"> <span>Warnungen und Gefahren</span></label></summary>
+            <p class="group-hint small muted">Amtliche Warnungen, Hochwasser, Blitze, Brand, Erdbeben</p>
             <div class="layer-list">
               <label><input type="checkbox" data-layer="warning" checked> <span class="ico ico-warnung" aria-hidden="true"></span>Warnungen (NINA, DWD)</label>
               <label><input type="checkbox" data-layer="flood" checked> <span class="ico ico-hochwasser" aria-hidden="true"></span>Hochwasser</label>
+              <label><input type="checkbox" data-layer="blitz" checked> <span class="ico ico-blitz" aria-hidden="true"></span>Blitze <span class="live-note small" id="blitznote" aria-live="off"></span></label>
               <label><input type="checkbox" data-layer="fire"> <span class="ico ico-feuer" aria-hidden="true"></span>Brandverdacht (Satellit)</label>
               <label><input type="checkbox" data-layer="quake"> <span class="ico ico-beben" aria-hidden="true"></span>Erdbeben</label>
-              <label><input type="checkbox" data-layer="blitz" checked> <span class="ico ico-blitz" aria-hidden="true"></span>Blitze <span class="live-note small" id="blitznote" aria-live="off"></span></label>
               <label><input type="checkbox" data-layer="rad" checked> <span class="ico ico-strahlung" aria-hidden="true"></span>Strahlung (nur bei erhöhtem Wert)</label>
             </div>
           </details>
@@ -107,21 +108,51 @@
               <label><input type="checkbox" data-layer="airq" checked> <span class="ico ico-luft" aria-hidden="true"></span>Luftqualität</label>
             </div>
           </details>
-          <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Gewässer ganz ein- oder ausblenden"> <span>Gewässer</span></label></summary>
-            <p class="group-hint small muted">Pegel, Wehre, Fließrichtung</p>
+          <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Wasserstände ganz ein- oder ausblenden"> <span>Wasserstände</span></label></summary>
+            <p class="group-hint small muted">Wie hoch die Flüsse stehen und wohin das Wasser fließt</p>
             <div class="layer-list">
-              <label><input type="checkbox" data-layer="gew" checked> <span class="ico ico-pegel" aria-hidden="true"></span>Pegel</label>
-              <label><input type="checkbox" data-layer="wehr"> <span class="ico ico-pegel" aria-hidden="true"></span>Wehre, Schleusen, Fähranleger</label>
+              <label><input type="checkbox" data-layer="gew" checked> <span class="ico ico-pegel" aria-hidden="true"></span>Pegel (Wasserstand der Flüsse)</label>
               <label title="Fließrichtung, Stau, Wellen im Wind"><input type="checkbox" data-layer="flow"> <span class="ico ico-wind" aria-hidden="true"></span>Wasserbewegung</label>
             </div>
           </details>
-          <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Verkehr ganz ein- oder ausblenden"> <span>Verkehr</span></label></summary>
-            <p class="group-hint small muted">Was gerade fließt oder steht</p>
+          <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Verkehr und Tanken ganz ein- oder ausblenden"> <span>Verkehr und Tanken</span></label></summary>
+            <p class="group-hint small muted">Staus, Baustellen, Bahn, Flugzeuge, Spritpreise</p>
             <div class="layer-list">
               <label><input type="checkbox" data-layer="traffic"> <span class="ico ico-stau" aria-hidden="true"></span>Straßenverkehr und Baustellen</label>
               <label><input type="checkbox" data-layer="transit"> <span class="ico ico-bahn" aria-hidden="true"></span>ÖPNV-Verspätungen</label>
               <div class="layer-row"><label><input type="checkbox" data-layer="air"> <span class="ico ico-flug" aria-hidden="true"></span>Luftverkehr <span class="live-note small" id="airnote" aria-live="off"></span></label><button type="button" class="egg" id="laser" aria-pressed="false" aria-label="Radarstrahl als Laser">ROT</button></div>
               <label><input type="checkbox" data-layer="tank"> <span class="ico ico-tanken" aria-hidden="true"></span>Tankstellen mit Preisen</label>
+            </div>
+          </details>
+          </div>
+          <label class="sound-opt"><input type="checkbox" id="pingsound"> <span class="ico ico-ton" aria-hidden="true"></span>Ton (Ping, Laser)</label>
+        </details>
+        <details class="controls" id="ctl-geographie">
+          <summary>Geographie</summary>
+          <p class="group-hint small muted">Die Landkarte selbst: Gelände, Straßen, Wald, Grenzen, Orte, Natur und Geschichte</p>
+          <div class="layer-groups" role="group" aria-label="Geographie nach Thema">
+          <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Gelände und Gebäude ganz ein- oder ausblenden"> <span>Gelände und Gebäude</span></label></summary>
+            <p class="group-hint small muted">Berge, Höhenlinien, Hänge, Felsen und Häuser</p>
+            <div class="layer-list">
+              <label><input type="checkbox" data-layer="relief" checked>Berge und Täler (Schattierung und Farbe)</label>
+              <label><input type="checkbox" data-layer="contours" checked>Höhenlinien</label>
+              <label title="Hänge hell, Schatten hinter Kämmen"><input type="checkbox" data-layer="licht">Licht am Zeiger</label>
+              <div class="layer-sub" id="licht-opt" hidden><label>Lichthöhe <input type="range" id="licht-hoehe" min="20" max="300" step="10" value="80" aria-label="Höhe der Lichtquelle über dem Gelände"></label></div>
+              <label><input type="checkbox" data-layer="cliffs" checked>Klippen und Steinbrüche</label>
+              <label title="Ab 15, 25 und 35 Grad (Probe, Gelände 1 m)"><input type="checkbox" data-layer="hang">Hangneigung</label>
+              <label><input type="checkbox" data-layer="buildings" checked>Gebäude</label>
+            </div>
+          </details>
+          <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Wald, Wiesen und Felder ganz ein- oder ausblenden"> <span>Wald, Wiesen und Felder</span></label></summary>
+            <p class="group-hint small muted">Wald, Wiesen, Äcker, Wein, Feuchtgebiete und Fels</p>
+            <div class="layer-list">
+              <label><input type="checkbox" data-layer="vegForest" checked> <span class="ico ico-natur" aria-hidden="true"></span>Wald</label>
+              <label><input type="checkbox" data-layer="vegMeadow" checked> <span class="ico ico-natur" aria-hidden="true"></span>Wiesen und Parks</label>
+              <label><input type="checkbox" data-layer="vegScrub" checked> <span class="ico ico-natur" aria-hidden="true"></span>Busch und Heide</label>
+              <label><input type="checkbox" data-layer="vegField" checked> <span class="ico ico-natur" aria-hidden="true"></span>Äcker und Gärten</label>
+              <label><input type="checkbox" data-layer="vegVine" checked> <span class="ico ico-natur" aria-hidden="true"></span>Obst und Wein</label>
+              <label><input type="checkbox" data-layer="vegWet" checked> <span class="ico ico-natur" aria-hidden="true"></span>Feuchtgebiete</label>
+              <label><input type="checkbox" data-layer="vegRock" checked> <span class="ico ico-relief" aria-hidden="true"></span>Fels, Sand und Strand</label>
             </div>
           </details>
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Straßen und Bahn ganz ein- oder ausblenden"> <span>Straßen und Bahn</span></label></summary>
@@ -139,13 +170,26 @@
               <label><input type="checkbox" data-layer="bruecke"> <span class="ico ico-stau" aria-hidden="true"></span>Benannte Brücken und Tunnel</label>
             </div>
           </details>
-          <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Gemeinwesen und Infrastruktur ganz ein- oder ausblenden"> <span>Gemeinwesen und Infrastruktur</span></label></summary>
-            <p class="group-hint small muted">Notfall, Schulen, Laden, Wind</p>
+          <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Grenzen und Schutzgebiete ganz ein- oder ausblenden"> <span>Grenzen und Schutzgebiete</span></label></summary>
+            <p class="group-hint small muted">Verwaltungsgrenzen, Natur- und Sperrgebiete</p>
+            <div class="layer-list">
+              <label><input type="checkbox" data-layer="bndCountry" checked> <span class="ico ico-relief" aria-hidden="true"></span>Staatsgrenzen</label>
+              <label><input type="checkbox" data-layer="bndRegion" checked> <span class="ico ico-relief" aria-hidden="true"></span>Landesgrenzen</label>
+              <label><input type="checkbox" data-layer="bndCounty" checked> <span class="ico ico-relief" aria-hidden="true"></span>Kreisgrenzen</label>
+              <label><input type="checkbox" data-layer="bndLocal"> <span class="ico ico-relief" aria-hidden="true"></span>Gemeindegrenzen</label>
+              <label><input type="checkbox" data-layer="protNature" checked> <span class="ico ico-natur" aria-hidden="true"></span>Naturschutzgebiete und Schutzgebiete</label>
+              <label><input type="checkbox" data-layer="protPark" checked> <span class="ico ico-natur" aria-hidden="true"></span>Nationalparks</label>
+              <label><input type="checkbox" data-layer="protMil" checked> <span class="ico ico-warnung" aria-hidden="true"></span>Militärgelände und Sperrgebiete</label>
+            </div>
+          </details>
+          <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Orte und Einrichtungen ganz ein- oder ausblenden"> <span>Orte und Einrichtungen</span></label></summary>
+            <p class="group-hint small muted">Notfallpunkte, Schulen, Ladesäulen, Windräder, Wehre</p>
             <div class="layer-list">
               <label title="Defibrillator, Feuerwache, Krankenhaus"><input type="checkbox" data-layer="emerg"> <span class="ico ico-warnung" aria-hidden="true"></span>Notfallpunkte</label>
               <label><input type="checkbox" data-layer="civic"> <span class="ico ico-natur" aria-hidden="true"></span>Schulen und Rathäuser</label>
               <label><input type="checkbox" data-layer="charge"> <span class="ico ico-stau" aria-hidden="true"></span>Ladesäulen für E-Autos</label>
               <label><input type="checkbox" data-layer="wturb"> <span class="ico ico-wind" aria-hidden="true"></span>Windräder</label>
+              <label><input type="checkbox" data-layer="wehr"> <span class="ico ico-pegel" aria-hidden="true"></span>Wehre, Schleusen und Fähranleger</label>
             </div>
           </details>
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Natur und Freizeit ganz ein- oder ausblenden"> <span>Natur und Freizeit</span></label></summary>
@@ -155,18 +199,6 @@
               <label><input type="checkbox" data-layer="rast"> <span class="ico ico-natur" aria-hidden="true"></span>Rastplätze, Schutzhütten, Badestellen</label>
               <label><input type="checkbox" data-layer="hike"> <span class="ico ico-natur" aria-hidden="true"></span>Wanderrouten (Fern- und Regionalwege)</label>
               <label><input type="checkbox" data-layer="bike"> <span class="ico ico-stau" aria-hidden="true"></span>Radrouten (Fern- und Regionalrouten)</label>
-            </div>
-          </details>
-          <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Bewuchs und Flächen ganz ein- oder ausblenden"> <span>Bewuchs und Flächen</span></label></summary>
-            <p class="group-hint small muted">Landnutzung der Karte nach Art</p>
-            <div class="layer-list">
-              <label><input type="checkbox" data-layer="vegForest" checked> <span class="ico ico-natur" aria-hidden="true"></span>Wald</label>
-              <label><input type="checkbox" data-layer="vegMeadow" checked> <span class="ico ico-natur" aria-hidden="true"></span>Wiesen und Parks</label>
-              <label><input type="checkbox" data-layer="vegScrub" checked> <span class="ico ico-natur" aria-hidden="true"></span>Busch und Heide</label>
-              <label><input type="checkbox" data-layer="vegField" checked> <span class="ico ico-natur" aria-hidden="true"></span>Äcker und Gärten</label>
-              <label><input type="checkbox" data-layer="vegVine" checked> <span class="ico ico-natur" aria-hidden="true"></span>Obst und Wein</label>
-              <label><input type="checkbox" data-layer="vegWet" checked> <span class="ico ico-natur" aria-hidden="true"></span>Feuchtgebiete</label>
-              <label><input type="checkbox" data-layer="vegRock" checked> <span class="ico ico-relief" aria-hidden="true"></span>Fels, Sand und Strand</label>
             </div>
           </details>
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Kultur und Geschichte ganz ein- oder ausblenden"> <span>Kultur und Geschichte</span></label></summary>
@@ -185,30 +217,6 @@
               <label><input type="checkbox" data-layer="herGallows"> <span class="ico ico-natur" aria-hidden="true"></span>Galgen und Richtstätten</label>
               <label><input type="checkbox" data-layer="herWell"> <span class="ico ico-natur" aria-hidden="true"></span>Brunnen</label>
               <label><input type="checkbox" data-layer="cemetery"> <span class="ico ico-natur" aria-hidden="true"></span>Friedhöfe</label>
-            </div>
-          </details>
-          <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Grenzen und Schutzgebiete ganz ein- oder ausblenden"> <span>Grenzen und Schutzgebiete</span></label></summary>
-            <p class="group-hint small muted">Verwaltungsgrenzen, Natur- und Sperrgebiete</p>
-            <div class="layer-list">
-              <label><input type="checkbox" data-layer="bndCountry" checked> <span class="ico ico-relief" aria-hidden="true"></span>Staatsgrenzen</label>
-              <label><input type="checkbox" data-layer="bndRegion" checked> <span class="ico ico-relief" aria-hidden="true"></span>Landesgrenzen</label>
-              <label><input type="checkbox" data-layer="bndCounty" checked> <span class="ico ico-relief" aria-hidden="true"></span>Kreisgrenzen</label>
-              <label><input type="checkbox" data-layer="bndLocal"> <span class="ico ico-relief" aria-hidden="true"></span>Gemeindegrenzen</label>
-              <label><input type="checkbox" data-layer="protNature" checked> <span class="ico ico-natur" aria-hidden="true"></span>Naturschutzgebiete und Schutzgebiete</label>
-              <label><input type="checkbox" data-layer="protPark" checked> <span class="ico ico-natur" aria-hidden="true"></span>Nationalparks</label>
-              <label><input type="checkbox" data-layer="protMil" checked> <span class="ico ico-warnung" aria-hidden="true"></span>Militärgelände und Sperrgebiete</label>
-            </div>
-          </details>
-          <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Kartengrundlage ganz ein- oder ausblenden"> <span>Kartengrundlage</span></label></summary>
-            <p class="group-hint small muted">Gelände, Klippen und Gebäude</p>
-            <div class="layer-list">
-              <label><input type="checkbox" data-layer="relief" checked>Schummerung und Höhenfärbung</label>
-              <label><input type="checkbox" data-layer="contours" checked>Höhenlinien</label>
-              <label title="Hänge hell, Schatten hinter Kämmen"><input type="checkbox" data-layer="licht">Licht am Zeiger</label>
-              <div class="layer-sub" id="licht-opt" hidden><label>Lichthöhe <input type="range" id="licht-hoehe" min="20" max="300" step="10" value="80" aria-label="Höhe der Lichtquelle über dem Gelände"></label></div>
-              <label><input type="checkbox" data-layer="cliffs" checked>Klippen und Steinbrüche</label>
-              <label title="Ab 15, 25 und 35 Grad (Probe, Gelände 1 m)"><input type="checkbox" data-layer="hang">Hangneigung</label>
-              <label><input type="checkbox" data-layer="buildings" checked>Gebäude</label>
             </div>
           </details>
           <details class="lgb-gruppe" id="lgb-gruppe" hidden><summary>LGB Daten</summary>
@@ -242,7 +250,6 @@
             <p class="small muted lgb-lizenz">Lizenz je Dienst (Tooltip am Dienstnamen): meist <a href="https://www.govdata.de/dl-de/by-2-0" target="_blank" rel="noopener noreferrer">dl-de/by-2-0</a>, daneben dl-de/zero-2-0, CC BY und ODbL. Angaben aus dem Geoportal RLP, rechtlich noch nicht geprüft. Höchstens sechs Ebenen gleichzeitig; außerhalb des Maßstabsbereichs einer Ebene bleibt die Karte leer.</p>
           </details>
           </div>
-          <label class="sound-opt"><input type="checkbox" id="pingsound"> <span class="ico ico-ton" aria-hidden="true"></span>Ton (Ping, Laser)</label>
         </details>
       </div>
       <div class="map-wrap">

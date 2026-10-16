@@ -8,7 +8,7 @@ Oben steht die Überschrift „Lagekarte“ mit zwei Zählern: die Zahl der ange
 
 - **Warnband** ganz oben unter der Kopfzeile: die höchste Stufe der gerade geltenden Warnungen (NINA, Deutscher Wetterdienst, Hochwasser). Rot heißt rot. Das Band meldet sich als Statusbereich auch Bildschirmlesern.
 - **Suchfeld** in der Karte (Kapitel 3.4).
-- **Menüs links**, einklappbar: *Zeitraum*, *Ebenen*, *LGB Daten*, *Landesdaten* (Kapitel 3.2, 3.3, 3.7).
+- **Menüs links**, einklappbar: *Zeitraum*, *Darstellung*, *Ereignisse*, *Geographie* mit den Zusatzkarten *LGB Daten* und *Landesdaten* (Kapitel 3.2, 3.3, 3.7).
 - **Zeichenerklärung** unten: Sie zeigt für jede eingeschaltete Ebene, was Farben und Zeichen bedeuten.
 - **Seitenleiste** rechts mit Reitern *Ereignisse*, *Gewässer*, *Umwelt*, *Wetter* und *Grenzpendler* (Kapitel 3.5). Unter 1000 Pixel Breite stehen die Teile untereinander.
 
@@ -26,23 +26,32 @@ Das Menü *Zeitraum* wählt, welche Ereignisse gelten:
 
 Die Auswahl rechnet der Browser selbst, gegen die Uhr des Besuchers. Der Export liefert immer die Obermenge für sieben Tage. Das hat einen Nebeneffekt, der gewollt ist: Wird die Sammelstelle abgeschaltet, ruft die Seite nicht fälschlich „aktuell“.
 
-## 3.3 Ebenen
+## 3.3 Ereignisse und Geographie
 
-Das Menü *Ebenen* ist nach Themen gegliedert; jede Gruppe lässt sich als Ganzes oder einzeln ein- und ausschalten.
+Die Schalter der Karte stehen in zwei Menüs. *Ereignisse* zeigt, was gerade passiert und sich ändert. *Geographie* ist die Landkarte selbst, die sich nicht von Minute zu Minute ändert. Beide sind nach Themen gegliedert; jede Gruppe lässt sich als Ganzes oder einzeln ein- und ausschalten.
+
+**Menü Ereignisse**
 
 | Gruppe | Inhalt |
 |---|---|
-| **Warnungen und Lage** | Warnungen (NINA, DWD), Hochwasser, Brandverdacht (Satellit), Erdbeben, Blitze, erhöhte Strahlung |
+| **Warnungen und Gefahren** | Warnungen (NINA, DWD), Hochwasser, Blitze, Brandverdacht (Satellit), Erdbeben, erhöhte Strahlung |
 | **Wetter und Luft** | Regenradar mit Tropfen-Animation, Wind in 10 m Höhe, Wind im Gelände (Schätzung für Täler), Wetterstationen (DWD, KMI), Luftqualität |
-| **Gewässer** | Pegel, Wehre und Schleusen, Wasserbewegung |
-| **Verkehr** | Straßenverkehr und Baustellen, ÖPNV-Verspätungen, Luftverkehr, Tankstellen mit Preisen |
+| **Wasserstände** | Pegel der Flüsse, Wasserbewegung |
+| **Verkehr und Tanken** | Straßenverkehr und Baustellen, ÖPNV-Verspätungen, Luftverkehr, Tankstellen mit Preisen |
+
+**Menü Geographie**
+
+| Gruppe | Inhalt |
+|---|---|
+| **Gelände und Gebäude** | Berge und Täler (Schattierung und Farbe), Höhenlinien, Licht am Zeiger, Klippen, Hangneigung, Gebäude |
+| **Wald, Wiesen und Felder** | Wald, Wiesen, Busch und Heide, Äcker, Obst und Wein, Feuchtgebiete, Fels und Strand |
 | **Straßen und Bahn** | das Straßennetz der Karte nach Art, Bahnstrecken, Haltestellen, Straßenschilder, Brücken und Tunnel |
-| **Gemeinwesen und Infrastruktur** | Notfallpunkte, Schulen und Rathäuser, Ladesäulen, Windräder |
-| **Natur und Freizeit** | Gipfel, Höhlen, Wasserfälle, Rastplätze, Wander- und Radrouten |
-| **Bewuchs und Flächen** | Wald, Wiesen, Busch und Heide, Äcker, Obst und Wein, Feuchtgebiete, Fels und Strand |
-| **Kultur und Geschichte** | Burgen, Ausgrabungen, Klöster, historische Gebäude, Friedhöfe |
 | **Grenzen und Schutzgebiete** | Staats-, Landes-, Kreis- und Gemeindegrenzen, Naturschutzgebiete, Nationalparks, Militärgelände |
-| **Kartengrundlage** | Schummerung und Höhenfärbung, Höhenlinien, Licht am Zeiger, Klippen, Hangneigung, Gebäude |
+| **Orte und Einrichtungen** | Notfallpunkte, Schulen und Rathäuser, Ladesäulen, Windräder, Wehre und Schleusen |
+| **Natur und Freizeit** | Gipfel, Höhlen, Wasserfälle, Rastplätze, Wander- und Radrouten |
+| **Kultur und Geschichte** | Burgen, Ausgrabungen, Klöster, historische Gebäude, Kirchen, Friedhöfe |
+
+Darunter stehen in *Geographie* die Zusatzkarten der Landesstellen (*LGB Daten*, *Landesdaten*, Kapitel 3.7).
 
 Einige Ebenen verdienen ein Wort.
 
