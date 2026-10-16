@@ -6,6 +6,16 @@ import { map, mapReady, state } from './zustand.js';
 // Felsen und Vulkane aus landmarks.json (OpenStreetMap über Overpass, wöchentlich). Jeweils nur Name, Höhe, Ort; nichts Personenbezogenes.
 export const NATURE_COLOR = { peak: '#7a5a2e', cave: '#4b3a2c', waterfall: '#1f6fb5', viewpoint: '#8a3fb0', spring: '#12857f', rock: '#8c6b32', volcano: '#c0401f' };
 export const NAT_LAYERS = ['nat-t1', 'nat-t2', 'nat-t3', 'nat-t4'];
+// Schalter je Thema (Menü Geographie → Natur) und die Ortsarten, die dahinter stehen. Gipfel kommen aus den Kacheln und haben einen eigenen Schalter (natPeak).
+export const NAT_KINDS = { natCave: ['cave'], natWater: ['waterfall', 'spring'], natView: ['viewpoint'], natRock: ['rock', 'volcano'] };
+export const natureKinds = (layers) => Object.entries(NAT_KINDS).filter(([k]) => layers[k]).flatMap(([, kinds]) => kinds);
+// Grundfilter der Stufen (Bedeutung, siehe applyNature); die Themenschalter kommen als zweite Bedingung hinzu
+export const NAT_TIER_FILTER = {
+  'nat-t1': ['in', ['get', 'kind'], ['literal', ['cave', 'waterfall', 'rock', 'volcano']]],
+  'nat-t2': ['all', ['==', ['get', 'kind'], 'viewpoint'], ['==', ['get', 'named'], 1]],
+  'nat-t3': ['==', ['get', 'kind'], 'spring'],
+  'nat-t4': ['all', ['==', ['get', 'kind'], 'viewpoint'], ['==', ['get', 'named'], 0]],
+};
 export const HER_LAYERS = ['her-t1', 'her-t2'];
 export const HERITAGE_KINDS = ['castle', 'ruins', 'archaeological', 'monastery', 'building'];
 export const NATURE_WORD = { cave: ['Höhle', 'höhl'], waterfall: ['Wasserfall', 'wasserf'], viewpoint: ['Aussicht', 'aussicht|blick'], spring: ['Quelle', 'quell|born'], rock: ['Fels', 'fels|stein|kanzel'], volcano: ['Vulkan', 'vulkan'],
@@ -54,10 +64,10 @@ export function applyNature() {
     // Stufen nach Bedeutung, damit die Karte nicht mit Punkten zuläuft: Höhlen, Wasserfälle, Felsen, Vulkane früh; benannte Aussichten
     // später; Quellen (400) ab Zoom 13,5; unbenannte Aussichtspunkte (die meisten) erst ganz nah. Überlappende Symbole entfallen von selbst.
     const tiers = [
-      ['nat-t1', 10.5, ['in', ['get', 'kind'], ['literal', ['cave', 'waterfall', 'rock', 'volcano']]], 4],
-      ['nat-t2', 12.5, ['all', ['==', ['get', 'kind'], 'viewpoint'], ['==', ['get', 'named'], 1]], 3],
-      ['nat-t3', 13.5, ['==', ['get', 'kind'], 'spring'], 2],
-      ['nat-t4', 14.5, ['all', ['==', ['get', 'kind'], 'viewpoint'], ['==', ['get', 'named'], 0]], 1],
+      ['nat-t1', 10.5, NAT_TIER_FILTER['nat-t1'], 4],
+      ['nat-t2', 12.5, NAT_TIER_FILTER['nat-t2'], 3],
+      ['nat-t3', 13.5, NAT_TIER_FILTER['nat-t3'], 2],
+      ['nat-t4', 14.5, NAT_TIER_FILTER['nat-t4'], 1],
       // Kultur und Geschichte: Burgen, Ruinen, Ausgrabungen, Klöster früh; historische Gebäude (viele kleine) ab Zoom 12,5
       ['her-t1', 10.5, ['in', ['get', 'kind'], ['literal', ['castle', 'ruins', 'archaeological', 'monastery']]], 4],
       ['her-t2', 12.5, ['==', ['get', 'kind'], 'building'], 2],
@@ -77,8 +87,14 @@ export function applyNature() {
 }
 export function applyNatureVisibility() {
   if (!mapReady) return;
-  for (const id of [...NAT_LAYERS, 'bm-nat-peak-sym', 'bm-nat-peak-label']) {
-    if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', state.layers.nature ? 'visible' : 'none');
+  for (const id of ['bm-nat-peak-sym', 'bm-nat-peak-label']) {
+    if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', state.layers.natPeak ? 'visible' : 'none');
+  }
+  const natKinds = natureKinds(state.layers);
+  for (const id of NAT_LAYERS) {
+    if (!map.getLayer(id)) continue;
+    map.setLayoutProperty(id, 'visibility', natKinds.length ? 'visible' : 'none');
+    map.setFilter(id, ['all', NAT_TIER_FILTER[id], ['in', ['get', 'kind'], ['literal', natKinds]]]);
   }
   const med = !!state.layers.medieval;
   for (const id of NAT_LAYERS) {

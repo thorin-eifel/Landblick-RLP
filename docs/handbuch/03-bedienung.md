@@ -8,7 +8,7 @@ Oben steht die Überschrift „Lagekarte“ mit zwei Zählern: die Zahl der ange
 
 - **Warnband** ganz oben unter der Kopfzeile: die höchste Stufe der gerade geltenden Warnungen (NINA, Deutscher Wetterdienst, Hochwasser). Rot heißt rot. Das Band meldet sich als Statusbereich auch Bildschirmlesern.
 - **Suchfeld** in der Karte (Kapitel 3.4).
-- **Menüs links**, einklappbar: *Zeitraum*, *Darstellung*, *Ereignisse*, *Geographie* mit den Zusatzkarten *LGB Daten* und *Landesdaten* (Kapitel 3.2, 3.3, 3.7).
+- **Menüs links**, einklappbar: *Zeitraum*, *Darstellung*, *Ereignisse*, *Geographie* mit den Zusatzkarten *LGB Daten* und *Landesdaten*, *Freizeit* (Kapitel 3.2, 3.3, 3.7).
 - **Zeichenerklärung** unten: Sie zeigt für jede eingeschaltete Ebene, was Farben und Zeichen bedeuten.
 - **Seitenleiste** rechts mit Reitern *Ereignisse*, *Gewässer*, *Umwelt*, *Wetter* und *Grenzpendler* (Kapitel 3.5). Unter 1000 Pixel Breite stehen die Teile untereinander.
 
@@ -26,9 +26,9 @@ Das Menü *Zeitraum* wählt, welche Ereignisse gelten:
 
 Die Auswahl rechnet der Browser selbst, gegen die Uhr des Besuchers. Der Export liefert immer die Obermenge für sieben Tage. Das hat einen Nebeneffekt, der gewollt ist: Wird die Sammelstelle abgeschaltet, ruft die Seite nicht fälschlich „aktuell“.
 
-## 3.3 Ereignisse und Geographie
+## 3.3 Ereignisse, Geographie und Freizeit
 
-Die Schalter der Karte stehen in zwei Menüs. *Ereignisse* zeigt, was gerade passiert und sich ändert. *Geographie* ist die Landkarte selbst, die sich nicht von Minute zu Minute ändert. Beide sind nach Themen gegliedert; jede Gruppe lässt sich als Ganzes oder einzeln ein- und ausschalten.
+Die Schalter der Karte stehen in drei Menüs. *Ereignisse* zeigt, was gerade passiert und sich ändert. *Geographie* ist die Landkarte selbst, die sich nicht von Minute zu Minute ändert. *Freizeit* sammelt, was man unterwegs braucht. Beide sind nach Themen gegliedert; jede Gruppe lässt sich als Ganzes oder einzeln ein- und ausschalten.
 
 **Menü Ereignisse**
 
@@ -48,10 +48,19 @@ Die Schalter der Karte stehen in zwei Menüs. *Ereignisse* zeigt, was gerade pas
 | **Straßen und Bahn** | das Straßennetz der Karte nach Art, Bahnstrecken, Haltestellen, Straßenschilder, Brücken und Tunnel |
 | **Grenzen und Schutzgebiete** | Staats-, Landes-, Kreis- und Gemeindegrenzen, Naturschutzgebiete, Nationalparks, Militärgelände |
 | **Orte und Einrichtungen** | Notfallpunkte, Schulen und Rathäuser, Ladesäulen, Windräder, Wehre und Schleusen |
-| **Natur und Freizeit** | Gipfel, Höhlen, Wasserfälle, Rastplätze, Wander- und Radrouten |
+| **Natur** | Berggipfel (mit Höhe), Höhlen, Wasserfälle und Quellen, Aussichtspunkte, Felsen und Vulkane |
 | **Kultur und Geschichte** | Burgen, Ausgrabungen, Klöster, historische Gebäude, Kirchen, Friedhöfe |
 
 Darunter stehen in *Geographie* die Zusatzkarten der Landesstellen (*LGB Daten*, *Landesdaten*, Kapitel 3.7).
+
+**Menü Freizeit**
+
+| Gruppe | Inhalt |
+|---|---|
+| **Wandern und Radfahren** | Wanderrouten und Radrouten (Fern- und Regionalrouten) |
+| **Rast und Baden** | Rastplätze, Schutzhütten, Badestellen |
+
+Übernachten (Hotels, Pensionen, Campingplätze) und Aktivitäten sind geplant; die Quellen dafür stehen in `docs/rlp/freizeit-quellen.md`.
 
 Einige Ebenen verdienen ein Wort.
 

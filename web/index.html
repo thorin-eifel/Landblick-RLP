@@ -192,13 +192,14 @@
               <label><input type="checkbox" data-layer="wehr"> <span class="ico ico-pegel" aria-hidden="true"></span>Wehre, Schleusen und Fähranleger</label>
             </div>
           </details>
-          <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Natur und Freizeit ganz ein- oder ausblenden"> <span>Natur und Freizeit</span></label></summary>
-            <p class="group-hint small muted">Aussichten, Rastplätze und Routen</p>
+          <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Natur ganz ein- oder ausblenden"> <span>Natur</span></label></summary>
+            <p class="group-hint small muted">Berge, Höhlen, Wasserfälle, Aussichten, Felsen</p>
             <div class="layer-list">
-              <label><input type="checkbox" data-layer="nature" checked> <span class="ico ico-natur" aria-hidden="true"></span>Gipfel, Höhlen, Wasserfälle, Aussichten</label>
-              <label><input type="checkbox" data-layer="rast"> <span class="ico ico-natur" aria-hidden="true"></span>Rastplätze, Schutzhütten, Badestellen</label>
-              <label><input type="checkbox" data-layer="hike"> <span class="ico ico-natur" aria-hidden="true"></span>Wanderrouten (Fern- und Regionalwege)</label>
-              <label><input type="checkbox" data-layer="bike"> <span class="ico ico-stau" aria-hidden="true"></span>Radrouten (Fern- und Regionalrouten)</label>
+              <label><input type="checkbox" data-layer="natPeak" checked> <span class="ico ico-natur" aria-hidden="true"></span>Berggipfel (mit Höhe)</label>
+              <label><input type="checkbox" data-layer="natCave" checked> <span class="ico ico-natur" aria-hidden="true"></span>Höhlen</label>
+              <label><input type="checkbox" data-layer="natWater" checked> <span class="ico ico-natur" aria-hidden="true"></span>Wasserfälle und Quellen</label>
+              <label><input type="checkbox" data-layer="natView" checked> <span class="ico ico-natur" aria-hidden="true"></span>Aussichtspunkte</label>
+              <label><input type="checkbox" data-layer="natRock" checked> <span class="ico ico-natur" aria-hidden="true"></span>Felsen und Vulkane</label>
             </div>
           </details>
           <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Kultur und Geschichte ganz ein- oder ausblenden"> <span>Kultur und Geschichte</span></label></summary>
@@ -248,6 +249,25 @@
             </div>
             <div id="lad-menu" class="lgb-menu"></div>
             <p class="small muted lgb-lizenz">Lizenz je Dienst (Tooltip am Dienstnamen): meist <a href="https://www.govdata.de/dl-de/by-2-0" target="_blank" rel="noopener noreferrer">dl-de/by-2-0</a>, daneben dl-de/zero-2-0, CC BY und ODbL. Angaben aus dem Geoportal RLP, rechtlich noch nicht geprüft. Höchstens sechs Ebenen gleichzeitig; außerhalb des Maßstabsbereichs einer Ebene bleibt die Karte leer.</p>
+          </details>
+          </div>
+        </details>
+        <details class="controls" id="ctl-freizeit">
+          <summary>Freizeit</summary>
+          <p class="group-hint small muted">Unterwegs sein: Wandern, Radfahren, Rasten und Baden</p>
+          <div class="layer-groups" role="group" aria-label="Freizeit nach Thema">
+          <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Wandern und Radfahren ganz ein- oder ausblenden"> <span>Wandern und Radfahren</span></label></summary>
+            <p class="group-hint small muted">Fern- und Regionalrouten zum Wandern und Radeln</p>
+            <div class="layer-list">
+              <label><input type="checkbox" data-layer="hike"> <span class="ico ico-natur" aria-hidden="true"></span>Wanderrouten (Fern- und Regionalwege)</label>
+              <label><input type="checkbox" data-layer="bike"> <span class="ico ico-stau" aria-hidden="true"></span>Radrouten (Fern- und Regionalrouten)</label>
+            </div>
+          </details>
+          <details class="layer-group"><summary><label class="group-switch"><input type="checkbox" class="group-toggle" aria-label="Thema Rast und Baden ganz ein- oder ausblenden"> <span>Rast und Baden</span></label></summary>
+            <p class="group-hint small muted">Rastplätze, Schutzhütten und Badestellen</p>
+            <div class="layer-list">
+              <label><input type="checkbox" data-layer="rast"> <span class="ico ico-natur" aria-hidden="true"></span>Rastplätze, Schutzhütten, Badestellen</label>
+            </div>
           </details>
           </div>
         </details>

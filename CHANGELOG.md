@@ -4,6 +4,9 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unreleased]
 
+### Geändert (Natur und Freizeit)
+- „Natur und Freizeit“ ist aufgeteilt. **Geographie → Natur** hat fünf Schalter statt einem: Berggipfel, Höhlen, Wasserfälle und Quellen, Aussichtspunkte, Felsen und Vulkane (`natPeak`, `natCave`, `natWater`, `natView`, `natRock`; ersetzen `nature`). Das neue Menü **Freizeit** führt Wanderrouten, Radrouten und Rast und Baden (Rastplätze, Schutzhütten, Badestellen). `web/index.html`, `web/js/lage/natur.js`, `zustand.js`, Handbuch Kapitel 3.3.
+
 ### Geändert (Menüs)
 - Das Menü „Ebenen“ ist aufgeteilt in **Ereignisse** (was gerade passiert: Warnungen und Gefahren, Wetter und Luft, Wasserstände, Verkehr und Tanken) und **Geographie** (die Landkarte selbst: Gelände und Gebäude, Wald, Wiesen und Felder, Straßen und Bahn, Grenzen und Schutzgebiete, Orte und Einrichtungen, Natur und Freizeit, Kultur und Geschichte, dazu die Zusatzkarten LGB Daten und Landesdaten). Alle 70 Schalter sind erhalten und gleich benannt, bis auf „Pegel (Wasserstand der Flüsse)“ und „Berge und Täler (Schattierung und Farbe)“. Wehre und Schleusen wechseln zu „Orte und Einrichtungen“, Tankstellen bleiben beim Verkehr. `web/index.html`, Handbuch Kapitel 3.3.
 
