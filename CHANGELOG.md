@@ -4,6 +4,9 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unreleased]
 
+### Neu (Tests)
+- Layouttest im Browser (`tests/e2e/layout.e2e.mjs`): prüft bei 390, 900, 1300, 1700 und 2000 px, auf Touchgeräten und im Vollbild, dass Menükarte, Detailfeld, Legenden und Werkzeugleiste sich nicht überlappen, nicht aus der Seite ragen und die Kartenmitte frei lassen. Er fand zwei Fehler: Auf dem Handy lag die Leiste 15 px über dem Höhenpanel, auf dem Tablet (um 820 px) die Zeichenerklärung neben der Leiste.
+
 ### Geändert (Design)
 - Überarbeitetes CSS eingespielt (tokens.css, app.css): ein gemeinsamer Fokusring, Skin-Token für das Pergament-Design, Token für Messen, dvh-Einheiten, tote Werte entfernt, Fingerziele von 44 px bei `pointer: coarse`.
 

@@ -53,7 +53,7 @@ def quellen_tabelle(register: Path | None = None) -> str:
             f"`{s['id']}`", _zelle(s.get("kurzname") or s["name"]) + art, _zelle(s.get("betreiber", "")), _zelle(s.get("lizenz", "")),
             "—" if s.get("art") == "client" else _intervall(s.get("intervall")), _zelle(s.get("datenschutz_risiko", "")),
             "ja" if s.get("lizenz_geprueft") else "nein", "ja" if s.get("aktiv", True) else "nein"]) + " |")
-    return "\n".join(kopf + zeilen) + f"\n\n{len(daten)} Quellen im Register, davon {sum(1 for s in daten if s.get('aktiv', True))} aktiv.\n"
+    return "\n".join(kopf + zeilen) + f"\n\n{len(daten)} Quellen im Register, davon {sum(1 for s in daten if s.get('aktiv', True))} aktiv ({sum(1 for s in daten if s.get('aktiv', True) and s.get('art') != 'client')} mit Sammler, {sum(1 for s in daten if s.get('aktiv', True) and s.get('art') == 'client')} nur im Browser).\n"
 
 
 def ersetze(text: str, tabelle: str) -> str:

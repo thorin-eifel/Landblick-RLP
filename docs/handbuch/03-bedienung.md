@@ -47,7 +47,7 @@ Die Schalter der Karte stehen in drei Menüs. *Ereignisse* zeigt, was gerade pas
 | **Wald, Wiesen und Felder** | Wald, Wiesen, Busch und Heide, Äcker, Obst und Wein, Feuchtgebiete, Fels und Strand |
 | **Straßen und Bahn** | das Straßennetz der Karte nach Art, Bahnstrecken, Haltestellen, Straßenschilder, Brücken und Tunnel |
 | **Grenzen und Schutzgebiete** | Staats-, Landes-, Kreis- und Gemeindegrenzen, Naturschutzgebiete, Nationalparks, Militärgelände |
-| **Orte und Einrichtungen** | Notfallpunkte, Schulen und Rathäuser, Ladesäulen, Wehre und Schleusen |
+| **Orte und Einrichtungen** | Notfallpunkte, Schulen und Rathäuser, Wehre und Schleusen |
 | **Energie** | Windräder, Solarparks, Kraftwerke, Umspannwerke, Transformatoren, Hochspannungsleitungen ab 110 kV (110, 220 und 380 kV in drei Farben), Tankstellen mit Preisen, Ladesäulen für E-Autos |
 | **Natur** | Berggipfel (mit Höhe), Höhlen, Wasserfälle und Quellen, Aussichtspunkte, Felsen und Vulkane |
 | **Kultur und Geschichte** | Burgen, Ausgrabungen, Klöster, historische Gebäude, Kirchen, Friedhöfe |
@@ -86,6 +86,12 @@ Einige Ebenen verdienen ein Wort.
 **Suche.** Das Feld links oben in der Karte (Tastaturkürzel `/` oder `Strg+K`) sucht Orte, Straßen, Bäche, Gipfel, Wälder, Schutzgebiete, Schulen, Kirchen, Feuerwachen, Brücken, Haltestellen, Routen und Pegel. Die Suche läuft vollständig im Browser; der Index wird beim ersten Klick ins Feld geladen, und es geht keine Anfrage nach außen. Der Index enthält keine Hausnummern, keine Adressen und keine Personennamen. Die Pfeiltasten wählen, `Enter` springt hin.
 
 **Rechtsklick.** Ein Rechtsklick auf die Karte (auf Touchgeräten: Finger lang halten) öffnet ein kleines Fenster mit der Höhe über Normalhöhennull (aus dem Geländemodell der Karte), den Koordinaten in drei Schreibweisen (Dezimalgrad, Grad-Minuten-Sekunden, UTM 32 ETRS89), dem nächsten Ortsteil, der Gemeinde mit Verbandsgemeinde und dem Kreis. Die Namen kommen aus einer Datei, die der Browser beim ersten Rechtsklick holt (rund 1,2 MB komprimiert); es gibt keine Anfrage an Dritte. Außerhalb von Rheinland-Pfalz kennt die Auskunft nur den Kreis. Die Gemarkung fehlt noch.
+
+**Werkzeugleiste.** Unten mittig sitzt eine Glasleiste mit Zoom (plus und minus), Vollbild, dem Messwerkzeug und dem Maßstab. Auf schmalen Schirmen (bis 640 px) steht sie über den beiden Legenden, bei offenem Detailfeld rückt die Zeichenerklärung über die Leiste. Auf Touchgeräten haben die Knöpfe 44 Pixel Kantenlänge.
+
+**Vollbild.** Der Knopf in der Leiste zeigt die ganze Lageseite im Vollbild, nicht nur die Karte: Menükarte links, Detailfeld rechts, Legenden unten. `Esc` beendet es.
+
+**Messen.** Der Knopf mit dem Lineal schaltet das Messwerkzeug ein. Jeder Klick setzt einen Punkt; das Feld oben rechts zeigt die Länge des Wegs und, sobald es eine Fläche gibt, Umfang und Flächeninhalt. Ein Klick auf den ersten Punkt (oder „Schließen“) schließt das Areal; dann steht die Fläche in m², ha oder km². Gerechnet wird auf der Kugel (Erdradius 6.371 km, Fläche über den sphärischen Exzess), die Abweichung gegenüber dem Ellipsoid liegt unter 0,5 %. Für Grundstücksgrenzen ersetzt das keine Vermessung. Sich selbst schneidende Umrisse werden gekennzeichnet, ihr Flächenwert ist dann nicht belastbar. `Rücktaste` oder `Entf` nimmt den letzten Punkt zurück, `Enter` schließt, `Esc` beendet. „Punkt in Kartenmitte“ setzt einen Punkt ohne Maus, „Neu“ löscht alle Punkte, „Kopieren“ legt das Ergebnis in die Zwischenablage. Solange gemessen wird, öffnen Klicks auf die Karte keine Fenster. Gespeichert wird nichts; die Punkte verschwinden mit dem Neuladen.
 
 ## 3.5 Seitenleiste: Ereignisse, Gewässer, Umwelt, Wetter, Grenzpendler
 

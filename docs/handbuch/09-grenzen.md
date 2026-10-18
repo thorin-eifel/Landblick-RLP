@@ -19,11 +19,12 @@ Eine Alpha-Fassung ist ehrlich, wenn sie sagt, was nicht geht. Dieses Kapitel sa
 - **Betriebsanleitung teilweise veraltet.** In `docs/betrieb.md` stehen noch Abschnitte aus der Zeit des 120-Kilometer-Kreises. Maßgeblich ist die Region in `region.yaml` (Rheinland-Pfalz plus 80 km).
 - **Radar-Sweep** zeichnet um den Mittelpunkt Irrel, nicht entlang der Landesgrenze.
 - **Länderzuordnung** außerhalb Deutschlands hängt am Kennzeichen des Sammlers; saubere Landesgrenzen (Natural Earth) fehlen noch.
-- **Overpass-Sammler** (Infrastruktur, Natur, Routen, Anbau) sind nicht live gemessen; die Obergrenzen der Mengen sind geschätzt.
+- **Overpass-Sammler** (Infrastruktur, Natur, Routen, Anbau, Energie) sind nicht live gemessen; die Obergrenzen der Mengen sind geschätzt.
 - **Tankerkönig und NASA FIRMS** brauchen eigene Schlüssel und sind nur dann aktiv, wenn sie in `.env` stehen.
 - **Medienfeeds.** Nur ausgewählte Feeds sind eingebunden; weitere warten auf Prüfung von Lizenz und robots.txt.
 - **Abrufzeit je Meldung.** Der Zeitpunkt „Abruf“ im Zellenbetrieb ist der letzte Erfolg der Quelle, nicht der der einzelnen Meldung.
 - **Tastaturbedienung** der Dichte-Ebene: die Zahlen lassen sich nur mit der Maus anklicken; Ersatz sind Zoomtasten, Landkreisfilter und Tabelle.
+- **Energie.** Windräder und Solarparks kommen aus dem Geodatendienst der SGD Nord (nur Nordteil von Rheinland-Pfalz, ohne Betreiberangaben), Kraftwerke, Umspannwerke, Transformatoren und Leitungen ab 110 kV aus OpenStreetMap. Der OSM-Teil ist noch nicht live gelaufen. Im Süden fehlt ein vergleichbarer amtlicher Dienst.
 - **Ein unstabiler Test** (`test_hochwasser_rlp_config_cached_and_second_run_no_duplicates`) lief früher selten rot und wird beobachtet.
 
 ## 9.3 Was nicht geplant ist

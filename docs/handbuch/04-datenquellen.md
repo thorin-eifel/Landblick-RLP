@@ -111,6 +111,6 @@ Kennung in der ersten Spalte, die Intervalle sind Soll-Abstände. „Risiko“ i
 | `lgb_wms` | LGB Daten (Browser) | Landesamt für Geologie und Bergbau Rheinland-Pfalz (LGB) | Datenlizenz Deutschland – Namensnennung – Version 2.0 (dl-de/by-2-0) | — | mittel | nein | ja |
 | `landesdaten_wms` | Landesdaten (Browser) | Landesstellen Rheinland-Pfalz (Landesamt für Vermessung und Geobasisinformationen, Landesamt für Umwelt, Ministerium, LBM, DLR u. a.) | je Dienst, überwiegend Datenlizenz Deutschland – Namensnennung – Version 2.0 (dl-de/by-2-0); daneben dl-de/zero-2-0, CC BY 3.0/4.0, ODbL 1.0 | — | mittel | nein | ja |
 
-49 Quellen im Register, davon 47 aktiv.
+49 Quellen im Register, davon 47 aktiv (45 mit Sammler, 2 nur im Browser).
 
 <!-- quellen:ende -->

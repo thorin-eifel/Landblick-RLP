@@ -69,9 +69,9 @@ Plan und Begründung: `docs/rlp/plan.md`. Entscheidung: `docs/adr/0001-region-rl
 
 ### Zahlen
 
-- Quellen im Register: 47, davon aktiv: 43
-- Sammler (Module in `app/collectors/`): 46
-- Tests: 633 Python, 104 JavaScript
+- Quellen im Register: 49, davon aktiv: 45
+- Sammler (Module in `app/collectors/`): 48
+- Tests: 654 Python, 158 JavaScript
 
 ### Quellen und Lizenzen
 
@@ -96,6 +96,8 @@ Plan und Begründung: `docs/rlp/plan.md`. Entscheidung: `docs/adr/0001-region-rl
 | `gtfs_rt_de` | ÖPNV Echtzeit | CC BY-SA 4.0 (Namensnennung, Weitergabe unter gleichen Bedingungen), ohne Gewähr | 10 min | ja |
 | `osm_natur` | Landmarken | ODbL 1.0 (© OpenStreetMap-Mitwirkende) | 168 h | ja |
 | `osm_infra` | Infrastruktur | ODbL 1.0 (© OpenStreetMap-Mitwirkende) | 168 h | ja |
+| `sgdnord_energie` | Wind und Solar (SGD Nord) | Datenlizenz Deutschland Namensnennung 2.0 (dl-de/by-2.0) | 24 h | ja |
+| `osm_energie` | Energie | ODbL 1.0 (© OpenStreetMap-Mitwirkende) | 168 h | ja |
 | `osm_anbau` | Anbauflächen | ODbL 1.0 (© OpenStreetMap-Mitwirkende) | 168 h | ja |
 | `osm_routen` | Routen | ODbL 1.0 (© OpenStreetMap-Mitwirkende) | 168 h | ja |
 | `meteolux` | MeteoLux Findel | CC0 1.0 | 10 min | ja |

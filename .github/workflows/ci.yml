@@ -27,6 +27,21 @@ jobs:
           [ -z "$bad" ] || { echo "Nicht ins Repository:"; echo "$bad"; exit 1; }
           big=$(git ls-files -z | xargs -0 du -k | awk '$1>5120{print}' | grep -v -e 'web/vendor/' -e 'web/basis/welt\.pmtiles' || true)
           [ -z "$big" ] || { echo "Datei über 5 MB:"; echo "$big"; exit 1; }
+  layout:
+    # Layouttest im Browser (Überlappung, Fensterrand, freie Kartenmitte, Vollbild); eigener Job, damit ein Browserproblem die Testläufe oben nicht färbt
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: pip, cache-dependency-path: "requirements*.txt" }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: pip install -r requirements.txt
+      - run: npm install --no-save --prefix "$RUNNER_TEMP/pw" playwright@1.49.1
+      - run: npx --prefix "$RUNNER_TEMP/pw" playwright install --with-deps chromium
+      - name: Layouttest
+        run: node --test tests/e2e/layout.e2e.mjs
+        env: { PLAYWRIGHT_MODULE: "${{ runner.temp }}/pw/node_modules/playwright" }
   audit:
     runs-on: ubuntu-24.04
     steps:

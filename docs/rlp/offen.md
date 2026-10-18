@@ -1,6 +1,6 @@
 # Offene Punkte und Dinge, die nicht funktioniert haben
 
-Wird in jeder Phase fortgeschrieben (Plan: `plan.md`). Stand R4.
+Wird in jeder Phase fortgeschrieben (Plan: `plan.md`). Stand 18. Oktober 2026 (R5 abgeschlossen, Nachträge unten; R6 und R7 offen).
 
 ## Technik
 
@@ -71,3 +71,12 @@ Wird in jeder Phase fortgeschrieben (Plan: `plan.md`). Stand R4.
 - Radar-Sweep zeichnet weiter um den Mittelpunkt Irrel (Kreis); die Vignette dahinter ist jetzt eine andere Form. Entscheidung offen, ob der Sweep der Landesform folgt oder bleibt.
 - Die Karte zieht nur so weit, wie Kacheln und Daten reichen: Die Kacheln auf dem Mac decken noch 120 km, die Vignette lässt Rheinland-Pfalz plus 80 km klar. Bis die großen Kacheln eingespielt sind, sieht man im Osten leere Fläche statt Schwarz.
 - Kleine Knicke im Verlauf an einspringenden Ecken der Grenze sind Eigenschaft des Abstandsfelds, kein Fehler.
+
+## Aus Energie, Messen, Bedienung (Okt. 2026)
+
+- **`osm_energie` nicht live gelaufen** (Overpass aus dem Sandkasten nicht erreichbar). Menge und Laufzeit für Kraftwerke, Umspannwerke, Transformatoren und Leitungen ab 110 kV sind offen; Lauf auf dem Mac, dann Obergrenzen prüfen.
+- **Energie: SGD Nord deckt nur den Norden.** Der Süden (SGD Süd) hat keinen vergleichbaren offenen Dienst, dort kommt alles aus OSM. Amtliche Wasserkraftdaten sind nicht verwendbar. Betreiberangaben werden bewusst nicht übernommen.
+- **Messen** rechnet auf der Kugel (Abweichung unter 0,5 %), nicht auf dem Ellipsoid. Kein Ersatz für Vermessung. Ohne Maus lassen sich Punkte nur über „Punkt in Kartenmitte“ setzen.
+- **Layouttest** (`tests/e2e/layout.e2e.mjs`) braucht Playwright und Chromium und läuft deshalb nicht in `tests/js`. Er prüft Überlappung, Fensterrand und freie Kartenmitte bei 390 bis 2000 px, auf Touchgeräten und im Vollbild. Echte Geräte (iPhone Safari, iPad) sind nicht getestet, nur die Chromium-Emulation. Die Karte war dabei ohne Kacheln; Dunkel und „Alte Karte“ sind nur auf Screenshots geprüft, nicht im Test.
+- **Design vom Nutzer** (`web/css/tokens.css`, `web/css/app.css`) ist eingespielt; Dunkel auf echten Kartendaten ist nicht gesehen.
+
