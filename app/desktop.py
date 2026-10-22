@@ -131,10 +131,18 @@ class App:
             e["OSINT_PROGRESS_FILE"] = str(progress)
         return e
 
-    def _run(self, args: list[str], progress: Path | None = None, timeout: int = 1800) -> int:
+    def _run(self, args: list[str], progress: Path | None = None, timeout: int = 1800, err_tail: list[str] | None = None) -> int:
         """Sammler und Export als Kindprozess. Im gebündelten Programm (PyInstaller) ruft es sich selbst mit --run auf."""
         cmd = [sys.executable, "--run", *args] if getattr(sys, "frozen", False) else [sys.executable, "-m", *args]
-        return subprocess.run(cmd, cwd=self.repo_dir, env=self.env(progress), timeout=timeout).returncode
+        if err_tail is None:
+            return subprocess.run(cmd, cwd=self.repo_dir, env=self.env(progress), timeout=timeout).returncode
+        # Fehlerausgabe mitlesen, damit die Meldung die Ursache nennt (sonst nur "Code 1"); weiter auch ins Log
+        r = subprocess.run(cmd, cwd=self.repo_dir, env=self.env(progress), timeout=timeout, stderr=subprocess.PIPE, text=True, errors="replace")
+        lines = [x for x in r.stderr.splitlines() if x.strip()]
+        for x in lines[-40:]:
+            sys.stderr.write(x + "\n")
+        err_tail[:] = lines[-3:]
+        return r.returncode
 
     def job_snapshot(self) -> dict:
         """Zustand des Aufbaus. Im Sammellauf kommt "n von m, läuft noch: <Namen>" aus der Fortschrittsdatei des Sammlers."""
@@ -169,11 +177,13 @@ class App:
         for versuch in range(60):
             n = len(list((work / "chunks").glob("*/*.pmtiles"))) if (work / "chunks").exists() else 0
             self.job.set("tiles", f"Karte wird geholt ({n} Stücke fertig, einmalig rund 1,5 GB)", 5 + min(60, int(60 * n / 150)))
-            rc = self._run(args, timeout=1500)
+            tail: list[str] = []
+            rc = self._run(args, timeout=1500, err_tail=tail)
             if rc == 0:
                 return
             if rc != 2:
-                raise RuntimeError(f"Kartenabruf fehlgeschlagen (Code {rc})")
+                grund = " | ".join(x.strip()[-160:] for x in tail)
+                raise RuntimeError(f"Kartenabruf fehlgeschlagen (Code {rc})" + (f": {grund}" if grund else ""))
         raise RuntimeError("Karte nach 60 Läufen noch nicht vollständig")
 
     def pakete_url(self) -> str:

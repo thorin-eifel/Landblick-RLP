@@ -96,9 +96,19 @@ def test_tiles_are_fetched_for_the_whole_region_and_resumed_until_done(app, monk
     """Ohne Karte ruft work() den Gebietsbau auf (Code 2 = noch nicht fertig, Wiederholung), nicht mehr den Kreis um einen Mittelpunkt."""
     codes = iter([2, 2, 0])
     calls = []
-    monkeypatch.setattr(app, "_run", lambda args, progress=None, timeout=1800: calls.append(tuple(args)) or next(codes))
+    monkeypatch.setattr(app, "_run", lambda args, progress=None, timeout=1800, err_tail=None: calls.append(tuple(args)) or next(codes))
     app.holen_tiles()
     assert len(calls) == 3 and calls[0][0] == "tools.build_region_tiles" and str(app.repo_dir / "region.yaml") in calls[0]
     monkeypatch.setattr(app, "_run", lambda *a, **k: 1)
     with pytest.raises(RuntimeError, match="Code 1"):
+        app.holen_tiles()
+
+
+def test_tile_failure_message_names_the_cause_from_stderr(app, monkeypatch):
+    """Code 1 allein sagt nichts: die letzten Zeilen der Fehlerausgabe des Kartenbaus stehen in der Meldung."""
+    def fake(args, progress=None, timeout=1800, err_tail=None):
+        err_tail[:] = ["Traceback", "ModuleNotFoundError: No module named 'shapely'"]
+        return 1
+    monkeypatch.setattr(app, "_run", fake)
+    with pytest.raises(RuntimeError, match=r"Code 1\): Traceback \| ModuleNotFoundError: No module named 'shapely'"):
         app.holen_tiles()
