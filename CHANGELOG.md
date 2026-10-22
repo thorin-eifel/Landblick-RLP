@@ -4,6 +4,9 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unreleased]
 
+### Behoben (Installer)
+- Windows-Installer und Desktop-Bau schlugen seit dem Ressourcenordner `pakete/` im Schritt „Installer“ fehl, weil der Ordner (gitignore) auf dem Runner fehlte. Beide Workflows legen jetzt einen Platzhalter an; die App sucht ohne Pakete im Datenordner.
+
 ### Neu (Tests)
 - Layouttest im Browser (`tests/e2e/layout.e2e.mjs`): prüft bei 390, 900, 1300, 1700 und 2000 px, auf Touchgeräten und im Vollbild, dass Menükarte, Detailfeld, Legenden und Werkzeugleiste sich nicht überlappen, nicht aus der Seite ragen und die Kartenmitte frei lassen. Er fand zwei Fehler: Auf dem Handy lag die Leiste 15 px über dem Höhenpanel, auf dem Tablet (um 820 px) die Zeichenerklärung neben der Leiste.
 

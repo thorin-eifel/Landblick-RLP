@@ -17,6 +17,12 @@ jobs:
       - name: Sidecar (Python-Dienst und pmtiles)
         shell: pwsh
         run: ./desktop/build-sidecar.ps1
+      - name: Platzhalter für die Kachelpakete
+        # tauri.conf.json verlangt den Ressourcenordner pakete/; er liegt nicht im Git (gitignore). Ohne Pakete sucht die App im Datenordner.
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force desktop/src-tauri/pakete | Out-Null
+          Set-Content desktop/src-tauri/pakete/LIESMICH.txt 'Platzhalter: Kachelpakete liegen nicht im Repository.'
       - name: Installer
         shell: pwsh
         working-directory: desktop

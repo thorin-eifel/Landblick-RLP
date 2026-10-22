@@ -20,6 +20,12 @@ jobs:
       - name: Sidecar
         shell: bash
         run: desktop/build-sidecar.sh
+      - name: Platzhalter für die Kachelpakete
+        # tauri.conf.json verlangt den Ressourcenordner pakete/; er liegt nicht im Git (gitignore). Ohne Pakete sucht die App im Datenordner.
+        shell: bash
+        run: |
+          mkdir -p desktop/src-tauri/pakete
+          echo 'Platzhalter: Kachelpakete liegen nicht im Repository.' > desktop/src-tauri/pakete/LIESMICH.txt
       - name: App
         shell: bash
         run: cd desktop && npm install --include=dev && npx tauri build
