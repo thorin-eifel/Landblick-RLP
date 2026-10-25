@@ -35,6 +35,7 @@ Erste Version unter der Nummer 1. Vorher gab es keine gezählten Versionen; der 
 - `tools/dauerlauf.py` und `docs/rlp/r6-dauerlauf.md`: Messung und Protokoll für den 7-Tage-Lauf (der Lauf selbst steht aus).
 - Umgebungsvariable für das Register heißt in `gesundheit.py` und `dauerlauf.py` jetzt wie im Rest (`LANDBLICK_SOURCES`).
 - Ein Name durchgehend: Umgebungsvariablen `LANDBLICK_*`, Datenbank `data/landblick.sqlite`, Sidecar `landblick-core`, Kennung `de.thorin.landblick` (launchd, Desktop-App), systemd `landblick-*`, Logger `landblick.*`, Header `X-Landblick`. Bestehende Installationen ziehen einmal um (Schritte im Pull Request).
+- Abhängigkeiten: `pillow` 12.3.0 → 13.0.0, `certifi` 2026.7.22 → 2026.10.19 (pip-audit: 37 bzw. 1 bekannte Lücke).
 - `.env`: Kommentar am Zeilenende gehört nicht mehr zum Wert. Vorher landete er aus der Vorlage im User-Agent, und der Umlaut darin ließ jeden Abruf scheitern.
 
 ### Handbuch
