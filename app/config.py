@@ -28,7 +28,15 @@ def load_dotenv(path: Path | None = None) -> int:
         if not line or line.startswith("#") or "=" not in line:
             continue
         key, _, value = line.partition("=")
-        key, value = key.strip(), value.strip().strip("'\"")
+        key, value = key.strip(), value.strip()
+        if value[:1] in ("'", '"') and value[0] in value[1:]:
+            value = value[1:value.index(value[0], 1)]   # Anführungszeichen: alles bis zum schließenden, auch "#"
+        else:
+            # Kommentar am Zeilenende (" # ...") gehört nicht zum Wert. Sonst landet er im User-Agent, und ein
+            # Umlaut darin lässt httpx jeden Abruf mit UnicodeEncodeError abbrechen.
+            for sep in (" #", "\t#"):
+                value = value.split(sep, 1)[0]
+            value = value.strip().strip("'\"")
         if key and value and key not in os.environ:
             os.environ[key] = value
             n += 1
