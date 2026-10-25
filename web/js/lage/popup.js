@@ -1,3 +1,4 @@
+import { energieSourceText, energieText } from '../energie.js';
 import { infraText } from '../infra.js';
 import { deriveStatus } from '../rules.js';
 import { TYPE_LABEL, ageEl, fmtDateTime, h, link, sevBadge } from '../util.js';
@@ -28,9 +29,13 @@ export function showPopup(p, kind, lngLat) {
     box.append(h('h3', {}, p.name), h('p', {}, p.kind === 'bike' ? 'Radroute' : 'Wanderroute', p.ref ? ` ${p.ref}` : '', p.network ? ` · ${({ iwn: 'international', nwn: 'national', rwn: 'regional', icn: 'international', ncn: 'national', rcn: 'regional' })[p.network] ?? p.network}` : ''),
       h('p', { class: 'k' }, `${state.routen?.source?.attribution ?? '© OpenStreetMap-Mitwirkende (ODbL)'} · Stand `, ageEl(state.routen?.source?.last_success)),
       h('p', { class: 'k' }, 'Ehrenamtlich gepflegt; Sperrungen und Umleitungen zeigt die Karte nicht. Maßgeblich ist die Wegweisung vor Ort.'));
+  } else if (kind === 'energie') {
+    box.append(h('h3', {}, energieText(p)),
+      h('p', { class: 'k' }, `${energieSourceText(p.src)} · Stand `, ageEl(state.energie?.source?.last_success)),
+      h('p', { class: 'k' }, 'Angaben ohne Gewähr, kein Ersatz für die Netzauskunft der Betreiber.'));
   } else if (kind === 'infra') {
     box.append(h('h3', {}, infraText(p)),
-      h('p', { class: 'k' }, `${state.infra?.source?.attribution ?? '© OpenStreetMap-Mitwirkende (ODbL)'} · Stand `, ageEl(state.infra?.source?.last_success)),
+      h('p', { class: 'k' }, `${p.src === 'rok' ? energieSourceText('rok') : state.infra?.source?.attribution ?? '© OpenStreetMap-Mitwirkende (ODbL)'} · Stand `, ageEl(state.infra?.source?.last_success)),
       h('p', { class: 'k' }, 'Ehrenamtlich gepflegt, ohne Gewähr; im Notfall 112.'));
   } else if (kind === 'env') {
     box.append(h('h3', {}, h('span', { class: `ico ico-${p.icon}`, 'aria-hidden': 'true' }), `${p.kind === 'radiation' ? 'Strahlung' : p.kind === 'weather' ? 'Wetterstation' : 'Luft'}: ${p.name}`),

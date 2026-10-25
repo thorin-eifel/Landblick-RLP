@@ -20,8 +20,8 @@ export const RAMP = {
   dark: [[100, '#25493a'], [200, '#3b5638'], [300, '#5a5a36'], [400, '#6e5a38'], [500, '#7d5a3e'], [600, '#8a5f4c'], [700, '#95695f']],
 };
 // Karte „um 1450“: Ocker statt Höhenstufen, braune Schummerung, Höhenlinien in Tinte (über den Relief-Schalter weiter nutzbar)
-const MED_RAMP = [[100, '#e6d6a4'], [300, '#dcc790'], [500, '#cfb27c'], [700, '#bf9a68']];
-const MED_STYLE = { opacity: 0.45, shadow: '#3f2a12', high: '#f3e4b8', accent: '#5e4220', hill: 0.72, contour: 'rgba(110,70,34,0.5)', contourMajor: 'rgba(84,52,24,0.8)', label: '#4a2f16', halo: 'rgba(238,224,182,0.9)' };
+export const MED_RAMP = [[100, '#e6d6a4'], [300, '#dcc790'], [500, '#cfb27c'], [700, '#bf9a68']];
+export const MED_STYLE = { font: 'Grenze Gotisch Regular', opacity: 0.45, shadow: '#3f2a12', high: '#f3e4b8', accent: '#5e4220', hill: 0.72, contour: 'rgba(110,70,34,0.5)', contourMajor: 'rgba(84,52,24,0.8)', label: '#4a2f16', halo: 'rgba(238,224,182,0.9)' };
 const STYLE = {
   light: { opacity: 0.62, shadow: '#1f2533', high: '#ffffff', accent: '#2f3646', hill: 0.7, contour: 'rgba(122,84,48,0.55)', contourMajor: 'rgba(104,68,36,0.8)', label: '#5b3d21', halo: 'rgba(255,255,255,0.85)' },
   dark: { opacity: 0.5, shadow: '#000000', high: '#7a8496', accent: '#000000', hill: 0.5, contour: 'rgba(226,196,150,0.5)', contourMajor: 'rgba(240,212,168,0.85)', label: '#f0dcbc', halo: 'rgba(18,18,18,0.9)' },
@@ -77,22 +77,24 @@ export function buildRelief(map, dark, shade, contours, med = false) {
   for (const id of RELIEF_LAYERS) if (map.getLayer(id)) map.removeLayer(id);
   const ramp = ['interpolate', ['linear'], ['elevation'], ...(med ? MED_RAMP : RAMP[dark ? 'dark' : 'light']).flat()];
   const anchor = 'radius-fill';
-  const under = map.getLayer('bm-water') ? 'bm-water' : anchor;
-  const over = map.getLayer('bm-roads_minor_service_casing') ? 'bm-roads_minor_service_casing' : anchor;
+  // Wasser (Säume, Rand, Fläche): Schummerung, Hangneigung und Höhenlinien liegen darunter, damit in Seen und Flüssen nichts davon durchscheint
+  const under = ['bm-water_stream_casing', 'bm-water_river_casing', 'bm-water_edge', 'bm-water'].find((id) => map.getLayer(id)) ?? anchor;
+  const over = under;
   // Höhenfärbung unter den Flächenfarben (Wald, Wiese, Acker), Schummerung darüber: so bleibt das Grün sichtbar
   const colorUnder = map.getLayer('bm-land-forest') ? 'bm-land-forest' : under;
   map.addLayer({ id: 'relief-color', type: 'color-relief', source: ELEV_SRC, layout: { visibility: vis },
     paint: { 'color-relief-color': ramp, 'color-relief-opacity': s.opacity } }, colorUnder);
+  const hillBefore = map.getLayer('bm-land-hang-ab15') ? 'bm-land-hang-ab15' : under;   // Hangneigung liegt über der Schummerung und ergänzt sie
   map.addLayer({ id: 'relief-hill', type: 'hillshade', source: ELEV_SRC, layout: { visibility: vis },
     paint: { 'hillshade-exaggeration': s.hill, 'hillshade-shadow-color': s.shadow, 'hillshade-highlight-color': s.high,
-      'hillshade-accent-color': s.accent, 'hillshade-illumination-direction': 315 } }, under);
+      'hillshade-accent-color': s.accent, 'hillshade-illumination-direction': 315 } }, hillBefore);
   const level = ['coalesce', ['get', 'level'], 0];
   map.addLayer({ id: 'relief-contour', type: 'line', source: CONTOUR_SRC, 'source-layer': 'contours', minzoom: 7, layout: { visibility: visLines, 'line-join': 'round' },
     paint: { 'line-color': ['case', ['>=', level, 1], s.contourMajor, s.contour],
       'line-width': ['interpolate', ['linear'], ['zoom'], 7, ['case', ['>=', level, 1], 0.5, 0.25], 13, ['case', ['>=', level, 1], 1.3, 0.7]] } }, over);
   map.addLayer({ id: 'relief-contour-label', type: 'symbol', source: CONTOUR_SRC, 'source-layer': 'contours', minzoom: 10,
     filter: ['>=', level, 1],
-    layout: { visibility: visLines, 'symbol-placement': 'line', 'text-field': ['concat', ['to-string', ['get', 'ele']], ' m'], 'text-font': [med ? 'Grenze Gotisch Regular' : 'Noto Sans Regular'],
+    layout: { visibility: visLines, 'symbol-placement': 'line', 'text-field': ['concat', ['to-string', ['get', 'ele']], ' m'], 'text-font': [med ? s.font : 'Noto Sans Regular'],
       'text-size': 10, 'text-max-angle': 30, 'symbol-spacing': 320 },
     paint: { 'text-color': s.label, 'text-halo-color': s.halo, 'text-halo-width': 1.4 } });
 }

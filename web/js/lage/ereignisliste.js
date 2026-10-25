@@ -1,7 +1,9 @@
 import { SORTS, filterEvents, sortEvents } from '../eventlist.js';
 import { iconFor } from '../rules.js';
 import { $, TYPE_LABEL, ageEl, fmtDateTime, h, sevBadge } from '../util.js';
-import { GEBIET_LEER, gebietAktiv, kreisWaehlen, kreiseListe, laenderListe, landWaehlen } from '../gebiet.js';
+import { GEBIET_LEER, gebietAktiv, gebietAusEinheit, kreisWaehlen, kreiseListe, laenderListe, landWaehlen } from '../gebiet.js';
+import { ausschnitt } from './ausschnitt-karte.js';
+import { ereignisseImAusschnitt } from './ausschnitt.js';
 import { showPopup } from './popup.js';
 import { gebietGeaendert } from './zellenlauf.js';
 import { GROUPS, map, mapReady, state } from './zustand.js';
@@ -78,10 +80,10 @@ export function renderEvents(statuses) {
   box.replaceChildren();
   queueMicrotask(() => { panel.scrollTop = top; });
   const types = Object.entries(GROUPS).filter(([g]) => state.layers[g]).flatMap(([, t]) => t);
-  const layered = state.events.filter((f) => types.includes(f.properties.type));
+  const layered = ereignisseImAusschnitt(state.events.filter((f) => types.includes(f.properties.type)), ausschnitt());   // nur der sichtbare Kartenbereich
   const rows = sortEvents(filterEvents(layered, evView), evView.sort, evView.reverse);
   const cnt = panel.querySelector('#ev-count');
-  const countText = rows.length === layered.length ? `${rows.length} Ereignisse` : `${rows.length} von ${layered.length} Ereignissen`;
+  const countText = rows.length === layered.length ? `${rows.length} Ereignisse im Ausschnitt` : `${rows.length} von ${layered.length} Ereignissen im Ausschnitt`;
   if (cnt) cnt.textContent = countText;
   const q = panel.querySelector('#ev-q'); if (q) q.placeholder = `${countText} durchsuchen`;
   const problems = statuses.filter((s) => ['down', 'stale', 'pending'].includes(s.status) && ['autobahn', 'lbm_baustellen', 'mobidata_bw_baustellen', 'mobidata_bw_meldungen', 'lhp_hochwasser', 'nina', 'dwd_warnungen', 'adsblol'].includes(s.id) && (s.id !== 'adsblol' || state.layers.air));
@@ -89,7 +91,10 @@ export function renderEvents(statuses) {
     box.append(h('div', { class: 'card-f' }, h('span', { class: 'stale-note' }, `${s.name}: ${s.status === 'down' ? `nicht erreichbar seit ${fmtDateTime(s.failing_since ?? s.last_attempt)}` : s.status === 'pending' ? 'noch kein Abruf' : 'veraltet'}`)));
   }
   if (!rows.length) {
-    box.append(h('div', { class: 'empty' }, layered.length ? 'Kein Ereignis passt zu den Filtern.' : 'Keine Ereignisse in diesem Zeitfenster und dieser Auswahl.'));
+    const verdeckt = layered.length ? 0 : ereignisseImAusschnitt(state.events, ausschnitt()).length;   // da, aber über ausgeschaltete Ebenen verborgen
+    box.append(h('div', { class: 'empty' }, layered.length ? 'Kein Ereignis passt zu den Filtern.'
+      : verdeckt ? `Im Ausschnitt liegen ${verdeckt} Ereignisse in ausgeschalteten Ebenen (Menü Ereignisse: Verkehr, Luft und weitere).`
+        : 'Im sichtbaren Kartenausschnitt liegt kein Ereignis (Zeitfenster und Ebenen beachten). Karte verschieben oder herauszoomen.'));
     return;
   }
   const tbody = h('tbody');
@@ -108,6 +113,23 @@ export function renderEvents(statuses) {
   box.append(h('div', { class: 'scroll-x' }, h('table', {},
     h('caption', { class: 'sr-only' }, 'Ereignisse im Radius, Tabellenansicht der Karte'),
     h('thead', {}, h('tr', {}, th('Stufe', 'prio'), h('th', { scope: 'col' }, 'Ereignis'), th('Abstand', 'dist', 'num'))), tbody)));
+}
+
+/** Klick auf eine Übersichtszahl (Land, Kreis): Gebietsfilter auf diese Einheit, Detailfeld öffnen, Reiter „Ereignisse“ zeigen.
+ *  Gibt true zurück, wenn der Filter gesetzt wurde (die Karte zoomt der Aufrufer). */
+export function zeigeEinheit(key) {
+  const g = gebietAusEinheit(key, state.start?.kreise);
+  if (!g) return false;
+  state.gebiet = g;
+  const btn = $('#side-toggle');
+  if (btn && btn.getAttribute('aria-expanded') !== 'true') btn.click();   // eingeklapptes Detailfeld aufklappen
+  const tab = $('#tab-events');
+  if (tab && tab.getAttribute('aria-selected') !== 'true') tab.click();
+  const panel = $('#panel-events');
+  if (panel.querySelector('#ev-tools')) { panel.querySelector('#ev-tools').replaceWith(buildEventTools(panel)); syncEventTools(panel); }   // Auswahlfelder zeigen das neue Gebiet
+  gebietGeaendert();
+  map?.resize();   // die Karte wird schmaler, wenn das Detailfeld aufgeht
+  return true;
 }
 
 export function focusEvent(f) {

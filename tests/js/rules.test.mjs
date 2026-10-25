@@ -113,3 +113,17 @@ for (const jetzt of ['2026-03-29T00:30:00Z', '2026-03-29T01:30:00Z', '2026-10-25
     assert.equal(deriveStatus({ ...src, interval_s: 3600, last_success: new Date(now - 3 * 3600 * 1000 + 10_000).toISOString() }, now).status, 'ok');
   });
 }
+
+test('windowFilter: unlesbare Zeitangaben verbergen das Ereignis nicht (Befund N2)', () => {
+  const now = Date.parse('2026-10-15T12:00:00Z');
+  const f = (p) => ({ properties: p });
+  const out = windowFilter([f({ valid_from: 'kaputt', valid_to: 'auch kaputt' }), f({ valid_to: '2026-10-15T11:00:00Z', valid_from: '2026-10-15T10:00:00Z' })], 'now', now);
+  assert.equal(out.length, 1);
+});
+
+test('deriveStatus und exportStale: fehlende oder unlesbare Angaben täuschen keine Aktualität vor (Befund N3)', () => {
+  const now = Date.parse('2026-10-15T12:00:00Z');
+  assert.equal(deriveStatus({ status: 'ok', last_success: 'kaputt', last_attempt: 'x', consecutive_failures: 0, interval_s: 60 }, now).status, 'down');
+  assert.equal(exportStale('kein Datum', now), true);
+  assert.equal(deriveStatus({ status: 'ok', last_success: '2026-10-15T11:59:00Z', consecutive_failures: 0 }, now).status, 'ok');
+});

@@ -4,7 +4,7 @@ Wer an einem Dienstagmorgen von Irrel nach Echternach fährt, schaut vorher auf 
 
 **Landblick - RLP** legt sie auf eine Karte. Es ruft offene Datenquellen ab (Warnungen, Wetter, Pegel, Verkehr, Luft, Strahlung, Erdbeben, regionale Meldungen), schneidet sie auf Rheinland-Pfalz plus 80 Kilometer Umland zu und zeigt sie so, dass an jedem Wert dransteht, woher er kommt, wie alt er ist und unter welcher Lizenz er steht. Wenn eine Quelle ausfällt, sagt die Kachel das, statt eine leere Fläche zu zeigen.
 
-Dieses Handbuch beschreibt Version **1.0.0-alpha.1**. Es richtet sich an drei Leserinnen und Leser: wer die Karte benutzt (Kapitel 3), wer sie betreibt (Kapitel 2 und 6) und wer sie später weiterentwickeln oder warten muss (Kapitel 5, 8 und 10). Kapitel 9 sagt ehrlich, was noch nicht geht.
+Dieses Handbuch beschreibt Version **1.0.0-beta.1**. Es richtet sich an drei Leserinnen und Leser: wer die Karte benutzt (Kapitel 3), wer sie betreibt (Kapitel 2 und 6) und wer sie später weiterentwickeln oder warten muss (Kapitel 5, 8 und 10). Kapitel 9 sagt ehrlich, was noch nicht geht.
 
 ## 1.1 Was es ist
 
@@ -24,7 +24,7 @@ Diese Regeln sind nicht verhandelbar. Sie stehen so in der Projektanweisung und 
 
 1. **Ereignisse statt Personen.** Gespeichert und angezeigt werden Orte, Zeiten, Themen und Zahlen. Keine Klarnamen, keine Nutzerprofile, keine Bilder von Personen. Bei Fluginformationen wird nur eine Klasse (zivil, militärisch, Hubschrauber) gespeichert, nie Kennzeichen oder Kennung.
 2. **Offene Daten, offene Lizenzen.** Jede Quelle hat einen Eintrag im Quellenregister mit Lizenz und Namensnennung. Ohne Eintrag läuft kein Sammler. Wo die Bedingungen unklar sind, bleibt die Quelle aus.
-3. **Lokal zuerst.** Betrieb auf eigener Hardware oder bei einem EU-Hoster. Die Karte kommt aus eigenen Kacheln, nicht aus einem Kartendienst. Die Suche läuft im Browser.
+3. **Lokal zuerst.** Betrieb auf eigener Hardware, ohne Server und ohne Hoster. Die Karte kommt aus eigenen Kacheln, nicht aus einem Kartendienst. Die Suche läuft im Browser.
 4. **Herkunft immer sichtbar.** Jede Kachel und jede Meldung zeigt Quelle, Abrufzeit und Alter. Alte Daten werden als alt markiert, nicht versteckt.
 5. **Ehrlich bei Unsicherheit.** Schätzungen sind als Schätzungen gekennzeichnet (etwa Höhenwerte aus Rasterdaten, keine Vermessung). Es gibt keine Warnung, die nur eine Rechnung behauptet.
 6. **Ausfallsicher.** Fällt eine Quelle aus, bleibt der Rest stehen. Die Kachel sagt „Quelle nicht erreichbar seit …“.
@@ -44,7 +44,7 @@ Das Projekt begann als Schaufenster der CTW Computer-Irrel GmbH für Datenpipeli
 
 ## 1.6 Was „alpha“ heißt
 
-Die Version 1.0.0-alpha.1 läuft, ist aber nicht abgenommen. Offen sind die rechtliche Prüfung vor einem öffentlichen Start, der Dauerbetrieb über sieben Tage ohne Eingriff (R6), die Bestätigung einiger Lizenztexte an der Primärquelle und Erfahrungen auf Windows. Wer die Seite öffentlich ins Netz stellt, tut das auf eigene Verantwortung, und das Impressum und die Datenschutzerklärung müssen vorher zur eigenen Lage passen.
+Die Version 1.0.0-beta.1 läuft, ist aber nicht abgenommen. Offen sind die rechtliche Prüfung vor einem öffentlichen Start, der Dauerbetrieb über sieben Tage ohne Eingriff (R6), die Bestätigung einiger Lizenztexte an der Primärquelle und Erfahrungen auf Windows. Wer die Seite öffentlich ins Netz stellt, tut das auf eigene Verantwortung, und das Impressum und die Datenschutzerklärung müssen vorher zur eigenen Lage passen.
 
 ## 1.7 Lizenz und Kontakt
 

@@ -8,3 +8,9 @@ Ausnahme: hoehle, wasserfall, fernglas (Aussicht) stammen aus OpenStreetMap Cart
 Keine Namensnennung nötig; Adressen stehen im Skript.
 
 tanken.svg ist eine eigene Zeichnung (CTW), nicht von uxwing; sie liegt im Repository.
+
+Menüzeichen (web/icons/menu/, im Repository, weil frei weitergebbar):
+Maki (Mapbox, CC0 1.0, https://github.com/mapbox/maki), Temaki (OpenStreetMap-Editor iD, CC0 1.0, https://github.com/ideditor/temaki)
+und OpenStreetMap Carto (CC0 1.0, hoehle.svg). Eigene Zeichnungen (CTW): autobahn, bundesstrasse, landstrasse, nebenstrasse,
+grenze-staat, grenze-land, grenze-kreis, grenze-gemeinde, solar (Energie; kraftwerk, umspannwerk, transformator, leitung aus Temaki). Regel: jedes Zeichen steht im Menü und in den Reitern nur einmal,
+tests/js/icons-eindeutig.test.mjs prüft das. Neue Schalter bekommen ein neues Zeichen, keine Wiederverwendung.

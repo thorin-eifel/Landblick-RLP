@@ -9,8 +9,10 @@ import { MED, MED_COLORS, MED_ICON_STYLE, medFlavor, medievalize } from './mitte
 import { HER_LAYERS, NAT_LAYERS, applyNatureVisibility, paintNature, peakLayers } from './natur.js';
 import { INFRA_LAYER_IDS, paintStops } from './orte.js';
 import { placeLgb } from './lgb.js';
-import { BUILDING_OPACITY, LABEL_SKIP, LAND, cliffLayers, hangLayers, labelsAndBuildings, ortsnamenUebersicht, landUseLayers, mainRoad, signLayers, waterEdges } from './stil.js';
+import { skinize, skinById, tintOf, wantsPatterns } from './skins.js';
+import { BUILDING_OPACITY_LEGEND, LABEL_SKIP, LAND, cliffLayers, hangLayers, labelsAndBuildings, ortsnamenUebersicht, landUseLayers, mainRoad, roadsFromDetail, signLayers, waterEdges } from './stil.js';
 import { applyFlow, applyLegends, fillTempLegend, placeRadar } from './wetterkarte.js';
+import { applyFont, resetFontMemory } from './schrift.js';
 import { BUILDING_KLASSEN } from '../gebaeude-farben.js';
 import { basemapOk, coreOk, flow, gebOk, hangOk, light, klippenOk, map, mapReady, reliefOk, ringOk, state } from './zustand.js';
 
@@ -32,7 +34,7 @@ const VEG_LEGENDE = [['forest', 'Wald'], ['meadow', 'Wiese, Weide'], ['grass', '
 /** Zeichenerklärung der Flächen: Gebäudefunktion, Bewuchs, Meldungsstufen. Farben folgen dem Farbschema (hell/dunkel). */
 function fillFlaechenLegenden(dark) {
   const k = dark ? 'dark' : 'light';
-  $('#legend-geb')?.replaceChildren(...BUILDING_KLASSEN.filter(([id]) => id !== 'sonst').map(([, titel, c]) => legendZeile(c[k], titel, BUILDING_OPACITY + 0.4)));
+  $('#legend-geb')?.replaceChildren(...BUILDING_KLASSEN.filter(([id]) => id !== 'sonst').map(([, titel, c]) => legendZeile(c[k], titel, BUILDING_OPACITY_LEGEND)));
   $('#legend-veg')?.replaceChildren(...VEG_LEGENDE.map(([id, titel]) => legendZeile(LAND[k][id][0], titel, Math.min(1, LAND[k][id][1] + 0.3))));
   const pal = palette();
   $('#legend-warn')?.replaceChildren(...['critical', 'warning', 'notice', 'info'].map((id) => legendZeile(pal[id], SEV[id].label)));
@@ -42,8 +44,10 @@ function fillFlaechenLegenden(dark) {
 export function applyBasemap() {
   if (!basemapOk) { applyRelief(); placeRadar(); return; }
   for (const l of map.getStyle().layers) if (l.id.startsWith('bm-')) map.removeLayer(l.id);
+  resetFontMemory();
   const med = !!state.layers.medieval;
-  document.documentElement.dataset.karte = med ? 'mittelalter' : '';
+  document.documentElement.dataset.karte = med ? ((state.symbole ?? state.skin) === 'alte-karte' ? 'mittelalter' : 'zeichnung') : '';
+  document.documentElement.dataset.skin = skinById(state.skin).id;
   const flavor = !med && document.documentElement.dataset.ansicht === 'dunkel' ? 'dark' : 'grayscale';
   const before = baseAnchor();
   // Keine Grenzlinien (Länder, Kreise): die Karte zeigt Gelände, Gewässer, Straßen und den Radius
@@ -56,13 +60,25 @@ export function applyBasemap() {
     });
   // eigene Flächen- und Geländeebenen gleich hinter dem Landnutzungs-Layer des Stils (unter Wasser, Straßen und Relief-Linien)
   const at = styled.findIndex((x) => x.id === 'landuse_park');
+  // Reihenfolge von unten: Vegetation (Landnutzung), Schummerung, Hangneigung, Klippen (weiter unten im Code, über allem Gelände)
   styled.splice(at >= 0 ? at + 1 : 0, 0, ...landUseLayers(dark, !!map.getSource('rlp-grenze')));
-  // Klippen weit oben: über Relief, Höhenlinien, Vegetation, Gewässer und Straßen, unter den Beschriftungen
+  // Klippen weit oben: über Hangneigung, Relief, Höhenlinien, Vegetation, Gewässer und Straßen, unter den Beschriftungen
   const lab0 = styled.findIndex((x) => x.layout?.['text-font'] && !x.id.startsWith('land-'));
-  styled.splice(lab0 < 0 ? styled.length : lab0, 0, ...hangLayers(dark, hangOk, state.layers.hang), ...cliffLayers(dark ? 'dark' : 'light', dark, map.hasImage('cliff-tick'), klippenOk));
+  styled.splice(lab0 < 0 ? styled.length : lab0, 0, ...cliffLayers(med ? 'med' : dark ? 'dark' : 'light', dark, map.hasImage('cliff-stroke'), klippenOk));
   waterEdges(styled, dark);
+  // Hangneigung ergänzt die Schummerung: über Höhenfärbung, Schummerung (relief.js legt sie davor) und Vegetation, vor der ersten Wasserebene (Säume, Rand, Fläche), dahinter die Höhenlinien (relief.js)
+  {
+    // Gebäude liegen über Schummerung und Hangneigung (Dächer sind flach: kein Schatten, keine Hangflecken auf Häusern), unter Höhenlinien und Wasser
+    const isBld = (x) => /^buildings(-line)?$/.test(x.id), bld = styled.filter(isBld);
+    for (let i = styled.length - 1; i >= 0; i--) if (isBld(styled[i])) styled.splice(i, 1);
+    const wi = styled.findIndex((x) => /^water(_stream_casing|_river_casing|_edge)?$/.test(x.id));
+    styled.splice(wi < 0 ? styled.length : wi, 0, ...hangLayers(dark, hangOk, state.layers.hang), ...bld);
+  }
   styled.push(...peakLayers(dark, map.hasImage('peak-tri')));   // Gipfel oben auf den Beschriftungen des Stils
+  const tint = tintOf(state.skin, dark);
+  if (tint) styled = skinize(styled, tint, { patterns: wantsPatterns(state.skin) });
   if (med) styled = medievalize(styled);
+  styled = roadsFromDetail(styled, { core: coreOk, ring: ringOk });   // Straßen und Namen ab Zoom 14 aus Kern und Ring (vollständiger als Zoom 13)
   if (ringOk && !gebOk) {   // gleiche Gebäudeebenen noch einmal aus dem Ring; Kern und Ring überlappen nicht, nichts wird doppelt gezeichnet
     const at2 = styled.map((x) => x.id).lastIndexOf('buildings-line');
     const extra = styled.filter((x) => x.id === 'buildings' || x.id === 'buildings-line').map((x) => ({ ...x, id: `${x.id}-ring`, source: 'basemap-ring' }));
@@ -90,11 +106,12 @@ export function applyBasemap() {
   applyRelief();
   placeRadar();
   placeLgb();   // LGB-Ebenen bleiben über der neu gebauten Basis, unter Straßen und Beschriftung
+  applyFont();   // gewählte Schrift auf die neu gebauten Beschriftungen
 }
 
 // Gewässer blau, damit Mosel, Sauer und Seen auch auf der grauen Basiskarte und über dem Relief sofort lesbar sind
 export function paintWater(dark, med) {
-  const fill = med ? MED.water : dark ? '#1f4f7a' : '#8fc0e8', line = fill;   // Linie in Flächenfarbe: Mittellinie und Fläche gehen nahtlos ineinander über
+  const fill = med ? MED.water : tintOf(state.skin, dark)?.water ?? (dark ? '#1f4f7a' : '#8fc0e8'), line = fill;   // Linie in Flächenfarbe: Mittellinie und Fläche gehen nahtlos ineinander über
   if (map.getLayer('bm-water')) map.setPaintProperty('bm-water', 'fill-color', fill);
   for (const id of ['bm-water_stream', 'bm-water_river']) if (map.getLayer(id)) map.setPaintProperty(id, 'line-color', line);
 }
@@ -118,7 +135,7 @@ export function applyLight(dark = document.documentElement.dataset.ansicht === '
   const last = Math.max(...['bm-water', 'bm-water_stream', 'bm-water_river'].map((i) => ids.indexOf(i)));
   const beforeWater = last >= 0 && ids[last + 1] ? ids[last + 1] : 'radius-fill';
   light.setEnabled(on);
-  light.build(before, beforeWater, { dark, med, waterColor: med ? MED.water : dark ? '#1f4f7a' : '#8fc0e8' });
+  light.build(before, beforeWater, { dark, med, waterColor: med ? MED.water : tintOf(state.skin, dark)?.water ?? (dark ? '#1f4f7a' : '#8fc0e8') });
   if (map.getLayer('relief-hill')) map.setPaintProperty('relief-hill', 'hillshade-exaggeration', on ? 0.12 : hillStrength(dark, med));
   const box = $('#licht-opt'); if (box) box.hidden = !on;
 }

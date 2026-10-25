@@ -21,7 +21,7 @@ test('Ebenenbudget: unter Zoom 8 nichts, bei Ortszoom alles', () => {
   assert.deepEqual(kindsForZoom(7.5), []);
   assert.deepEqual(kindsForZoom(8), ['events', 'gewaesser', 'umwelt']);
   assert.ok(!kindsForZoom(8).includes('haltestellen'));
-  assert.equal(kindsForZoom(15).length, 10);
+  assert.equal(kindsForZoom(15).length, 11);
 });
 
 test('ensure lädt nur Dateien aus dem Manifest, begrenzt parallel, und merged entfernt Dubletten über Zellkanten', async () => {
@@ -142,4 +142,28 @@ test('Einheiten: je Land und Kreis ein Punkt an der Lage der Fläche, leere entf
   assert.deepEqual(einheitenPunkte(undefined), []);
   assert.equal(kurzname('Landkreis Ahrweiler'), 'Ahrweiler'); assert.equal(kurzname('Eifelkreis Bitburg-Prüm'), 'Eifelkreis Bitburg-Prüm');
   assert.equal(kurzname('Regionalverband Saarbrücken'), 'Saarbrücken');
+});
+
+test('ensure: neueres Manifest während eines laufenden Abrufs lädt danach neu (Befund N7)', async () => {
+  let n = 0; const rel = 'z/12_99/events.json';
+  const gates = [];
+  const sp = new ZellenSpeicher({ fetchJSON: () => new Promise((res) => gates.push(() => res({ n: ++n, features: [], sources: [] }))) });
+  sp.setManifest({ cells: ['12_99'], files: { [rel]: { sha256: 'a' } } });
+  const p1 = sp.ensure(['12_99'], ['events']);
+  sp.setManifest({ cells: ['12_99'], files: { [rel]: { sha256: 'b' } } });
+  const p2 = sp.ensure(['12_99'], ['events']);
+  gates[0]();
+  await new Promise((r) => setTimeout(r, 5));
+  gates[1]?.();
+  await Promise.all([p1, p2]);
+  assert.equal(sp.held.get(rel).sha, 'b');
+  assert.equal(sp.held.get(rel).data.n, 2);
+});
+
+test('hasData: fehlgeschlagener Erstabruf hält keine Daten (Befund N5)', async () => {
+  const sp = new ZellenSpeicher({ fetchJSON: async () => { throw new Error('x'); } });
+  sp.setManifest({ cells: ['1_1'], files: { 'z/1_1/gewaesser.json': { sha256: 'a' } } });
+  await sp.ensure(['1_1'], ['gewaesser']);
+  assert.equal(sp.hasData('gewaesser'), false);
+  assert.equal(sp.status().error, 1);
 });

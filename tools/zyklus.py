@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
-"""Ein Durchlauf der Sammelstelle: fällige Quellen abrufen, exportieren, optional hochladen. Läuft auf Windows, Linux und macOS.
+"""Ein Durchlauf der Sammelstelle: fällige Quellen abrufen und exportieren. Läuft auf Windows, Linux und macOS.
 
-Zweck:      Portable Fassung von deploy/run-cycle.sh (die bleibt für Cron/launchd auf Unix). Ein Zeitplaner startet dieses Skript
-            im Fünf-Minuten-Takt (siehe install.py).
+Zweck:      Ein Zeitplaner startet dieses Skript im Fünf-Minuten-Takt (siehe install.py).
 Parameter:  --erst     Erstlauf: jede Quelle einmal (außer den langsamen, erstlauf: spaeter), danach Export
             --spaet    nur die langsamen Quellen (erstlauf: spaeter, z. B. große OSM-Abfragen), fällig nach Intervall
             --ohne-export   nach dem Abruf nicht exportieren
 Umgebung:   Aus .env (app.config lädt sie). OSINT_LIVE=1 (Standard): Quellen mit params.live holt das Livemodul, nicht dieser Lauf.
-            PUBLISH_ENABLED=1: danach deploy/publish.sh --delta (braucht bash und lftp; unter Windows meist nicht vorhanden).
 Sperre:     Läuft schon ein Durchlauf, endet dieser sofort mit Code 0. Verwaiste Sperren (älter als 30 Minuten) werden verworfen.
-Exit:       0 = Export erzeugt, 1 = Export oder Upload fehlgeschlagen (ein Fehler einer Quelle zählt nicht)
+Exit:       0 = Export erzeugt, 1 = Export fehlgeschlagen (ein Fehler einer Quelle zählt nicht)
 Beispiel:   python tools/zyklus.py
 """
 from __future__ import annotations
@@ -17,7 +15,6 @@ from __future__ import annotations
 import argparse
 import logging
 import os
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -91,13 +88,6 @@ def main(argv: list[str] | None = None) -> int:
         if step(["app.export"], 20 * 60) != 0:
             log.error("Export fehlgeschlagen")
             return 1
-        if os.environ.get("PUBLISH_ENABLED") == "1":
-            bash = shutil.which("bash")
-            if not bash:
-                log.warning("Upload ist an, aber bash fehlt: übersprungen")
-            elif subprocess.run([bash, str(ROOT / "deploy" / "publish.sh"), "--delta"], cwd=ROOT).returncode != 0:
-                log.error("Upload fehlgeschlagen, der nächste Durchlauf versucht es erneut")
-                return 1
         log.info("fertig")
         return 0
     finally:

@@ -104,8 +104,8 @@ export function cssColor(varName) {
   const probe = h('span'); probe.style.color = raw; document.body.append(probe);
   const resolved = getComputedStyle(probe).color; probe.remove();
   cx.clearRect(0, 0, 1, 1); cx.fillStyle = '#000'; cx.fillStyle = resolved; cx.fillRect(0, 0, 1, 1);
-  const [r, g, b] = cx.getImageData(0, 0, 1, 1).data;
-  return `rgb(${r},${g},${b})`;
+  const [r, g, b, a] = cx.getImageData(0, 0, 1, 1).data;
+  return a === 255 ? `rgb(${r},${g},${b})` : `rgba(${r},${g},${b},${(a / 255).toFixed(3)})`;   // Alpha bleibt erhalten, nicht auf Schwarz plattgedrückt
 }
 
 export function sparkline(points, { w = 200, h: hh = 34 } = {}) {

@@ -13,12 +13,12 @@
 
 export const KIND_KEY = {
   events: 'features', gewaesser: 'stations', umwelt: 'stations', haltestellen: 'stops', landmarks: 'items',
-  infrastruktur: 'items', sakral: 'items', routen: 'items', anbau: 'features', kraftstoff: 'stations',
+  infrastruktur: 'items', sakral: 'items', energie: 'items', routen: 'items', anbau: 'features', kraftstoff: 'stations',
 };
 
 // Welche Arten ab welcher Zoomstufe geladen werden (Ebenenbudget). Darunter zeigt die Karte nur Zählwerte aus dem Startpaket.
 export const KIND_MIN_ZOOM = {
-  events: 8, gewaesser: 8, umwelt: 8, kraftstoff: 9, haltestellen: 10, landmarks: 10, infrastruktur: 11, routen: 10, anbau: 11, sakral: 11,
+  events: 8, gewaesser: 8, umwelt: 8, kraftstoff: 9, haltestellen: 10, landmarks: 10, infrastruktur: 11, routen: 10, anbau: 11, sakral: 11, energie: 9,
 };
 
 export const cellId = (lon, lat) => `${Math.floor(lon * 2)}_${Math.floor(lat * 2)}`;
@@ -40,13 +40,12 @@ const itemKey = (kind, it) => it.id ?? it.properties?.id ?? it.station_id ?? `${
 
 export class ZellenSpeicher {
   /**
-   * @param {{fetchJSON: (path: string) => Promise<any>, parallel?: number, retryMs?: number, maxCells?: number, now?: () => number}} o
+   * @param {{fetchJSON: (path: string) => Promise<any>, parallel?: number, retryMs?: number, now?: () => number}} o
    */
-  constructor({ fetchJSON, parallel = 6, retryMs = 30000, maxCells = 80, now = Date.now }) {
+  constructor({ fetchJSON, parallel = 6, retryMs = 30000, now = Date.now }) {
     this.fetchJSON = fetchJSON;
     this.parallel = parallel;
     this.retryMs = retryMs;
-    this.maxCells = maxCells;
     this.now = now;
     this.files = {};          // rel → { sha256, bytes, kind, cell } aus dem Manifest
     this.held = new Map();    // rel → { state, sha, data, err, at }
@@ -77,7 +76,8 @@ export class ZellenSpeicher {
     for (const rel of rels) {
       const h = this.held.get(rel), sha = this.files[rel].sha256;
       if (h?.state === 'ok' && h.sha === sha) continue;
-      if (h?.state === 'loading') { jobs.push(h.promise); continue; }
+      if (h?.state === 'loading' && h.sha === sha) { jobs.push(h.promise); continue; }
+      if (h?.state === 'loading') { jobs.push(h.promise.then(() => { const c = this.held.get(rel); return c?.sha === sha ? c.promise : this._load(rel, sha); })); continue; }   // Manifest ist inzwischen neuer als der laufende Abruf
       if (h?.state === 'error' && h.sha === sha && this.now() - h.at < this.retryMs) continue;
       jobs.push(this._load(rel, sha));
     }
@@ -123,6 +123,12 @@ export class ZellenSpeicher {
     }
     if (dropped) this.version++;
     return dropped;
+  }
+
+  /** Gibt es zu dieser Art mindestens eine Datei mit Inhalt? (Fehlgeschlagene Erstabrufe halten keine Daten.) */
+  hasData(kind) {
+    for (const [rel, h] of this.held) if (rel.endsWith(`/${kind}.json`) && h.data != null) return true;
+    return false;
   }
 
   /** Gehaltene Zellen mit Zustand, für Statusanzeige und Prüfzugang. */

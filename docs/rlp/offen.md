@@ -1,6 +1,6 @@
 # Offene Punkte und Dinge, die nicht funktioniert haben
 
-Wird in jeder Phase fortgeschrieben (Plan: `plan.md`). Stand R4.
+Wird in jeder Phase fortgeschrieben (Plan: `plan.md`). Stand 18. Oktober 2026 (R5 abgeschlossen, Nachträge unten; R6 und R7 offen).
 
 ## Technik
 
@@ -17,7 +17,7 @@ Wird in jeder Phase fortgeschrieben (Plan: `plan.md`). Stand R4.
 ## Recht und Lizenz
 
 - **Quellen im privaten Betrieb neu bewerten.** Einige Entscheidungen hingen daran, dass der Betreiber eine GmbH war (adsb.lol, Blitzdaten/LightningMaps). Seit dem 9. Oktober 2026 ist das Projekt privat. Eine öffentliche Seite bleibt trotzdem ein Angebot an Dritte; die Bewertung gehört in die Rechtsprüfung vor dem öffentlichen Start, nicht in diese Datei. Bis dahin bleibt alles wie zuvor entschieden.
-- **Impressum und Datenschutzerklärung** nennen jetzt Name, Anschrift und E-Mail. Name in der Schreibweise "Schleicher" (laut Profil); bitte gegen den Personalausweis prüfen. Datenschutz: Angaben zu IONOS-Logs und Auftragsverarbeitung fehlen weiter.
+- **Impressum und Datenschutzerklärung** nennen jetzt Name, Anschrift und E-Mail. Name in der Schreibweise "Schleicher" (laut Profil); bitte gegen den Personalausweis prüfen.
 
 ## R3: offen geblieben
 
@@ -32,12 +32,11 @@ Wird in jeder Phase fortgeschrieben (Plan: `plan.md`). Stand R4.
 
 ## R4: offen geblieben
 
-- **Upload nicht gegen den echten Webspace getestet** (kein `lftp` im Sandkasten). Trockenlauf und Plan sind getestet. Erster echter Lauf auf dem Mac.
 - **Zelle `z/16_98/events.json` 509 KB** (Budget 500 KB): gemeldet, nicht gekürzt. Geometrien liegen über Zellgrenzen mehrfach (Ereignisse 5,6 MB statt 3,5 MB); Vereinfachung nach Zoomstufe gehört in R5.
 - **Flachdateien** (`events.json` usw.) bleiben bis R5; `events.json` dort weiter bei 2.000 Einträgen, im alten Frontend fehlen damit Ereignisse im Osten der Region. Abhilfe ist das Zellenfrontend, nicht eine größere Flachdatei.
 - **Radar, Wind, Suchindex** sind global (1,2 MB / 110 KB / 136 KB), nicht in Zellen; Nachladestrategie in R5.
 - **Herzschlag** (162 KB je Zyklus) trägt den Quellenzustand. Wird das zu viel, kann `start.json` auf Zustand und Warnband verkleinert werden.
-- Neue Kachelarchive (913 MB) und Höhenmodell (676 MB) liegen weiter auf dem Mac; Einspielen und Hochladen ist nicht Teil dieses PR (siehe PR-Text, Frage 1).
+- Neue Kachelarchive (913 MB) und Höhenmodell (676 MB) liegen weiter auf dem Mac; das Einspielen ist nicht Teil dieses PR (siehe PR-Text, Frage 1).
 
 ## Aus R5 (Frontend)
 
@@ -71,3 +70,12 @@ Wird in jeder Phase fortgeschrieben (Plan: `plan.md`). Stand R4.
 - Radar-Sweep zeichnet weiter um den Mittelpunkt Irrel (Kreis); die Vignette dahinter ist jetzt eine andere Form. Entscheidung offen, ob der Sweep der Landesform folgt oder bleibt.
 - Die Karte zieht nur so weit, wie Kacheln und Daten reichen: Die Kacheln auf dem Mac decken noch 120 km, die Vignette lässt Rheinland-Pfalz plus 80 km klar. Bis die großen Kacheln eingespielt sind, sieht man im Osten leere Fläche statt Schwarz.
 - Kleine Knicke im Verlauf an einspringenden Ecken der Grenze sind Eigenschaft des Abstandsfelds, kein Fehler.
+
+## Aus Energie, Messen, Bedienung (Okt. 2026)
+
+- **`osm_energie` live gemessen (18. Oktober 2026, Mac, Rheinland-Pfalz plus 80 km, 47 Kacheln je Art).** Der Lauf dauerte 1 h 47 min (6.416 s) und lief teilweise: Overpass war überlastet (119 Antworten mit HTTP 500, 502 oder 504, alle drei Spiegel in Folge ausgefallen bei Transformator und Leitung). Frisch geholt wurden Kraftwerke 705, Solarparks 1.009 und Umspannwerke 1.488. Transformator (220) und Leitung (14.981 Objekte, 39.603 Linienpunkte) blieben auf dem Stand aus dem Cache, den der Sammler dafür vorsieht; ob dieser Stand vollständig war, ist nicht belegt. Gesamt 18.403 Objekte und 39.603 Linienpunkte, also rund ein Drittel der Obergrenze von 60.000 Objekten und ein Zehntel der Grenze von 400.000 Punkten; der Cache-Eintrag ist 1,9 MB groß. Die Obergrenzen reichen damit mit großem Abstand. Offen: Transformator und Leitung einzeln neu holen (`OSM_ENERGIE_ONLY=transformer` und `OSM_ENERGIE_ONLY=line`), am besten nachts; dazu `energie.json` nach dem Export messen. Ein voller Lauf braucht bei Last weit über eine Stunde, deshalb ist wöchentlich (604.800 s) richtig und der Erstlauf bleibt `spaeter`.
+- **Energie: SGD Nord deckt nur den Norden.** Der Süden (SGD Süd) hat keinen vergleichbaren offenen Dienst, dort kommt alles aus OSM. Amtliche Wasserkraftdaten sind nicht verwendbar. Betreiberangaben werden bewusst nicht übernommen.
+- **Messen** rechnet auf der Kugel (Abweichung unter 0,5 %), nicht auf dem Ellipsoid. Kein Ersatz für Vermessung. Ohne Maus lassen sich Punkte nur über „Punkt in Kartenmitte“ setzen.
+- **Layouttest** (`tests/e2e/layout.e2e.mjs`) braucht Playwright und Chromium und läuft deshalb nicht in `tests/js`. Er prüft Überlappung, Fensterrand und freie Kartenmitte bei 390 bis 2000 px, auf Touchgeräten und im Vollbild. Echte Geräte (iPhone Safari, iPad) sind nicht getestet, nur die Chromium-Emulation. Die Karte war dabei ohne Kacheln; Dunkel und „Alte Karte“ sind nur auf Screenshots geprüft, nicht im Test.
+- **Design vom Nutzer** (`web/css/tokens.css`, `web/css/app.css`) ist eingespielt; Dunkel auf echten Kartendaten ist nicht gesehen.
+

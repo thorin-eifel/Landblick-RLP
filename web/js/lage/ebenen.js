@@ -5,8 +5,14 @@ import { $, initTheme, tickAges } from '../util.js';
 import { applyBaseToggles, applyLegend, applyLight, recolor } from './basiskarte.js';
 import { pushAir, refreshAir } from './flugverkehr.js';
 import { refresh, render } from './laden.js';
+import { SACRAL_LAYERS } from '../infra.js';
 import { windrose } from './mittelalter.js';
+import { initDarstellung } from './darstellung.js';
+import { skinById } from './skins.js';
+import { applyArt } from './zeichensatz.js';
+import { artOf } from './zeichensaetze.js';
 import { applyNatureVisibility } from './natur.js';
+import { applyEnergieVisibility } from './energie.js';
 import { applyInfra, applyInfraVisibility, applyRoutesVisibility, applyStopsVisibility } from './orte.js';
 import { applyBlitzVisibility, applyFlow, applyLegends, applyRadarVisibility, applyWind } from './wetterkarte.js';
 import { AIR_POLL_MS, GROUPS, map, mapReady, reliefOk, state } from './zustand.js';
@@ -42,6 +48,7 @@ export function applyLayerFilters() {
   map.setLayoutProperty('tank-label', 'visibility', on(state.layers.tank && state.iconsOk));
   applyInfraVisibility();
   applyRoutesVisibility();
+  applyEnergieVisibility();
   map.setLayoutProperty('tank-circle', 'visibility', on(state.layers.tank && !state.iconsOk));
   applyBaseToggles();
   applyFlow();
@@ -61,6 +68,7 @@ export function wire() {
     if (!enableSound(e.target.checked)) e.target.checked = false;
   });
   let medApplied = false, autoHeritage = false;
+  const decorOn = () => !!state.layers.medieval && !!artOf(skinById(state.skin).art)?.decor;   // Titelschild und Windrose nur, wo der Zeichensatz sie führt
   const setLayer = (name, on) => { const cb = document.querySelector(`input[data-layer="${name}"]`); if (cb) cb.checked = on; state.layers[name] = on; };
   const syncMedieval = () => {
     if (state.layers.medieval === medApplied) return;
@@ -70,7 +78,7 @@ export function wire() {
     if (medApplied && !HER.some((n) => state.layers[n])) { for (const n of HER) setLayer(n, true); autoHeritage = true; }
     else if (!medApplied && autoHeritage) { for (const n of HER) setLayer(n, false); autoHeritage = false; }
     if (!medApplied) autoHeritage = false;
-    windrose(medApplied); decor(medApplied); applyLegends();
+    windrose(decorOn()); decor(decorOn()); applyLegends();
     applyLayerFilters(); syncGroups(); recolor(); applyInfra();
   };
   const syncGroups = () => { // Themenschalter: an, wenn alle Ebenen des Themas an sind; „gemischt“, wenn nur einige
@@ -82,6 +90,7 @@ export function wire() {
   };
   for (const cb of document.querySelectorAll('input[data-layer]')) cb.addEventListener('change', () => {
     state.layers[cb.dataset.layer] = cb.checked; applyLayerFilters(); render(); syncGroups(); syncMedieval();
+    if (SACRAL_LAYERS.includes(cb.dataset.layer)) applyInfra();   // Kirchen, Mühlen … erst laden, wenn eine dieser Ebenen an ist
     if (cb.dataset.layer === 'licht') applyLight();
     if (cb.dataset.layer === 'air' && cb.checked) refreshAir();
   });
@@ -89,9 +98,19 @@ export function wire() {
     const boxes = [...t.closest('.layer-group').querySelectorAll('input[data-layer]')];
     for (const cb of boxes) { cb.checked = t.checked; state.layers[cb.dataset.layer] = t.checked; }
     applyLayerFilters(); render(); syncGroups(); syncMedieval();
+    if (boxes.some((cb) => SACRAL_LAYERS.includes(cb.dataset.layer))) applyInfra();
     if (boxes.some((cb) => cb.dataset.layer === 'licht')) applyLight();
     if (t.checked && boxes.some((cb) => cb.dataset.layer === 'air')) refreshAir();
   });
+  // Darstellung: Farb-Schema, Symbole, Schrift und „Anpassen“ (darstellung.js); der Wechsel läuft hier, weil er die Ebenen mitschaltet
+  const setzeDarstellung = () => {
+    const sk = skinById(state.skin);
+    state.layers.medieval = !!sk.art;
+    if (sk.art) applyArt(map, sk.art);   // Zeichensatz: Farben, Schrift, Muster und Symbole neu
+    applyLayerFilters(); render(); syncGroups();
+    if (state.layers.medieval !== medApplied) syncMedieval(); else { windrose(decorOn()); decor(decorOn()); recolor(); }
+  };
+  initDarstellung(setzeDarstellung);
   syncGroups();
   const tabs = [...document.querySelectorAll('[role="tab"]')];
   for (const t of tabs) t.addEventListener('click', () => {
@@ -103,3 +122,4 @@ export function wire() {
   setInterval(() => { if (!document.hidden && state.layers.air) pushAir(); }, 1000); // weiterrücken und Stand-Anzeige
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshAir(); });
 }
+

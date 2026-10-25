@@ -1,6 +1,6 @@
 # Handbuch Landblick - RLP
 
-Das Handbuch zu Version 1.0.0-alpha.1, in Kapiteln als Markdown. Gebaut wird es mit `python tools/handbuch.py` (HTML und PDF unter `build/handbuch/`). Die fertigen Dateien hängen am GitHub-Release.
+Das Handbuch zu Version 1.0.0-beta.1, in Kapiteln als Markdown. Gebaut wird es mit `python tools/handbuch.py` (HTML und PDF unter `build/handbuch/`). Die fertigen Dateien hängen am GitHub-Release.
 
 | Kapitel | Inhalt |
 |---|---|
@@ -14,5 +14,6 @@ Das Handbuch zu Version 1.0.0-alpha.1, in Kapiteln als Markdown. Gebaut wird es 
 | [8 Entwicklung](08-entwicklung.md) | Tests, neue Quelle, Phasen, Mitarbeit |
 | [9 Grenzen](09-grenzen.md) | Was nicht fertig ist |
 | [10 Referenz](10-referenz.md) | Variablen, Befehle, Dateien, Glossar |
+| [11 Darstellung und Skins](11-darstellung.md) | Kartenstil, Farbquellen, Zeichen, CSS und SVG, Grundlage für Themen |
 
 Die Quellentabelle in Kapitel 4 entsteht aus `sources.yaml` (`python tools/handbuch.py --update`); ein Test prüft, dass sie aktuell ist.

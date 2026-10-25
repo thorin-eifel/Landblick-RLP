@@ -1,3 +1,4 @@
+import { KLIPPEN_UMRISS } from './klippen-umriss.js';
 import { RLP_UMRISS } from './rlp-umriss.js';
 import { map } from './zustand.js';
 import { BUILDING, buildingFill } from '../gebaeude-farben.js';
@@ -44,7 +45,9 @@ export const LABEL_SKIP = /^(boundaries|pois$|roads_shields|roads_oneway|places_
 export const INK = { light: '#111111', dark: '#f4f4f4' };
 export const WATER_INK = { light: '#0b4f9c', dark: '#8cc4ff' };   // Gewässernamen immer blau
 export const HALO = { light: 'rgba(255,255,255,0.95)', dark: 'rgba(16,16,16,0.95)' };
-export const BUILDING_OPACITY = 0.4; // 60 % Transparenz, damit Relief und Straßen durchscheinen
+// Deckkraft der Gebäude nach Zoom: in der Übersicht 40 % (Relief und Straßen scheinen durch), im Nahbereich bis 75 % (Häuser stehen deutlich da)
+export const BUILDING_OPACITY = ['interpolate', ['linear'], ['zoom'], 14, 0.4, 17, 0.75];
+export const BUILDING_OPACITY_LEGEND = 0.75;   // Farbfeld der Zeichenerklärung
 export const GREEN = { light: '#9fc98a', dark: '#2f6a43' };
 // Flächenfarben nach OSM-Klasse (Farbe, Deckkraft); dezent, damit Relief, Straßen und Ereignisse führen
 // Farben nach der Natur: Wald dunkles Blattgrün, Wiese frisches Gelbgrün, Weide/Rasen satteres Grün, Busch olivgrau,
@@ -60,8 +63,8 @@ export const LAND = {
 // Tinte der Signaturen (Rgba), Bilder lp-<klasse>-<light|dark> aus icons.js registerLandPatterns()
 export const PAT_MIN_ZOOM = 12;
 export const PROTECTED = { light: '#2e7d3c', dark: '#7fd18a' };
-export const CLIFF = { light: '#000000', dark: '#dedad2' }; // dunkles Steingrau bzw. helles Grau, bewusst kein Braun: Höhenlinien sind braun
-export const CLIFF_SCREE = { light: '#6f675b', dark: '#8d8578' };   // Geröllband am Fuß der Wand
+export const CLIFF = { light: '#000000', dark: '#dedad2', med: '#3a2614', medWall: '#b39d73' }; // dunkles Steingrau bzw. helles Grau, bewusst kein Braun: Höhenlinien sind braun
+export const CLIFF_SCREE = { light: '#6f675b', dark: '#8d8578', med: '#7a5530' };   // Geröllband am Fuß der Wand
 export const QUARRY = { light: ['#8a6d3b', '#4a3a1c'], dark: ['#d9b56b', '#f0dcae'] };
 export const LAND_KINDS = {
   forest: ['forest', 'wood'],
@@ -164,37 +167,41 @@ export function labelsAndBuildings(dark) {
 }
 
 // Klippe in drei Lagen: weiches Geröllband auf der Abbruchseite (rechts der Linienrichtung), heller Saum für Lesbarkeit im Wald,
-// dünne Wandlinie mit Schraffen (lange und kurze Striche im Wechsel, Bild cliff-tick).
+// dünne Wandlinie mit Schraffen (lange und kurze Striche im Wechsel, Bild cliff-tick, für die Klippenebene der Karte jetzt cliff-stroke).
 // Mit `dgm` kommen die Wände in Rheinland-Pfalz aus dem Geländemodell (Quelle klippen, Ebenen wand, kante, schraffur, Attribut drop = Wandhöhe in m);
 // die OpenStreetMap-Klippen der Basiskarte gelten dann nur noch außerhalb des Landes.
-// Hangneigung aus dem DGM1: drei ineinander liegende Flächen (ab 15, 25, 35 Grad), je steiler desto dunkler. Bewusst durchscheinend (die Deckkraft addiert sich
-// nach innen auf rund 0,32), damit Schummerung und Höhenlinien darunter lesbar bleiben; Wandstriche und Oberkante der Klippen bleiben deckend. Nur mit Kacheln (hang).
+// Hangneigung aus dem DGM1: drei ineinander liegende Flächen (ab 15, 25, 35 Grad), je steiler desto dunkler. Liegt über Höhenfärbung, Schummerung und Vegetation (ergänzt die Schummerung), unter Wasser, Gebäuden, Straßen und Klippen; die Deckkraft addiert sich nach innen. Wandstriche und Oberkante der Klippen bleiben deckend. Nur mit Kacheln (hang).
 export function hangLayers(dark, on, visible) {
   if (!on) return [];
   const col = dark ? { ab15: '#8a7a4a', ab25: '#9a6a3a', ab35: '#b04a3a' } : { ab15: '#e6d27a', ab25: '#d98a3a', ab35: '#b3342a' };
   return ['ab15', 'ab25', 'ab35'].map((c) => ({ id: `land-hang-${c}`, type: 'fill', source: 'hang', 'source-layer': c, minzoom: 14,
     layout: { visibility: visible ? 'visible' : 'none' },
-    paint: { 'fill-color': col[c], 'fill-opacity': c === 'ab15' ? 0.1 : c === 'ab25' ? 0.12 : 0.14, 'fill-antialias': true } }));
+    paint: { 'fill-color': col[c], 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 14, c === 'ab15' ? 0.16 : c === 'ab25' ? 0.2 : 0.24, 16, c === 'ab15' ? 0.16 : c === 'ab25' ? 0.2 : 0.24, 17.5, 0], 'fill-antialias': true } }));   // ab Zoom 16 ausblenden: im Hausmaßstab sind die Hangflächen grob und stören
 }
 
+// k: 'light', 'dark' oder 'med' (Alte Karte: Tinte, Pergament; dieselbe Zeichnung wie in Landblick)
 export function cliffLayers(k, dark, ticks, dgm) {
-  const osmFilter = dgm ? ['all', ['==', ['get', 'kind'], 'cliff'], ['!', ['within', RLP_UMRISS]]] : ['==', 'kind', 'cliff'];
+  const osmFilter = dgm ? ['all', ['==', ['get', 'kind'], 'cliff'], ['!', ['within', KLIPPEN_UMRISS]]] : ['==', 'kind', 'cliff'];
   // Wandhöhe 5 m bis 30 m: Linie und Band wachsen mit der Höhe
   const byDrop = (lo, hi) => ['interpolate', ['linear'], ['get', 'drop'], 5, lo, 30, hi];
   const round = { 'line-cap': 'round', 'line-join': 'round' };
   const osm = { source: 'basemap', 'source-layer': 'earth' };
+  // Gleiche Zeichnung für beide Quellen. Die OSM-Linie kennt weder Wandfläche noch Wandhöhe; sie wird deshalb wie eine 10-m-Wand gezeichnet:
+  // Wandband rechts der Linie (dort liegt die Abbruchseite), Oberkante, Fallstriche. Breite, Strichlänge und -abstand wachsen mit dem Zoom
+  // (Meter, nicht Pixel), wie bei den Kacheln aus dem Geländemodell. Einsatz bei Zoom 13, Striche ab 14.
+  const wallColor = k === 'med' ? CLIFF.medWall : dark ? '#625c52' : '#c7bca4';
+  const bandW = ['interpolate', ['linear'], ['zoom'], 13, 3, 14, 5, 15, 8, 16, 12, 17, 20, 18, 34];
+  const bandOff = ['interpolate', ['linear'], ['zoom'], 13, 1.5, 14, 2.5, 15, 4, 16, 6, 17, 10, 18, 17];
   const out = [
-    { id: 'land-cliff-band', type: 'line', ...osm, minzoom: 12, filter: osmFilter, layout: round,
-      paint: { 'line-color': CLIFF_SCREE[k], 'line-opacity': 0.55, 'line-blur': 2.5, 'line-offset': ['interpolate', ['linear'], ['zoom'], 12, 2, 17, 6],
-        'line-width': ['interpolate', ['linear'], ['zoom'], 12, 4, 17, 12] } },
-    { id: 'land-cliff-case', type: 'line', ...osm, minzoom: 12, filter: osmFilter, layout: round,
-      paint: { 'line-color': dark ? '#161616' : '#ffffff', 'line-opacity': 0.5, 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 2.4, 16, 4] } },
-    { id: 'land-cliff', type: 'line', ...osm, minzoom: 12, filter: osmFilter, layout: round,
-      paint: { 'line-color': CLIFF[k], 'line-opacity': 1, 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1.1, 16, 2.2] } },
-    ...(ticks ? [{ id: 'land-cliff-teeth', type: 'symbol', ...osm, minzoom: 13, filter: osmFilter,
-      layout: { 'symbol-placement': 'line', 'symbol-spacing': 8, 'icon-image': 'cliff-tick', 'icon-anchor': 'top', 'icon-offset': [0, 0.5],
+    { id: 'land-cliff-band', type: 'line', ...osm, minzoom: 13, filter: osmFilter, layout: round,
+      paint: { 'line-color': wallColor, 'line-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.35], 'line-blur': 0.5, 'line-offset': bandOff, 'line-width': bandW } },
+    { id: 'land-cliff', type: 'line', ...osm, minzoom: 13, filter: osmFilter, layout: round,
+      paint: { 'line-color': CLIFF[k], 'line-opacity': 1, 'line-width': ['interpolate', ['linear'], ['zoom'], 13, 0.92, 16, 1.6, 18, 2.28] } },
+    ...(ticks ? [{ id: 'land-cliff-teeth', type: 'symbol', ...osm, minzoom: 14, filter: osmFilter,
+      layout: { 'symbol-placement': 'line', 'symbol-spacing': ['interpolate', ['linear'], ['zoom'], 14, 2.5, 16, 3, 17, 4, 18, 8],
+        'icon-image': 'cliff-stroke', 'icon-anchor': 'top', 'icon-offset': [0, 0],
         'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true,
-        'icon-size': ['interpolate', ['linear'], ['zoom'], 13, 0.85, 17, 1.25] },
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 14, 0.8, 15, 1.1, 16, 1.6, 17, 2.4, 18, 3.6] },
       paint: { 'icon-color': CLIFF[k], 'icon-opacity': 1 } }] : []),
   ];
   if (!dgm) return out;
@@ -205,7 +212,7 @@ export function cliffLayers(k, dark, ticks, dgm) {
   return [
     ...out,
     { id: 'land-cliff-wand-dgm', type: 'fill', ...wall('wand'), minzoom: 13,
-      paint: { 'fill-color': dark ? '#625c52' : '#c7bca4', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.2], 'fill-antialias': true } },
+      paint: { 'fill-color': k === 'med' ? CLIFF.medWall : dark ? '#625c52' : '#c7bca4', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.2], 'fill-antialias': true } },
     { id: 'land-cliff-schraffur-dgm', type: 'line', ...wall('schraffur'), minzoom: 14, layout: round,
       paint: { 'line-color': CLIFF[k], 'line-opacity': 0.9, 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 0.5, 17, 0.9, 19, 1.4] } },
     { id: 'land-cliff-dgm', type: 'line', ...wall('kante'), minzoom: 13, layout: round, filter: ['>=', ['get', 'drop'], 5],
@@ -327,4 +334,23 @@ export function signLayers(dark) {
     mk('bm-sign-bundes', ['major_road'], ['B', 'N'], 'sign-bundes', '#111111', 10),
     mk('bm-sign-land', ['major_road'], ['L', 'K', 'D', 'C'], 'sign-land', '#111111', 12),
   ];
+}
+
+// Straßen ab Zoom 14 aus den feineren Archiven. region.pmtiles endet bei Zoom 13: dort fehlen kleine Straßen, Wege und fast alle
+// Straßennamen (Kachelfeld `name` nur an Haupt- und Landstraßen). core.pmtiles (Zoom 14 und 15) und ring.pmtiles (Zoom 14, außerhalb der
+// Kerne) führen dieselbe Schicht `roads` vollständig. Jede Straßenebene der Basiskarte (Linien und Namen) bekommt je Archiv einen Zwilling
+// direkt hinter sich (gleiche Stapelfolge), das Original endet vor Zoom 14. Die Kachelfelder sind dieselben, Filter und Zeichnung gelten unverändert.
+export const DETAIL_ZOOM = 14;
+export function roadsFromDetail(styled, { core = false, ring = false } = {}) {
+  if (!core && !ring) return styled;
+  const out = [];
+  for (const l of styled) {
+    if (l.source !== 'basemap' || l['source-layer'] !== 'roads' || l.type === 'fill') { out.push(l); continue; }
+    out.push({ ...l, maxzoom: Math.min(l.maxzoom ?? DETAIL_ZOOM, DETAIL_ZOOM) });
+    for (const [on, suffix, source] of [[core, 'c', 'basemap-core'], [ring, 'r', 'basemap-ring']]) {
+      if (!on || (l.maxzoom != null && l.maxzoom <= DETAIL_ZOOM)) continue;
+      out.push({ ...l, id: `${l.id}_${suffix}`, source, minzoom: Math.max(l.minzoom ?? 0, DETAIL_ZOOM) });
+    }
+  }
+  return out;
 }

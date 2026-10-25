@@ -25,7 +25,7 @@ def test_meta_and_sources(storage, registry):
     assert (m["center"]["lat"], m["center"]["lon"]) == (payloads.REGION.query_lat, payloads.REGION.query_lon)
     assert set(m["reference"]) == {"lat", "lon", "name"}
     s = payloads.sources_payload(registry)["sources"]
-    assert len(s) == 47 and all("params" not in x and x["namensnennung"] for x in s)
+    assert len(s) == 49 and all("params" not in x and x["namensnennung"] for x in s)
 
 
 def test_events_validation(storage, registry):
@@ -117,7 +117,7 @@ async def test_export_writes_complete_atomic_files(registry, storage, settings, 
     await _seed_all(registry, storage, settings)
     out = tmp_path / "data"
     sizes = export.write_all(export.build_all(storage, registry), out)
-    assert set(sizes) == {"meta.json", "events.json", "aircraft.json", "gewaesser.json", "wetter.json", "status.json", "sources.json", "umwelt.json", "indizes.json", "kraftstoff.json", "themen.json", "radar.json", "blitz.json", "wind.json", "haltestellen.json", "landmarks.json", "infrastruktur.json", "routen.json", "anbau.json", "sakral.json", "suche.json"}
+    assert set(sizes) == {"meta.json", "events.json", "aircraft.json", "gewaesser.json", "wetter.json", "status.json", "sources.json", "umwelt.json", "indizes.json", "kraftstoff.json", "themen.json", "radar.json", "blitz.json", "wind.json", "haltestellen.json", "landmarks.json", "infrastruktur.json", "energie.json", "routen.json", "anbau.json", "sakral.json", "suche.json"}
     assert not list(out.glob(".*.tmp"))  # keine halben Dateien
     ev_ = json.loads((out / "events.json").read_text())
     assert ev_["type"] == "FeatureCollection" and ev_["features"] and ev_["generated_at"].endswith("Z")

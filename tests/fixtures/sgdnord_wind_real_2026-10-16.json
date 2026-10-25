@@ -1,0 +1,349 @@
+{
+ "numberMatched": 11,
+ "numberReturned": 11,
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "gml_id": "windenergieanlagen_an.519",
+    "gid": 519,
+    "gemeinde": "Winringen",
+    "gdeschl": 23206327,
+    "vg": "Prüm",
+    "kreis": "Eifelkreis Bitburg-Prüm",
+    "timePosition": "1991-07-15",
+    "datum_antr|timePosition": "1991-07-15",
+    "datum_gen|timePosition": "1998-01-30",
+    "nennleist": 1500,
+    "stohoehe": 543.5,
+    "nabenhoehe": 100,
+    "rotor": 77,
+    "gesamthoeh": 138.5,
+    "typ": "GE Wind Energy1.5sl",
+    "windpark": "ja",
+    "planstd": "am Netz",
+    "x_utm": 314973.32,
+    "y_utm": 5557454.76,
+    "datum_netz|timePosition": "1998-01-30"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     6.410541,
+     50.140428
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "gml_id": "windenergieanlagen_an.517",
+    "gid": 517,
+    "gemeinde": "Winringen",
+    "gdeschl": 23206327,
+    "vg": "Prüm",
+    "kreis": "Eifelkreis Bitburg-Prüm",
+    "timePosition": "1991-07-15",
+    "datum_antr|timePosition": "1991-07-15",
+    "datum_gen|timePosition": "1998-01-30",
+    "nennleist": 600,
+    "stohoehe": 542,
+    "nabenhoehe": 65,
+    "rotor": 44,
+    "gesamthoeh": 87,
+    "typ": "Enercon E-40/6.44",
+    "windpark": "ja",
+    "planstd": "am Netz",
+    "x_utm": 315298.04,
+    "y_utm": 5557883.01,
+    "datum_netz|timePosition": "1998-01-30"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     6.414873,
+     50.144376
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "gml_id": "windenergieanlagen_an.7331",
+    "gid": 7331,
+    "gemeinde": "Plütscheid",
+    "gdeschl": 23201293,
+    "vg": "Arzfeld",
+    "kreis": "Eifelkreis Bitburg-Prüm",
+    "timePosition": "2024-11-15",
+    "datum_antr|timePosition": "2024-11-20",
+    "datum_gen|timePosition": "2026-10-01",
+    "nennleist": 6000,
+    "stohoehe": 555.6,
+    "nabenhoehe": 132.46,
+    "rotor": 175,
+    "gesamthoeh": 219.96,
+    "typ": "Enercon E175 EP5 E1",
+    "windpark": "nein",
+    "planstd": "genehmigt",
+    "x_utm": 316665,
+    "y_utm": 5552286
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     6.436673,
+     50.094512
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "gml_id": "windenergieanlagen_an.7768",
+    "gid": 7768,
+    "gemeinde": "Koxhausen",
+    "gdeschl": 23205068,
+    "vg": "Südeifel",
+    "kreis": "Eifelkreis Bitburg-Prüm",
+    "timePosition": "2025-11-12",
+    "datum_antr|timePosition": "2025-12-12",
+    "datum_gen|timePosition": "2026-09-30",
+    "nennleist": 6000,
+    "stohoehe": 528.3,
+    "nabenhoehe": 162,
+    "rotor": 175,
+    "gesamthoeh": 249.5,
+    "typ": "E 175 EP5",
+    "windpark": "ja",
+    "planstd": "genehmigt",
+    "x_utm": 303312,
+    "y_utm": 5542666
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     6.255133,
+     50.00382
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "gml_id": "windenergieanlagen_an.7074",
+    "gid": 7074,
+    "gemeinde": "Idenheim",
+    "gdeschl": 23208060,
+    "vg": "Bitburger Land",
+    "kreis": "Eifelkreis Bitburg-Prüm",
+    "timePosition": "2023-11-02",
+    "datum_antr|timePosition": "2023-11-02",
+    "datum_gen|timePosition": "2025-11-12",
+    "nennleist": 7000,
+    "stohoehe": 357.7,
+    "nabenhoehe": 164,
+    "rotor": 163,
+    "gesamthoeh": 163.5,
+    "typ": "N163/6.X",
+    "windpark": "ja",
+    "planstd": "beantragt",
+    "x_utm": 326820,
+    "y_utm": 5529857
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     6.588625,
+     49.896011
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "gml_id": "windenergieanlagen_an.7075",
+    "gid": 7075,
+    "gemeinde": "Idenheim",
+    "gdeschl": 23208060,
+    "vg": "Bitburger Land",
+    "kreis": "Eifelkreis Bitburg-Prüm",
+    "timePosition": "2023-11-02",
+    "datum_antr|timePosition": "2023-11-02",
+    "datum_gen|timePosition": "2025-11-12",
+    "nennleist": 7000,
+    "stohoehe": 354.8,
+    "nabenhoehe": 164,
+    "rotor": 163,
+    "gesamthoeh": 163.5,
+    "typ": "N163/6.X",
+    "windpark": "ja",
+    "planstd": "beantragt",
+    "x_utm": 326607,
+    "y_utm": 5529256
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     6.585932,
+     49.890549
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "gml_id": "windenergieanlagen_an.7309",
+    "gid": 7309,
+    "gemeinde": "Büdesheim",
+    "gdeschl": 23206209,
+    "vg": "Prüm",
+    "kreis": "Eifelkreis Bitburg-Prüm",
+    "timePosition": "2024-10-01",
+    "datum_antr|timePosition": "2024-10-01",
+    "nennleist": 6800,
+    "stohoehe": 511.1,
+    "nabenhoehe": 179,
+    "rotor": 175,
+    "gesamthoeh": 266.5,
+    "typ": "Nordex NX 175",
+    "windpark": "ja",
+    "planstd": "aufgegeben",
+    "x_utm": 327799,
+    "y_utm": 5565177
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     6.586366,
+     50.21368
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "gml_id": "windenergieanlagen_an.7310",
+    "gid": 7310,
+    "gemeinde": "Büdesheim",
+    "gdeschl": 23206209,
+    "vg": "Prüm",
+    "kreis": "Eifelkreis Bitburg-Prüm",
+    "timePosition": "2024-10-01",
+    "datum_antr|timePosition": "2024-10-01",
+    "nennleist": 6800,
+    "stohoehe": 525.8,
+    "nabenhoehe": 179,
+    "rotor": 175,
+    "gesamthoeh": 266.5,
+    "typ": "Nordex NX 175",
+    "windpark": "ja",
+    "planstd": "aufgegeben",
+    "x_utm": 327015,
+    "y_utm": 5564900
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     6.575514,
+     50.210962
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "gml_id": "windenergieanlagen_an.304",
+    "gid": 304,
+    "gemeinde": "Pintesfeld",
+    "gdeschl": 23201291,
+    "vg": "Arzfeld",
+    "kreis": "Eifelkreis Bitburg-Prüm",
+    "timePosition": "1994-08-01",
+    "datum_antr|timePosition": "1994-08-01",
+    "datum_gen|timePosition": "1995-01-09",
+    "nennleist": 250,
+    "stohoehe": 514.6,
+    "nabenhoehe": 50,
+    "rotor": 29,
+    "gesamthoeh": 64.5,
+    "typ": "Nordex N27",
+    "planstd": "rueckgebaut",
+    "x_utm": 312153,
+    "y_utm": 5554943,
+    "datum_netz|timePosition": "1995-01-09"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     6.37235,
+     50.116975
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "gml_id": "windenergieanlagen_an.316",
+    "gid": 316,
+    "gemeinde": "Halsdorf",
+    "gdeschl": 23208045,
+    "vg": "Bitburger Land",
+    "kreis": "Eifelkreis Bitburg-Prüm",
+    "timePosition": "1999-09-20",
+    "datum_antr|timePosition": "1999-09-20",
+    "datum_gen|timePosition": "2000-06-14",
+    "nennleist": 1000,
+    "stohoehe": 379.6,
+    "nabenhoehe": 80,
+    "rotor": 60,
+    "gesamthoeh": 110,
+    "typ": "NM 1000",
+    "windpark": "ja",
+    "planstd": "rueckgebaut",
+    "x_utm": 310556.01,
+    "y_utm": 5535026.22,
+    "datum_netz|timePosition": "2000-06-14"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     6.359871,
+     49.937526
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "gml_id": "windenergieanlagen_an.6912",
+    "gid": 6912,
+    "gemeinde": "Berzhahn",
+    "gdeschl": 14309209,
+    "vg": "Westerburg",
+    "kreis": "Westerwaldkreis",
+    "timePosition": "2022-05-27",
+    "datum_antr|timePosition": "2022-05-27",
+    "datum_gen|timePosition": "2023-12-27",
+    "nennleist": 6200,
+    "stohoehe": 455.8,
+    "nabenhoehe": 169,
+    "rotor": 162,
+    "gesamthoeh": 250,
+    "typ": "Vestas V-162",
+    "windpark": "ja",
+    "planstd": "am Netz",
+    "x_utm": 428570,
+    "y_utm": 5597779,
+    "datum_netz|timePosition": "2026-07-16"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     7.992227,
+     50.527597
+    ]
+   }
+  }
+ ]
+}

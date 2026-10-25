@@ -292,6 +292,33 @@ def anbau_payload(storage: Storage, registry: Registry) -> dict[str, Any]:
 SACRAL_KINDS = ("church", "chapel", "cross", "shrine", "watermill", "windmill", "ford", "border", "gallows", "well")     # nur für die Karte um 1450: eigene Datei, wird nur dort geladen
 
 
+def _near_index(points: list[dict[str, Any]], step: float = 0.003):
+    """Raster über Punkte (ca. 200 m) für die Nachbarsuche; liefert eine Funktion (lat, lon, max_km) -> Punkt oder None."""
+    grid: dict[tuple[int, int], list[dict[str, Any]]] = {}
+    for q in points:
+        grid.setdefault((round(q["lat"] / step), round(q["lon"] / step)), []).append(q)
+
+    def near(lat: float, lon: float, max_km: float) -> dict[str, Any] | None:
+        gx, gy = round(lat / step), round(lon / step)
+        reach = max(1, int(max_km / 0.2) + 1)
+        for dx in range(-reach, reach + 1):
+            for dy in range(-reach, reach + 1):
+                for q in grid.get((gx + dx, gy + dy), ()):
+                    if geo.haversine_km(lat, lon, q["lat"], q["lon"]) <= max_km:
+                        return q
+        return None
+    return near
+
+
+WIND_MATCH_KM = 0.15      # ein OSM-Windrad innerhalb von 150 m eines amtlichen Windrads ist dasselbe Windrad: das amtliche Objekt gilt
+SOLAR_MATCH_KM = 0.4
+
+
+def _rok(storage: Storage) -> dict[str, Any]:
+    row = storage.cache_get("energie_rok")
+    return row["payload"] if row else {}
+
+
 def _infra_items(storage: Storage, registry: Registry, sacral: bool) -> dict[str, Any]:
     st = statuses(storage, registry).get("osm_infra")
     row = storage.cache_get("infrastruktur")
@@ -299,12 +326,34 @@ def _infra_items(storage: Storage, registry: Registry, sacral: bool) -> dict[str
     if row:
         out["fetched_at"] = row.get("fetched_at")
         out["items"] = [i for i in row["payload"].get("items", []) if (i["kind"] in SACRAL_KINDS) == sacral]
+    if not sacral:
+        # Windräder: amtliche Daten der SGD Nord (Leistung, Höhe, Stand) haben Vorrang vor OpenStreetMap; OSM füllt den Rest des Landes auf
+        official = [{**w, "source_id": "sgdnord_energie"} for w in _rok(storage).get("wind", [])]
+        if official:
+            near = _near_index(official)
+            out["items"] = [i for i in out["items"] if i["kind"] != "wind" or not near(i["lat"], i["lon"], WIND_MATCH_KM)] + official
     return out
 
 
 def infrastruktur_payload(storage: Storage, registry: Registry) -> dict[str, Any]:
     """Windräder, Ladesäulen, Notfallpunkte, Wasserbauwerke, Brücken, Rastplätze aus dem letzten Overpass-Abruf (nur Art, Standort, Sachwert)."""
     return _infra_items(storage, registry, sacral=False)
+
+
+def energie_payload(storage: Storage, registry: Registry) -> dict[str, Any]:
+    """Solarparks, Kraftwerke, Umspannwerke, Transformatoren und Hochspannungsleitungen (OSM, Solarparks im Norden amtlich von der SGD Nord).
+    Windräder stehen in infrastruktur.json (gleiche Zeichen und Ebenen wie die übrige Infrastruktur)."""
+    out: dict[str, Any] = {"source": statuses(storage, registry).get("osm_energie"), "generated_at": iso(utcnow()), "fetched_at": None, "items": []}
+    osm = storage.cache_get("energie_osm")
+    items: list[dict[str, Any]] = list(osm["payload"].get("items", [])) if osm else []
+    if osm:
+        out["fetched_at"] = osm.get("fetched_at")
+    official = [{**s, "source_id": "sgdnord_energie"} for s in _rok(storage).get("solar", [])]
+    if official:
+        near = _near_index(official)
+        items = [i for i in items if i["kind"] != "solar" or not near(i["lat"], i["lon"], SOLAR_MATCH_KM)] + official
+    out["items"] = sorted(items, key=lambda i: (i["kind"], i["id"]))
+    return out
 
 
 def sakral_payload(storage: Storage, registry: Registry) -> dict[str, Any]:

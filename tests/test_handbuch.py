@@ -28,4 +28,4 @@ def test_kapitel_lueckenlos():
 def test_zusammenbau(tmp_path):
     assert handbuch.main(["--out", str(tmp_path), "--nur-md"]) == 0
     text = (tmp_path / "landblick-handbuch.md").read_text(encoding="utf-8")
-    assert "Version 1.0.0-alpha.1" in text and "`nina`" in text
+    assert "Version 1.0.0-beta.1" in text and "`nina`" in text

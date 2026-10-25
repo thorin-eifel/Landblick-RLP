@@ -23,9 +23,11 @@ import time
 import urllib.parse
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 log = logging.getLogger("osint.desktop")
+LOG_BYTES, LOG_KEEP = 2_000_000, 5
 
 
 def use_certifi() -> str | None:
@@ -46,10 +48,31 @@ def use_certifi() -> str | None:
 
 
 use_certifi()
+
+
+def log_in_datei(data_dir: Path) -> Path | None:
+    """Protokoll zusätzlich in <Datenordner>/logs/dienst.log schreiben, rotierend (5 x 2 MB).
+
+    Grund: Unter Windows läuft die App ohne Konsole (die Hülle ist als Fenster-Programm gebaut). Alles, was der Dienst
+    und seine Kindprozesse nach stderr schreiben, wäre dort sonst verloren und jeder Fehler unauffindbar.
+    Lässt sich die Datei nicht anlegen, läuft die App weiter und sagt es nur."""
+    try:
+        ordner = data_dir / "logs"
+        ordner.mkdir(parents=True, exist_ok=True)
+        datei = ordner / "dienst.log"
+        h = RotatingFileHandler(datei, maxBytes=LOG_BYTES, backupCount=LOG_KEEP, encoding="utf-8")
+        h.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+        logging.getLogger().addHandler(h)
+        return datei
+    except OSError as err:
+        log.warning("Protokolldatei nicht möglich: %s", err)
+        return None
+
+
 _RANGE = re.compile(r"^bytes=(\d*)-(\d*)$")
 CYCLE_S = 300
-# Manifest des Nachladepakets (Relief Zoom 13/14). Leer, bis die Veröffentlichung steht; OSINT_PAKETE_MANIFEST überschreibt, "aus" schaltet ab.
-PAKETE_MANIFEST = ""
+# Manifest des Nachladepakets (Relief Zoom 13/14), hängt am GitHub-Release. OSINT_PAKETE_MANIFEST überschreibt, "aus" schaltet ab.
+PAKETE_MANIFEST = "https://github.com/thorin-eifel/Landblick-RLP/releases/download/v1.0.0-alpha.2/dem-hoch.pmtiles.manifest.json"
 
 
 class Job:
@@ -75,7 +98,7 @@ class App:
                  pack_dirs: list[Path] | None = None) -> None:
         # pack_dirs: mitgelieferte, nur lesbare Ordner (Installer-Ressourcen) mit tiles/*.pmtiles und data/suche_geo.json
         self.pack_dirs = [d.resolve() for d in (pack_dirs or [])]
-        self.data_dir, self.web_dir, self.pmtiles, self.repo_dir = data_dir, web_dir.resolve(), pmtiles, repo_dir
+        self.data_dir, self.web_dir, self.pmtiles, self.repo_dir = data_dir.resolve(), web_dir.resolve(), pmtiles, repo_dir
         self.job = Job()
         self.nachladen = Job()                 # Nachladepaket im Hintergrund, getrennt vom Aufbau: die App läuft währenddessen
         self.nachlade_thread: threading.Thread | None = None
@@ -131,10 +154,18 @@ class App:
             e["OSINT_PROGRESS_FILE"] = str(progress)
         return e
 
-    def _run(self, args: list[str], progress: Path | None = None, timeout: int = 1800) -> int:
+    def _run(self, args: list[str], progress: Path | None = None, timeout: int = 1800, err_tail: list[str] | None = None) -> int:
         """Sammler und Export als Kindprozess. Im gebündelten Programm (PyInstaller) ruft es sich selbst mit --run auf."""
         cmd = [sys.executable, "--run", *args] if getattr(sys, "frozen", False) else [sys.executable, "-m", *args]
-        return subprocess.run(cmd, cwd=self.repo_dir, env=self.env(progress), timeout=timeout).returncode
+        # Die Ausgabe des Kindes wird immer mitgelesen: geerbtes stderr geht unter Windows ins Leere (Fenster ohne Konsole),
+        # über das Log landet sie in der Datei im Datenordner. err_tail nimmt zusätzlich die letzten Zeilen für die Meldung auf.
+        r = subprocess.run(cmd, cwd=self.repo_dir, env=self.env(progress), timeout=timeout, stderr=subprocess.PIPE, text=True, errors="replace")
+        lines = [x for x in r.stderr.splitlines() if x.strip()]
+        for x in lines:
+            log.log(logging.INFO if r.returncode == 0 else logging.WARNING, "[%s] %s", args[0], x)
+        if err_tail is not None:
+            err_tail[:] = lines[-3:]
+        return r.returncode
 
     def job_snapshot(self) -> dict:
         """Zustand des Aufbaus. Im Sammellauf kommt "n von m, läuft noch: <Namen>" aus der Fortschrittsdatei des Sammlers."""
@@ -157,6 +188,11 @@ class App:
         self.worker.start()
         return True
 
+    def daten_da(self) -> bool:
+        """Hat es schon einen Export gegeben? Das Frontend holt als Erstes data/meta.json; fehlt die Datei, hat die Karte
+        nichts zu zeigen und der Aufbau läuft noch. Darüber entscheidet die Oberfläche, ob sie die Aufbauseite zeigt."""
+        return (self.data_dir / "data" / "meta.json").is_file()
+
     def tiles_fehlen(self) -> bool:
         return not all(any((r / "tiles" / n).exists() for r in (self.data_dir, *self.pack_dirs)) for n in ("region.pmtiles", "core.pmtiles", "ring.pmtiles"))
 
@@ -169,11 +205,13 @@ class App:
         for versuch in range(60):
             n = len(list((work / "chunks").glob("*/*.pmtiles"))) if (work / "chunks").exists() else 0
             self.job.set("tiles", f"Karte wird geholt ({n} Stücke fertig, einmalig rund 1,5 GB)", 5 + min(60, int(60 * n / 150)))
-            rc = self._run(args, timeout=1500)
+            tail: list[str] = []
+            rc = self._run(args, timeout=1500, err_tail=tail)
             if rc == 0:
                 return
             if rc != 2:
-                raise RuntimeError(f"Kartenabruf fehlgeschlagen (Code {rc})")
+                grund = " | ".join(x.strip()[-160:] for x in tail)
+                raise RuntimeError(f"Kartenabruf fehlgeschlagen (Code {rc})" + (f": {grund}" if grund else ""))
         raise RuntimeError("Karte nach 60 Läufen noch nicht vollständig")
 
     def pakete_url(self) -> str:
@@ -217,16 +255,23 @@ class App:
             self.start_nachladen()
             first = True
             while True:
-                self.job.set("collect", "Daten werden abgerufen", 70)
-                # Erster Lauf: alle Quellen außer den langsamen (erstlauf: spaeter), danach nur, was fällig ist
-                if self._run(["app.collect", "--once" if first else "--due", "--skip-later"], self.progress_path) != 0:
-                    log.warning("Sammelzyklus mit Fehlern beendet")
-                self.job.set("export", "Daten werden aufbereitet", 90)
-                if self._run(["app.export", "--out", str(self.data_dir / "data")]) != 0:
-                    raise RuntimeError("Export fehlgeschlagen")
-                self.job.set("ready", "Bereit", 100)
-                self.start_later()
-                first = False
+                try:
+                    self.job.set("collect", "Daten werden abgerufen", 70)
+                    # Erster Lauf: alle Quellen außer den langsamen (erstlauf: spaeter), danach nur, was fällig ist
+                    if self._run(["app.collect", "--once" if first else "--due", "--skip-later"], self.progress_path) != 0:
+                        log.warning("Sammelzyklus mit Fehlern beendet")
+                    self.job.set("export", "Daten werden aufbereitet", 90)
+                    if self._run(["app.export", "--out", str(self.data_dir / "data")]) != 0:
+                        raise RuntimeError("Export fehlgeschlagen")
+                    self.job.set("ready", "Bereit", 100)
+                    self.start_later()
+                    first = False
+                except (subprocess.SubprocessError, OSError, RuntimeError) as err:
+                    # Ein hängender Sammler oder ein einzelner Exportfehler beendet den Takt nicht: sichtbar melden, nächster Versuch nach CYCLE_S.
+                    # Die zuletzt exportierten Dateien bleiben stehen, das Frontend markiert sie über das Alter als veraltet.
+                    log.exception("Zyklus fehlgeschlagen, nächster Versuch in %d s", CYCLE_S)
+                    # Vor dem ersten Export gibt es noch nichts anzuzeigen (Einrichtungsseite zeigt den Fehler); danach bleibt die Karte offen.
+                    self.job.set("error" if first else "ready", "Zyklus fehlgeschlagen, neuer Versuch folgt", pct=100 if not first else None, error=str(err)[:300])
                 time.sleep(CYCLE_S)
         except Exception as err:   # sichtbar machen, nicht verschlucken
             log.exception("Aufbau abgebrochen")
@@ -287,17 +332,25 @@ def make_handler(app: App, port_box: list[int]):
             self.wfile.write(b)
 
         def translate_path(self, path: str) -> str:
-            """/data/ nur aus dem Datenordner (nie Beispieldaten eines anderen Ortes), /tiles/ erst dort, dann aus der App."""
+            """/data/ nur aus dem Datenordner (nie Beispieldaten eines anderen Ortes), /tiles/ erst dort, dann aus der App.
+            Erlaubt ist je Präfix nur der Unterordner (data/ bzw. tiles/), nie der ganze Datenordner: dort liegen zugang.json und die
+            Datenbank. Der Pfad wird aufgelöst und gegen den aufgelösten Unterordner geprüft; Verzeichnisse gibt es nur im App-Ordner."""
             p = urllib.parse.unquote(urllib.parse.urlsplit(path).path)
+            if "\x00" in p:
+                return str(app.web_dir / "__nicht_da__")
             if p.startswith("/data/"):
                 roots = [app.data_dir] + (app.pack_dirs if p == "/data/suche_geo.json" else [])   # nur der feste Suchindex kommt aus dem Installer
+                sub = "data"
             elif p.startswith("/tiles/"):
                 roots = [app.data_dir, *app.pack_dirs, app.web_dir]
+                sub = "tiles"
             else:
-                roots = [app.web_dir]
+                roots, sub = [app.web_dir], ""
             for root in roots:
+                base = (root / sub).resolve() if sub else root.resolve()
                 cand = (root / p.lstrip("/")).resolve()
-                if (cand == root or root in cand.parents) and (cand.is_file() or cand.is_dir()):
+                inside = cand == base or base in cand.parents
+                if inside and (cand.is_file() or (cand.is_dir() and root == app.web_dir)):
                     return str(cand)
             return str(app.web_dir / "__nicht_da__")
 
@@ -306,7 +359,7 @@ def make_handler(app: App, port_box: list[int]):
                 return self.json({"error": "host"}, 403)
             u = urllib.parse.urlsplit(self.path)
             if u.path == "/api/state":
-                return self.json({"configured": True, "job": app.job_snapshot(), "nachladen": app.nachladen.snapshot()})
+                return self.json({"configured": True, "daten": app.daten_da(), "job": app.job_snapshot(), "nachladen": app.nachladen.snapshot()})
             if u.path == "/api/zugang":
                 return self.json({"quellen": app.zugang.status()})   # nur gesetzt/nicht gesetzt, nie Werte
             if u.path.startswith("/api/"):
@@ -371,25 +424,10 @@ def make_handler(app: App, port_box: list[int]):
 
         def post_zugang(self) -> None:
             """{"env": "NAME", "wert": "…"} setzt, {"env": "NAME", "loeschen": true} entfernt. Antworten enthalten nie den Wert."""
-            from app.zugang import ZugangError
-            try:
-                n = int(self.headers.get("Content-Length") or 0)
-                body = json.loads(self.rfile.read(min(n, 4096)) or b"{}")
-                env = body["env"]
-                if not isinstance(env, str):
-                    raise ZugangError("Unbekannte Zugangsvariable")
-                if body.get("loeschen") is True:
-                    app.zugang.delete(env)
-                else:
-                    app.zugang.set(env, body.get("wert"))
-            except ZugangError as err:
-                return self.json({"error": str(err)}, 400)
-            except (ValueError, KeyError, TypeError):
-                return self.json({"error": "Eingabe ungültig"}, 400)
-            except OSError:
-                log.exception("Zugangsdatei nicht schreibbar")
-                return self.json({"error": "Datei im Datenordner nicht schreibbar"}, 500)
-            self.json({"ok": True, "quellen": app.zugang.status()})
+            from app.zugang import handle_post
+            n = int(self.headers.get("Content-Length") or 0)
+            code, obj = handle_post(app.zugang, self.rfile.read(min(n, 4096)))
+            self.json(obj, code)
 
         def serve_range(self) -> None:
             header, path = self.headers.get("Range"), self.translate_path(self.path)
@@ -449,6 +487,10 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
     logging.basicConfig(level=a.log_level, format="%(asctime)s %(levelname)s %(name)s: %(message)s", stream=sys.stderr)
     logging.getLogger("httpx").setLevel(logging.WARNING)
+    datei = log_in_datei(a.data_dir)
+    from app import __version__
+    log.info("Landblick %s, %s, Python %s, Datenordner %s, Protokoll %s",
+             __version__, sys.platform, sys.version.split()[0], a.data_dir, datei or "nur stderr")
     app = App(a.data_dir, a.web_dir, a.pmtiles, root, pack_dirs=[d for d in a.pack_dir if d.is_dir()])
     box = [0]
     srv = ThreadingHTTPServer(("127.0.0.1", a.port), make_handler(app, box))

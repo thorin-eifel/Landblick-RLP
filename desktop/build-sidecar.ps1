@@ -34,7 +34,7 @@ try {
     $py = (Get-Command python -ErrorAction Stop).Source
     Invoke-Checked 'venv' { & $py -m venv (Join-Path $Work 'venv') }
     $vpy = Join-Path $Work 'venv\Scripts\python.exe'
-    Invoke-Checked 'pip install' { & $vpy -m pip install -q -r (Join-Path $Root 'requirements.txt') 'pyinstaller==6.*' }
+    Invoke-Checked 'pip install' { & $vpy -m pip install -q -r (Join-Path $Root 'requirements.txt') 'pyinstaller==6.*' 'shapely==2.2.0' 'pmtiles==3.8.1' }
 
     # Weboberfläche ohne Beispieldaten und ohne Höhenkacheln
     $web = Join-Path $Work 'web'
@@ -46,7 +46,8 @@ try {
     try {
         Invoke-Checked 'PyInstaller' {
             & $vpy -m PyInstaller --onefile --name osint-core --distpath (Join-Path $Work 'dist') --workpath (Join-Path $Work 'build') --specpath $Work `
-                --paths $Root --collect-submodules app --collect-data app --collect-data certifi `
+                --paths $Root --collect-submodules app --collect-data app --collect-data certifi --collect-all shapely --collect-submodules pmtiles `
+                --add-data "$(Join-Path $Root 'tools\build_region_tiles.py');tools" --add-data "$(Join-Path $Root 'tools\tile_cores.yaml');tools" `
                 --add-data "$web;web" --add-data "$(Join-Path $Root 'sources.yaml');." --add-data "$(Join-Path $Root 'region.yaml');." app\desktop.py
         }
     } finally { Pop-Location }
@@ -55,7 +56,10 @@ try {
     $exe = Join-Path $Work 'dist\osint-core.exe'
     $env:OSINT_NO_DOTENV = '1'
     Push-Location $Work
-    try { Invoke-Checked 'Rauchtest app.region' { & $exe --run app.region | Out-Null } } finally { Pop-Location; Remove-Item Env:\OSINT_NO_DOTENV -ErrorAction SilentlyContinue }
+    try { Invoke-Checked 'Rauchtest app.region' { & $exe --run app.region | Out-Null } } finally { Pop-Location }
+    # Zweiter Rauchtest: Kartenbau im Paket (Python-Pakete und Dateien), ohne Netz
+    Push-Location $Work
+    try { Invoke-Checked 'Rauchtest tools.build_region_tiles' { & $exe --run tools.build_region_tiles --dry-run 2>&1 | Out-Null } } finally { Pop-Location; Remove-Item Env:\OSINT_NO_DOTENV -ErrorAction SilentlyContinue }
     Copy-Item $exe (Join-Path $Bin "osint-core-$Triple.exe") -Force
 
     # pmtiles-CLI (go-pmtiles)

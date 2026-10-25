@@ -21,6 +21,18 @@ export function gebietPasst(p, g) {
   return p.land === g.land;
 }
 
+/** Gebiet zu einer Übersichtszahl (start.json einheiten[].key): „kreis:<ARS>“ oder „land:<Kürzel>“. Unbekannter Schlüssel → null. */
+export function gebietAusEinheit(key, kreise) {
+  const [art, wert] = String(key ?? '').split(':');
+  if (!wert) return null;
+  if (art === 'kreis') {
+    const k = (kreise ?? []).find((x) => x.ars === wert);
+    return k ? { land: k.land, ars: k.ars } : null;
+  }
+  if (art === 'land') return { land: wert, ars: '' };
+  return null;
+}
+
 /** Länder für die Auswahl: alle, die in der Kreisliste vorkommen, dazu die Nachbarländer. */
 export function laenderListe(kreise) {
   const set = new Set((kreise ?? []).map((k) => k.land));

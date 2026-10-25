@@ -23,7 +23,7 @@ export const MED_ICON_STYLE = { light: '#efe0b0', dark: '#3a2614' };
 export const MED_LAND = { forest: ['#8fa672', 0.55], meadow: ['#d6c88c', 0.15], scrub: ['#a9a66e', 0.35], farmland: ['#e3cf94', 0.2], wetland: ['#a9bdb0', 0.55], rock: ['#a89678', 0.55] };
 // neue Klassen der Naturfarben auf die Pigmente der alten Karte abbilden (Schutzgebiete und moderne Signaturen entfallen)
 export const MED_CLASS = { grass: 'meadow', heath: 'scrub', orchard: 'farmland', vineyard: 'farmland', allotment: 'farmland', sand: 'farmland', cemetery: 'meadow' };
-export const MED_DROP = /^(land-([a-z]+-pat|protected-|military-|bound-|cliff-(band|case|wand|schraffur))|roads_oneway|roads_rail|roads_runway|roads_taxiway|roads_pier|roads_labels_|roads_tunnels_|roads_.*casing|landuse_(park|runway|aerodrome|industrial|school|hospital|zoo|pedestrian|pier|urban_green|beach)|boundaries|address_label)/;
+export const MED_DROP = /^(land-([a-z]+-pat|protected-|military-|bound-)|roads_oneway|roads_rail|roads_runway|roads_taxiway|roads_pier|roads_labels_|roads_tunnels_|roads_.*casing|landuse_(park|runway|aerodrome|industrial|school|hospital|zoo|pedestrian|pier|urban_green|beach)|boundaries|address_label)/;
 export const medFlavor = () => ({ ...namedFlavor('grayscale'), background: MED.bg, earth: MED.paper, water: MED.water, city_label: MED.ink, subplace_label: MED.ink, city_label_halo: MED.halo, subplace_label_halo: MED.halo });
 export function medievalize(styled) {
   const rank = ['max', 1, ['min', 9, ['to-number', ['get', 'population_rank'], 1]]];
@@ -47,9 +47,6 @@ export function medievalize(styled) {
       pat.push([out.length + 1, patternLayer(x, cls, mk)]);
     } else if (l.id === 'buildings') x = { ...l, paint: { 'fill-pattern': 'med-bldg', 'fill-opacity': 1 } };
     else if (l.id === 'nat-peak-sym') x = { ...l, layout: { ...l.layout, 'icon-image': 'med-peak', 'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.55, 15, 0.85] } };
-    else if (l.id === 'land-cliff' || l.id === 'land-cliff-dgm') x = { ...l, minzoom: 11, paint: { 'line-color': MED.ink, 'line-opacity': 0.95, 'line-width': ['interpolate', ['linear'], ['zoom'], 11, 1.1, 16, 2.6] } };
-    else if (l.id === 'land-cliff-teeth' || l.id === 'land-cliff-teeth-dgm') x = { ...l, minzoom: 12, layout: { ...l.layout, 'icon-image': 'med-cliff', 'symbol-spacing': 6, 'icon-offset': [0, 0.5],
-      'icon-size': ['interpolate', ['linear'], ['zoom'], 12, 0.6, 17, 1.15] }, paint: { 'icon-opacity': 0.95 } };
     else if (l.id === 'land-quarry-dot') x = { ...l, paint: { ...l.paint, 'circle-color': MED.road, 'circle-stroke-color': MED.paper } };
     if (x.layout?.['text-font']) {
       const water = /^water_/.test(x.id);

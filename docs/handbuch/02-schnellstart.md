@@ -12,7 +12,7 @@ Voraussetzung für A und C ist Python 3.11 oder neuer (getestet mit 3.11; unter 
 
 ## 2.1 Weg A: Installer für einen Dauerläufer
 
-Quelltext entpacken (Release-Datei `landblick-1.0.0-alpha.1-quelltext.zip` oder `.tar.gz`), in den Ordner wechseln und den Installer starten.
+Quelltext entpacken (Release-Datei `landblick-1.0.0-beta.1-quelltext.zip` oder `.tar.gz`), in den Ordner wechseln und den Installer starten.
 
 **Windows (PowerShell):**
 
@@ -58,7 +58,7 @@ Die Desktop-App (Tauri, mit dem System-WebView, WebGL auf der Grafikkarte) bring
 
 Der Windows-Installer (`Landblick - RLP_<Version>_x64-setup.exe`) wird mit dem GitHub-Workflow **windows-installer** gebaut (Kapitel 6.10). Er installiert pro Benutzer, ohne Administratorrechte. Er ist nicht signiert: Windows SmartScreen meldet „Der Computer wurde durch Windows geschützt“; unter „Weitere Informationen“ lässt er sich trotzdem ausführen. Daten und Zugangsdaten liegen unter `%APPDATA%\de.ctw.osint`.
 
-In der Desktop-App erscheinen in der Quellenübersicht Eingabefelder für Zugangsdaten (Tankerkönig-Schlüssel, NASA-FIRMS-Schlüssel). Auf dem Dauerläufer (Weg A) trägt man sie in `.env` ein.
+In der Desktop-App und auf dem lokalen Webserver (Adresse `127.0.0.1`) erscheinen in der Quellenübersicht Eingabefelder für Zugangsdaten (Tankerkönig-Schlüssel, NASA-FIRMS-Schlüssel). Alternativ trägt man sie in `.env` ein; die `.env` hat Vorrang.
 
 ## 2.3 Weg C: von Hand aus dem Quelltext
 
@@ -70,10 +70,10 @@ python -m pytest -q && node --test tests/js/*.test.mjs     # Tests
 cp .env.example .env && chmod 600 .env                     # OSINT_CONTACT auf die eigene Adresse setzen
 python -m app.collect --once                               # alle Quellen einmal abrufen
 python -m app.export                                       # schreibt web/data/*.json
-python deploy/serve-local.py --dir web --port 8080         # http://127.0.0.1:8080
+python tools/serve-local.py --dir web --port 8080         # http://127.0.0.1:8080
 ```
 
-Der kleine Server `deploy/serve-local.py` versteht HTTP-Teilabrufe (Range), die die Kartendatei braucht; `python -m http.server` kann das nicht.
+Der kleine Server `tools/serve-local.py` versteht HTTP-Teilabrufe (Range), die die Kartendatei braucht; `python -m http.server` kann das nicht.
 
 ## 2.4 Erste Sichtprüfung
 

@@ -96,13 +96,13 @@ def test_launchd_plist():
 
 
 def test_env_setzen_und_lesen():
-    t = "# Kommentar\nOSINT_CONTACT=fremd@example.org   # alt\n# OSINT_LIVE=1\nPUBLISH_ENABLED=0\n"
+    t = "# Kommentar\nOSINT_CONTACT=fremd@example.org   # alt\n# OSINT_LIVE=1\nOSINT_HTTP_TIMEOUT=20\n"
     t2 = install.env_setzen(t, "OSINT_CONTACT", "ich@example.org")
     t2 = install.env_setzen(t2, "OSINT_LIVE", "0")
     t2 = install.env_setzen(t2, "NEU", "x")
     assert install.env_lesen(t2, "OSINT_CONTACT") == "ich@example.org"
     assert install.env_lesen(t2, "OSINT_LIVE") == "0" and install.env_lesen(t2, "NEU") == "x"
-    assert install.env_lesen(t2, "PUBLISH_ENABLED") == "0" and "# Kommentar" in t2
+    assert install.env_lesen(t2, "OSINT_HTTP_TIMEOUT") == "20" and "# Kommentar" in t2
     assert t2.count("OSINT_LIVE") == 1
 
 
@@ -120,7 +120,7 @@ def test_pmtiles_asset_namen_wie_im_sidecar_bau(monkeypatch):
 
 def test_kontakt_pflicht_ohne_tty(tmp_path, monkeypatch):
     monkeypatch.setattr(install, "ROOT", tmp_path)
-    (tmp_path / ".env.example").write_text("OSINT_CONTACT=fremd@example.org\nPUBLISH_ENABLED=0\n")
+    (tmp_path / ".env.example").write_text("OSINT_CONTACT=fremd@example.org\nOSINT_HTTP_TIMEOUT=20\n")
     monkeypatch.setattr(sys.stdin, "isatty", lambda: False)
     with pytest.raises(install.Fehler, match="kontakt"):
         install.schritt_env(None, True, False)
