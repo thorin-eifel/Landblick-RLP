@@ -31,7 +31,7 @@ const RIP_FRAMES = 6, RIP_MS = { wide: 110, stau: 650 };
 export const DASH_SEQ = [[0, 4, 3], [0.5, 4, 2.5], [1, 4, 2], [1.5, 4, 1.5], [2, 4, 1], [2.5, 4, 0.5], [3, 4, 0],
   [0, 0.5, 3, 3.5], [0, 1, 3, 3], [0, 1.5, 3, 2.5], [0, 2, 3, 2], [0, 2.5, 3, 1.5], [0, 3, 3, 1], [0, 3.5, 3, 0.5]];
 
-const COLORS = {
+export const COLORS = {
   light: { dash: '#ffffff', arrow: '#17436f', wave: '#ffffff' },
   dark: { dash: '#bfe0ff', arrow: '#e8f3ff', wave: '#a9d2f5' },
   med: { dash: '#efe0b0', arrow: '#3a2614', wave: '#efe0b0' },

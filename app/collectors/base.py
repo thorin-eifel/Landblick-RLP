@@ -143,6 +143,12 @@ class Collector(ABC):
         """Text (z. B. CSV) holen, gleiche Retry-Regeln. Schlüssel in `secrets` erscheinen nie in Meldungen."""
         resp = await self._request(url, params, "text/csv, text/plain, */*", False, secrets)
         assert resp is not None
+        if 300 <= resp.status_code < 400:   # der Client folgt nicht; ein Weiterleitungsrumpf ist keine Antwort
+            msg = f"HTTP {resp.status_code} (Weiterleitung) von {url}"
+            for sec in secrets:
+                if sec:
+                    msg = msg.replace(sec, "***")
+            raise SourceError(msg)
         return resp.text
 
     # -------------------------------------------------------------- Geo am Rand

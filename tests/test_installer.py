@@ -96,13 +96,13 @@ def test_launchd_plist():
 
 
 def test_env_setzen_und_lesen():
-    t = "# Kommentar\nLANDBLICK_CONTACT=fremd@example.org   # alt\n# LANDBLICK_LIVE=1\nPUBLISH_ENABLED=0\n"
+    t = "# Kommentar\nLANDBLICK_CONTACT=fremd@example.org   # alt\n# LANDBLICK_LIVE=1\nLANDBLICK_HTTP_TIMEOUT=20\n"
     t2 = install.env_setzen(t, "LANDBLICK_CONTACT", "ich@example.org")
     t2 = install.env_setzen(t2, "LANDBLICK_LIVE", "0")
     t2 = install.env_setzen(t2, "NEU", "x")
     assert install.env_lesen(t2, "LANDBLICK_CONTACT") == "ich@example.org"
     assert install.env_lesen(t2, "LANDBLICK_LIVE") == "0" and install.env_lesen(t2, "NEU") == "x"
-    assert install.env_lesen(t2, "PUBLISH_ENABLED") == "0" and "# Kommentar" in t2
+    assert install.env_lesen(t2, "LANDBLICK_HTTP_TIMEOUT") == "20" and "# Kommentar" in t2
     assert t2.count("LANDBLICK_LIVE") == 1
 
 
@@ -120,7 +120,7 @@ def test_pmtiles_asset_namen_wie_im_sidecar_bau(monkeypatch):
 
 def test_kontakt_pflicht_ohne_tty(tmp_path, monkeypatch):
     monkeypatch.setattr(install, "ROOT", tmp_path)
-    (tmp_path / ".env.example").write_text("LANDBLICK_CONTACT=fremd@example.org\nPUBLISH_ENABLED=0\n")
+    (tmp_path / ".env.example").write_text("LANDBLICK_CONTACT=fremd@example.org\nLANDBLICK_HTTP_TIMEOUT=20\n")
     monkeypatch.setattr(sys.stdin, "isatty", lambda: False)
     with pytest.raises(install.Fehler, match="kontakt"):
         install.schritt_env(None, True, False)

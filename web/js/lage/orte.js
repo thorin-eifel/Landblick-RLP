@@ -1,6 +1,6 @@
-import { INFRA_MEDIEVAL, SACRAL_KINDS, infraFeatures } from '../infra.js';
+import { INFRA_MEDIEVAL, infraFeatures, sakralAn } from '../infra.js';
 import { getJSON } from '../util.js';
-import { MED } from './mittelalter.js';
+import { MED, MED_FONT } from './mittelalter.js';
 import { loadView } from './zellenlauf.js';
 import { map, mapReady, state } from './zustand.js';
 
@@ -16,9 +16,9 @@ export function paintStops() {
 }
 // Infrastruktur aus OpenStreetMap (Windräder, Ladesäulen, Notfallpunkte). Eine Quelle, eine Zeichen- und eine Namensebene; welche Arten stehen, regelt der Filter.
 export let infraKey = '';
-export function ensureSakral() {   // Kirchen, Kapellen, Wegkreuze gibt es nur auf der Karte um 1450: Datei erst dann laden
-  if (state.zellen) { if (state.layers.medieval) loadView(); return; }   // Zellenbetrieb: Art 'sakral' kommt mit den Zellen
-  if (!state.layers.medieval || state.sakral || state.sakralLoading) return;
+export function ensureSakral() {   // Kirchen, Kapellen, Wegkreuze, Mühlen …: Datei erst laden, wenn eine dieser Ebenen an ist (gleich in welcher Darstellung)
+  if (state.zellen) { if (sakralAn(state.layers)) loadView(); return; }   // Zellenbetrieb: Art 'sakral' kommt mit den Zellen
+  if (!sakralAn(state.layers) || state.sakral || state.sakralLoading) return;
   state.sakralLoading = true;
   getJSON('data/sakral.json').then((j) => { state.sakral = j; applyInfra(); }).catch(() => {}).finally(() => { state.sakralLoading = false; });
 }
@@ -32,12 +32,12 @@ export const INFRA_LAYER_OF = { fire_station: 'inf-fire', church: 'inf-sac', cha
 export function infraFeaturesOn() {
   const med = !!state.layers.medieval;
   const group = (k) => (med && (k === 'ferry' || k === 'bridge') ? 'herFord' : INFRA_GROUP[k]);      // um 1450: Fähren und alte Brücken gehören zum Erbe, nicht zu Wehr/Brücke
-  return Object.keys(INFRA_GROUP).filter((k) => state.layers[group(k)] && (med ? INFRA_MEDIEVAL.has(k) : !SACRAL_KINDS.includes(k)));
+  return Object.keys(INFRA_GROUP).filter((k) => state.layers[group(k)] && (!med || INFRA_MEDIEVAL.has(k)));
 }
 export function applyInfra() {
   if (!mapReady || !state.infra) return;
   ensureSakral();
-  const sak = state.layers.medieval && state.sakral;
+  const sak = !!state.sakral;
   const items = sak ? [...state.infra.items, ...state.sakral.items] : state.infra.items;
   const key = `${state.infra.fetched_at}|${sak ? state.sakral.fetched_at : '-'}`;
   const src = map.getSource('infra');
@@ -50,7 +50,7 @@ export function applyInfra() {
         layout: { 'icon-image': ['concat', 'inf-', ['get', 'kind']], 'icon-size': ['interpolate', ['linear'], ['zoom'], 9.5, 0.5, 14, 0.8], 'icon-allow-overlap': false, 'icon-padding': 2,
           'symbol-sort-key': ['match', ['get', 'kind'], 'hospital', 0, 'fire_station', 1, 'wind', 2, 'aed', 3, 4],
           'text-field': ['get', 'label'], 'text-font': ['Noto Sans Regular'], 'text-size': 11, 'text-offset': [0, 1.2], 'text-anchor': 'top', 'text-max-width': 9, 'text-optional': true },
-        paint: { 'text-color': '#1c1c1c', 'text-halo-color': '#fff', 'text-halo-width': 1.8, 'text-opacity': ['step', ['zoom'], 0, 12, 1] } }, 'radius-fill');
+        paint: { 'text-color': '#1c1c1c', 'text-halo-color': '#fff', 'text-halo-width': 1.8, 'text-opacity': ['step', ['zoom'], 0, 12, 1], 'icon-opacity': ['case', ['==', ['get', 'plan'], 1], 0.55, 1] } }, 'radius-fill');
     }
   }
   infraKey = key;
@@ -99,7 +99,7 @@ export function applyInfraVisibility() {
     map.setFilter(id, med && id === 'inf-brueck' ? ['all', kindIn, ['==', ['get', 'old'], 1]] : kindIn);      // um 1450 nur alte Brücken
     map.setLayoutProperty(id, 'icon-image', ['concat', med ? 'med-inf-' : 'inf-', ['get', 'kind']]);
     map.setLayoutProperty(id, 'text-field', ['get', med ? 'labelMed' : 'label']);
-    map.setLayoutProperty(id, 'text-font', [med ? 'Grenze Gotisch Regular' : 'Noto Sans Regular']);
+    map.setLayoutProperty(id, 'text-font', [med ? MED_FONT[0] : 'Noto Sans Regular']);
     map.setLayoutProperty(id, 'text-size', med ? 13 : 11);
     map.setPaintProperty(id, 'text-color', med ? MED.ink : '#1c1c1c');
     map.setPaintProperty(id, 'text-halo-color', med ? MED.halo : '#fff');

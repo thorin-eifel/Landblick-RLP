@@ -6,8 +6,7 @@
 app/            Python-Kern: Sammler, Region, Speicher, Export, Live
 app/collectors/ ein Modul je Quelle
 web/            statisches Frontend (index.html, js/, css/, geo/, data/, tiles/)
-tools/          Werkzeuge: Karten bauen, Gesundheit, Backup, Dauerlauf, Zyklus
-deploy/         systemd, launchd, Webserver, Upload
+tools/          Werkzeuge: Karten bauen, Gesundheit, Backup, Dauerlauf, Zyklus, lokaler Webserver
 desktop/        Tauri-Hülle
 docs/           Betrieb, Pläne, Entscheidungen (adr/), dieses Handbuch
 tests/          pytest und tests/js (node --test)

@@ -2,21 +2,56 @@
 # Start: Actions → windows-installer → Run workflow. Die Datei steht danach unter "Artifacts" des Laufs (Zip mit der Setup.exe).
 # Der Installer ist nicht signiert: Windows SmartScreen warnt beim ersten Start ("Weitere Informationen" → "Trotzdem ausführen").
 name: windows-installer
-on: { workflow_dispatch: {}, push: { tags: ["windows-v*"] } }
+on:
+  workflow_dispatch:
+    inputs:
+      kacheln_tag:
+        description: "Release-Tag mit den Kachelpaketen; keine = Installer ohne Kacheln (rund 50 MB, die Karte kommt beim ersten Start per Download)"
+        default: "kacheln-1"
+  push: { tags: ["windows-v*"] }
 permissions: { contents: read }
 jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.12" }
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
+      - uses: actions/setup-node@v5
+        with: { node-version: 24 }
       - uses: dtolnay/rust-toolchain@stable
       - name: Sidecar (Python-Dienst und pmtiles)
         shell: pwsh
         run: ./desktop/build-sidecar.ps1
+      - name: Kachelpakete (Release laden, Prüfsummen prüfen)
+        # Die Pakete liegen nicht im Git, sondern als Dateien an einem Release (Tag kacheln-1, siehe desktop/stage-pakete.sh für das Layout).
+        # tauri.conf.json verlangt den Ordner pakete/ in jedem Fall; ohne Tag bleibt dort nur ein Platzhalter, die App lädt die Karte dann beim ersten Start.
+        shell: pwsh
+        env:
+          EREIGNIS: ${{ github.event_name }}
+          EINGABE: ${{ github.event.inputs.kacheln_tag }}
+        run: |
+          $ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue'
+          $out = 'desktop/src-tauri/pakete'
+          # Von Hand gestartet gilt die Eingabe wörtlich ('keine' = ohne Kacheln; ein leeres Feld ersetzt GitHub durch den Standardwert); bei einem Tag-Lauf gilt kacheln-1.
+          $tag = if ($env:EREIGNIS -eq 'workflow_dispatch') { $env:EINGABE } else { 'kacheln-1' }
+          New-Item -ItemType Directory -Force "$out/tiles", "$out/data" | Out-Null
+          if (-not $tag -or $tag -eq 'keine') { Set-Content "$out/LIESMICH.txt" 'Platzhalter: Installer ohne Kachelpakete.'; return }
+          $base = "https://github.com/${{ github.repository }}/releases/download/$tag"
+          $sums = Join-Path $env:RUNNER_TEMP 'SHA256SUMS'
+          Invoke-WebRequest -UseBasicParsing "$base/SHA256SUMS" -OutFile $sums
+          foreach ($zeile in Get-Content $sums) {
+            if ($zeile -notmatch '^([0-9a-f]{64}) \*(.+)$') { continue }
+            $hash = $Matches[1]; $name = $Matches[2]
+            $ziel = if ($name -like '*.pmtiles') { "$out/tiles/$name" } else { "$out/data/$name" }
+            Write-Output "lade $name"
+            Invoke-WebRequest -UseBasicParsing "$base/$name" -OutFile $ziel
+            $ist = (Get-FileHash $ziel -Algorithm SHA256).Hash.ToLower()
+            if ($ist -ne $hash) { throw "Prüfsumme falsch: $name" }
+          }
+          $bytes = (Get-ChildItem $out -Recurse -File | Measure-Object Length -Sum).Sum
+          Write-Output ("Ressourcen: {0:N0} MB" -f ($bytes / 1e6))
+          if ($bytes -gt 1.9e9) { throw 'Ressourcen über 1,9 GB: der NSIS-Installer verträgt höchstens 2 GB' }
       - name: Installer
         shell: pwsh
         working-directory: desktop
@@ -26,7 +61,7 @@ jobs:
       - name: Ergebnis
         shell: pwsh
         run: Get-ChildItem desktop/src-tauri/target/release/bundle/nsis | Format-Table Name, Length
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: landblick-windows-installer
           path: desktop/src-tauri/target/release/bundle/nsis/*.exe

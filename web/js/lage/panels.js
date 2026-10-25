@@ -2,6 +2,8 @@ import { renderIndizes } from '../indizes.js';
 import { buildTree, sortStations } from '../pegel.js';
 import { exportStale } from '../rules.js';
 import { $, SEV, ageEl, fmtDateTime, fmtHour, fmtTime, h, sevBadge, sparkline } from '../util.js';
+import { ausschnitt } from './ausschnitt-karte.js';
+import { stationenImAusschnitt } from './ausschnitt.js';
 import { envLevel, envText } from './messnetz.js';
 import { sourceLine, trendText } from './popup.js';
 import { gebietAktiv } from '../gebiet.js';
@@ -91,8 +93,8 @@ export function renderGewaesser() {
   panel.replaceChildren();
   const g = state.gew;
   if (!g) { panel.append(h('div', { class: 'empty' }, 'Keine Daten geladen.')); return; }
-  const list = sortStations(g.stations.filter((s) => s.latest)); // Gewässer alphabetisch, darin Stationen alphabetisch
-  if (!list.length) panel.append(h('div', { class: 'empty' }, 'Noch keine Messwerte.'));
+  const list = sortStations(stationenImAusschnitt(g.stations.filter((s) => s.latest), ausschnitt())); // nur sichtbarer Kartenbereich; Gewässer alphabetisch, darin Stationen alphabetisch
+  if (!list.length) panel.append(h('div', { class: 'empty' }, g.stations.some((s) => s.latest) ? 'Im sichtbaren Kartenausschnitt liegt keine Messstelle. Karte verschieben oder herauszoomen.' : 'Noch keine Messwerte.'));
   const tree = buildTree(list, state.net);
   if (tree.roots.length) {
     const all = (open) => () => { panel.querySelectorAll('details.gnode').forEach((d) => { d.open = open; }); };
@@ -123,7 +125,9 @@ export function renderUmwelt() {
   const e = state.env;
   if (!e) { panel.append(h('div', { class: 'empty' }, 'Keine Daten geladen.')); return; }
   let kind = null;
-  for (const s of e.stations.filter((x) => x.kind !== 'weather')) {   // Wetterstationen stehen auf der Karte, nicht in dieser Liste
+  const envList = stationenImAusschnitt(e.stations.filter((x) => x.kind !== 'weather'), ausschnitt());
+  if (e.stations.some((x) => x.kind !== 'weather') && !envList.length) panel.append(h('div', { class: 'empty' }, 'Im sichtbaren Kartenausschnitt liegt keine Messstelle für Luft oder Strahlung. Karte verschieben oder herauszoomen.'));
+  for (const s of envList) {   // Wetterstationen stehen auf der Karte, nicht in dieser Liste
     if (s.kind !== kind) { kind = s.kind; panel.append(h('div', { class: 'card-f' }, h('strong', {}, kind === 'radiation' ? 'Ortsdosisleistung (Gamma)' : 'Luftqualität'))); }
     const first = Object.values(s.values)[0];
     panel.append(h('div', { class: 'pegel' },

@@ -8,11 +8,11 @@ jobs:
       matrix: { os: [macos-latest, ubuntu-22.04] }   # Windows: windows-installer.yml (PowerShell statt bash)
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.12" }
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
+      - uses: actions/setup-node@v5
+        with: { node-version: 24 }
       - uses: dtolnay/rust-toolchain@stable
       - name: Linux-Bibliotheken
         if: matrix.os == 'ubuntu-22.04'
@@ -20,8 +20,14 @@ jobs:
       - name: Sidecar
         shell: bash
         run: desktop/build-sidecar.sh
+      - name: Platzhalter für die Kachelpakete
+        # tauri.conf.json verlangt den Ressourcenordner pakete/; er liegt nicht im Git (gitignore). Ohne Pakete sucht die App im Datenordner.
+        shell: bash
+        run: |
+          mkdir -p desktop/src-tauri/pakete
+          echo 'Platzhalter: Kachelpakete liegen nicht im Repository.' > desktop/src-tauri/pakete/LIESMICH.txt
       - name: App
         shell: bash
         run: cd desktop && npm install --include=dev && npx tauri build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with: { name: "app-${{ matrix.os }}", path: desktop/src-tauri/target/release/bundle/** }

@@ -1,4 +1,6 @@
 import json
+import logging
+import subprocess
 import threading
 import urllib.request
 from http.server import ThreadingHTTPServer
@@ -158,6 +160,7 @@ def test_pack_more_serves_higher_zoom_from_second_file(srv, tmp_path):
 def test_nachladen_aus_ohne_manifest(srv, monkeypatch):
     app, port, _ = srv
     monkeypatch.delenv("LANDBLICK_PAKETE_MANIFEST", raising=False)
+    monkeypatch.setattr("app.desktop.PAKETE_MANIFEST", "")
     assert app.start_nachladen() is False
     assert json.loads(call(port, "/api/state")[1])["nachladen"]["phase"] == "idle"
 
@@ -213,3 +216,146 @@ def test_tiles_fehlen_zaehlt_mitgelieferte(srv, tmp_path):
     assert app.tiles_fehlen()
     app.pack_dirs = [res.resolve()]
     assert not app.tiles_fehlen()
+
+
+def _raw_get(port, path):
+    """Roher Pfad ohne Normalisierung (wie curl --path-as-is); urllib würde '..' nicht entfernen, http.client schickt ihn unverändert."""
+    import http.client
+    c = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+    c.request("GET", path, headers={"Host": f"127.0.0.1:{port}"})
+    r = c.getresponse(); body = r.read(); c.close()
+    return r.status, body
+
+
+def test_traversal_erreicht_zugang_und_datenbank_nicht(srv):
+    """Befund H1: /data/../zugang.json lag vorher innerhalb des Datenordners und wurde ausgeliefert."""
+    app, port, _ = srv
+    (app.data_dir / "zugang.json").write_text('{"TANKERKOENIG_API_KEY": "geheim"}')
+    (app.data_dir / "landblick.sqlite").write_bytes(b"SQLite format 3\0")
+    (app.data_dir / "data").mkdir(exist_ok=True); (app.data_dir / "data" / "ok.json").write_text("{}")
+    for p in ("/data/../zugang.json", "/data/%2e%2e/zugang.json", "/tiles/../landblick.sqlite", "/tiles/..%2fzugang.json", "/data/..%2flandblick.sqlite"):
+        st, body = _raw_get(port, p)
+        assert st == 404 and b"geheim" not in body and b"SQLite" not in body, p
+    assert _raw_get(port, "/data/ok.json")[0] == 200
+
+
+def test_datenordner_wird_aufgeloest(tmp_path):
+    """Befund M1: relativer oder über Symlink angegebener Datenordner darf Dateien nicht aussperren."""
+    import os
+    real = tmp_path / "real"; (real / "data").mkdir(parents=True)
+    link = tmp_path / "link"; link.symlink_to(real, target_is_directory=True)
+    web = tmp_path / "web"; web.mkdir(); (web / "index.html").write_text("x")
+    app = desktop.App(link, web, tmp_path / "pm", tmp_path)
+    assert app.data_dir == real.resolve()
+
+
+def test_data_verzeichnis_wird_nicht_aufgelistet(srv):
+    app, port, _ = srv
+    (app.data_dir / "data").mkdir(exist_ok=True)
+    assert _raw_get(port, "/data/")[0] == 404
+    assert _raw_get(port, "/tiles/")[0] == 404
+
+
+def test_work_ueberlebt_timeout_und_exportfehler(tmp_path, monkeypatch):
+    """Befund H2: TimeoutExpired oder Exportfehler beendet den Takt nicht."""
+    import subprocess
+    web = tmp_path / "web"; web.mkdir()
+    app = desktop.App(tmp_path / "d", web, tmp_path / "pm", tmp_path)
+    monkeypatch.setattr(app, "tiles_fehlen", lambda: False)
+    monkeypatch.setattr(app, "start_nachladen", lambda: True)
+    monkeypatch.setattr(app, "start_later", lambda: None)
+    calls = []
+
+    def fake_run(args, progress=None, timeout=1800):
+        calls.append(args[0])
+        n = len(calls)
+        if n == 1:
+            raise subprocess.TimeoutExpired(args, timeout)       # Sammler hängt
+        if n == 3:
+            return 1                                              # Export scheitert
+        return 0
+
+    class Stop(BaseException):
+        pass
+
+    sleeps = []
+
+    def fake_sleep(s):
+        sleeps.append(s)
+        if len(sleeps) >= 3:
+            raise Stop
+
+    monkeypatch.setattr(app, "_run", fake_run)
+    monkeypatch.setattr(desktop.time, "sleep", fake_sleep)
+    with pytest.raises(Stop):
+        app.work()
+    assert len(sleeps) == 3 and calls.count("app.collect") >= 2
+    assert app.job.snapshot()["phase"] in ("ready", "error")
+
+
+# ---- Protokolldatei im Datenordner ----
+# Unter Windows läuft die App ohne Konsole: ohne diese Datei ist jeder Fehler des Dienstes unauffindbar.
+
+
+@pytest.fixture()
+def log_sauber():
+    """Handler, die ein Test an den Wurzel-Logger hängt, wieder abnehmen und schließen (sonst bleibt die Datei offen)."""
+    wurzel = logging.getLogger()
+    vorher = list(wurzel.handlers)
+    yield
+    for h in [h for h in wurzel.handlers if h not in vorher]:
+        wurzel.removeHandler(h)
+        h.close()
+
+
+def test_logdatei_nimmt_meldungen_auf(tmp_path, log_sauber):
+    datei = desktop.log_in_datei(tmp_path)
+    assert datei == tmp_path / "logs" / "dienst.log"
+    logging.getLogger("landblick.desktop").warning("Prüfzeile mit Umlaut: Höhe")
+    assert "Prüfzeile mit Umlaut: Höhe" in datei.read_text(encoding="utf-8")
+
+
+def test_logdatei_rotiert_und_begrenzt_sich(tmp_path, monkeypatch, log_sauber):
+    monkeypatch.setattr(desktop, "LOG_BYTES", 2000)
+    monkeypatch.setattr(desktop, "LOG_KEEP", 2)
+    datei = desktop.log_in_datei(tmp_path)
+    for i in range(400):
+        logging.getLogger("landblick.desktop").warning("Zeile %d %s", i, "x" * 80)
+    stand = sorted(p.name for p in (tmp_path / "logs").iterdir())
+    assert stand == ["dienst.log", "dienst.log.1", "dienst.log.2"]     # nicht mehr als LOG_KEEP Sicherungen
+    assert all(p.stat().st_size < 10_000 for p in (tmp_path / "logs").iterdir())
+
+
+def test_unbeschreibbarer_ordner_stoppt_den_dienst_nicht(tmp_path, log_sauber):
+    (tmp_path / "logs").write_text("keine Datei, sondern ein Ordnerplatz")   # mkdir scheitert daran
+    assert desktop.log_in_datei(tmp_path) is None
+
+
+def test_fehlerausgabe_des_kindes_steht_im_log(srv, caplog, monkeypatch):
+    """Die Ausgabe der Kindprozesse (app.collect, app.export) muss durch das Log laufen, nicht ins geerbte stderr."""
+    app, _, _ = srv
+    fertig = subprocess.CompletedProcess(args=[], returncode=1, stderr="erste Zeile\nZDM-Fehler: Quelle kaputt\n")
+    monkeypatch.setattr(desktop.subprocess, "run", lambda *a, **k: fertig)
+    schwanz: list[str] = []
+    with caplog.at_level(logging.WARNING, logger="landblick.desktop"):
+        assert app._run(["app.collect"], err_tail=schwanz) == 1
+    assert "ZDM-Fehler: Quelle kaputt" in caplog.text and "[app.collect]" in caplog.text
+    assert schwanz == ["erste Zeile", "ZDM-Fehler: Quelle kaputt"]
+
+
+def test_kindausgabe_auch_ohne_err_tail_im_log(srv, caplog, monkeypatch):
+    app, _, _ = srv
+    fertig = subprocess.CompletedProcess(args=[], returncode=0, stderr="Export geschrieben\n")
+    monkeypatch.setattr(desktop.subprocess, "run", lambda *a, **k: fertig)
+    with caplog.at_level(logging.INFO, logger="landblick.desktop"):
+        assert app._run(["app.export"]) == 0
+    assert "Export geschrieben" in caplog.text
+
+
+def test_state_sagt_ob_der_erste_export_schon_da_ist(srv):
+    """Daran entscheidet die Oberfläche, ob sie die Aufbauseite zeigt: ohne data/meta.json hat die Karte nichts anzuzeigen."""
+    app, port, _ = srv
+    j = json.loads(call(port, "/api/state")[1])
+    assert j["daten"] is False
+    (app.data_dir / "data" / "meta.json").write_text("{}", encoding="utf-8")
+    assert json.loads(call(port, "/api/state")[1])["daten"] is True

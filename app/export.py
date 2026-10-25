@@ -1,13 +1,12 @@
-"""Statischer Export: schreibt die JSON-Dateien, die das Frontend auf dem Webspace liest.
+"""Statischer Export: schreibt die JSON-Dateien, die das Frontend liest.
 
-Zweck:      Der Webspace (IONOS) führt kein Python aus. Der Collector läuft auf einem Rechner des Betreibers,
-            dieser Export macht aus der Datenbank kleine JSON-Dateien, ein Upload (deploy/publish.sh)
-            bringt sie auf den Webspace.
+Zweck:      Die Oberfläche rechnet nicht in der Datenbank, sie liest fertige Dateien. Dieser Export macht aus der
+            Datenbank kleine JSON-Dateien im Ordner web/data, die der lokale Server ausliefert.
 Parameter:  --out PFAD   Zielordner (Standard web/data)
             --db PFAD    Datenbank (Standard $LANDBLICK_DB_PATH oder data/landblick.sqlite)
 Beispiel:   python -m app.export --out web/data
 Zellen:     standardmäßig zusätzlich manifest.json, start.json und z/<x>_<y>/<art>.json (app/export_cells.py); --no-cells schaltet das ab
-Dateien:    meta.json events.json aircraft.json gewaesser.json wetter.json umwelt.json indizes.json kraftstoff.json themen.json radar.json radar.png blitz.json blitz.png wind.json haltestellen.json landmarks.json infrastruktur.json routen.json anbau.json sakral.json suche.json status.json sources.json
+Dateien:    meta.json events.json aircraft.json gewaesser.json wetter.json umwelt.json indizes.json kraftstoff.json themen.json radar.json radar.png blitz.json blitz.png wind.json haltestellen.json landmarks.json infrastruktur.json energie.json routen.json anbau.json sakral.json suche.json status.json sources.json
 Schreiben:  je Datei erst *.tmp, dann Umbenennen — kein halbes JSON im Zielordner.
 Datenschutz: Die Dateien enthalten nur Ereignisse, Messwerte und Quellenstatus.
 """
@@ -51,6 +50,7 @@ def build_all(storage: Storage, registry: Registry) -> dict[str, Any]:
         "routen.json": payloads.routen_payload(storage, registry),
         "anbau.json": payloads.anbau_payload(storage, registry),
         "sakral.json": payloads.sakral_payload(storage, registry),
+        "energie.json": payloads.energie_payload(storage, registry),
         "suche.json": payloads.suche_payload(storage, registry),
         "status.json": payloads.status_payload(storage, registry),
         "sources.json": payloads.sources_payload(registry),

@@ -478,7 +478,6 @@ async def test_live_loop_writes_only_aircraft_and_status(registry, settings, tmp
     from app import live
     real = httpx.AsyncClient
     monkeypatch.setattr(live.httpx, "AsyncClient", lambda **kw: real(transport=httpx.MockTransport(lambda r: httpx.Response(200, json=fixture("adsblol_point_ANONYMISIERT_SYNTHETISCH.json")))))
-    monkeypatch.delenv("PUBLISH_ENABLED", raising=False)
     st = dataclasses.replace(settings, web_dir=tmp_path)
     assert await live.run(st, None, once=True) == 0
     files = {p.name for p in (tmp_path / "data").iterdir()}

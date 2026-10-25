@@ -8,20 +8,18 @@ Regionales Lagebild aus offenen Daten für die Südeifel und ihre Nachbarregione
 
 Stand: **Phase 1 (MVP)**. Kein amtliches Warnsystem, kein Ersatz für NINA oder die Leitstelle.
 
-## Wie es läuft (statisch, für IONOS-Webspace)
+## Wie es läuft (lokal, ohne Server)
 
-Der Webspace führt nur HTML, CSS und JavaScript aus, kein Python. Deshalb zwei Teile:
+Alles läuft auf dem Rechner, auf dem die App steht. Nach außen gehen nur die Abrufe laut Quellenregister:
 
 ```
-Sammelstelle (ein Rechner des Betreibers, Python, Cron alle 5 Min.)          IONOS-Webspace (statisch)
-  Quellen → Collector → Geo-Filter → SQLite → Export → JSON-Dateien ──SFTP──▶ web/data/*.json
-                                                                            web/ (HTML, CSS, JS, MapLibre)
-                                                                                  ▲
-                                                                     Browser holt Dateien, rechnet
-                                                                     Zeitfenster und Alter selbst
+Quellen → Collector → Geo-Filter → SQLite → Export → JSON-Dateien → lokaler Dienst (127.0.0.1)
+                                                                          ▲
+                                                           Oberfläche holt Dateien, rechnet
+                                                           Zeitfenster und Alter selbst
 ```
 
-Die Sammelstelle braucht Python 3.11+, Internet und `lftp`. Sie kann jeder Rechner sein, der dauerhaft läuft: ein Server, ein Mini-PC, ein Raspberry Pi. Fällt sie aus, bleibt die Seite stehen und sagt es: Das Frontend rechnet Alter und Zustand gegen die Uhr des Besuchers und zeigt „Datenstand veraltet“, sobald der Export älter als 20 Minuten ist.
+Zwei Wege, dieselbe Oberfläche: die Desktop-App (`desktop/`, Tauri-Hülle um `app/desktop.py`) oder eine Installation auf einem Dauerläufer (`install.py`, Zeitplaner plus `tools/serve-local.py`). Beide brauchen Python 3.11+ und Internet. Steht der Sammelzyklus, bleibt die Oberfläche stehen und sagt es: Sie rechnet Alter und Zustand gegen die eigene Uhr und zeigt „Datenstand veraltet“, sobald der Export älter als 20 Minuten ist.
 
 ## Schnellstart
 
@@ -32,28 +30,15 @@ pip install -r requirements.txt -r requirements-dev.txt
 python -m pytest -q && node --test tests/js/rules.test.mjs     # 60 + 4 Tests
 cp .env.example .env && chmod 600 .env                         # LANDBLICK_CONTACT eintragen
 
-# Lokal ansehen, ohne Upload
-python -m app.collect --once          # alle Quellen einmal
-python -m app.export                  # schreibt web/data/*.json, manifest.json, start.json und z/<x>_<y>/ (Zellen, siehe docs/rlp/r4-export.md)
-deploy/publish.sh --delta            # lädt nur geänderte Dateien hoch, Manifest zuletzt
-python -m http.server 8000 -d web     # → http://localhost:8000
+# Lokal ansehen
+python -m app.collect --once               # alle Quellen einmal
+python -m app.export                       # schreibt web/data/*.json, manifest.json, start.json und z/<x>_<y>/ (Zellen, siehe docs/rlp/r4-export.md)
+python tools/serve-local.py --dir web      # → http://127.0.0.1:8080 (versteht Range, http.server nicht)
 
-# Seite auf den Webspace (einmalig und bei Änderungen an HTML/JS/CSS)
-deploy/publish.sh --site --dry-run
-deploy/publish.sh --site
-
-# Dauerbetrieb: Cron alle 5 Minuten (Vorlage: deploy/crontab.example)
-deploy/run-cycle.sh                   # abrufen (nur Fälliges) → exportieren → hochladen
+# Dauerbetrieb auf einem Rechner, der durchläuft
+python install.py --kontakt mail@example.org   # Zeitplaner, lokaler Webserver, Sicherung, Gesundheitsprüfung
+python tools/zyklus.py                         # ein Durchlauf von Hand: abrufen (nur Fälliges) → exportieren
 ```
-
-## Einrichtung IONOS
-
-1. **SFTP-Zugang** im IONOS-Kundencenter anlegen (Hosting → SFTP & SSH). Host, Benutzer und Passwort bzw. SSH-Schlüssel in `.env` eintragen: `IONOS_SFTP_HOST`, `IONOS_SFTP_USER`, `IONOS_SFTP_KEY` (oder `IONOS_SFTP_PASSWORD`), `IONOS_REMOTE_DIR`, `PUBLISH_ENABLED=1`.
-2. **Host-Schlüssel** einmalig ins `known_hosts`, den Fingerabdruck vorher gegen die Angabe im Kundencenter prüfen: `ssh-keyscan -t ed25519 "$IONOS_SFTP_HOST" >> ~/.ssh/known_hosts`. Das Skript prüft den Schlüssel strikt.
-3. **HTTPS** für die Domain im Kundencenter aktivieren (SSL-Zertifikat). Die `.htaccess` leitet auf HTTPS um.
-4. **Erster Upload:** `deploy/publish.sh --site`, danach `deploy/run-cycle.sh`.
-5. **Prüfen:** `curl -sI https://<domain>/` muss die Header `Content-Security-Policy`, `X-Content-Type-Options` und `Strict-Transport-Security` zeigen. Fehlen sie, wertet der Webspace die `.htaccess` nicht aus. Die CSP steht dann trotzdem als Meta-Tag in jeder Seite; `frame-ancestors` geht nur per Header.
-6. **Auftragsverarbeitung:** IONOS verarbeitet die Zugriffsprotokolle. Ohne Vertrag zur Auftragsverarbeitung mit IONOS nicht öffentlich schalten (siehe `docs/dsfa-entwurf.md`).
 
 ## Aufbau
 
@@ -63,13 +48,13 @@ deploy/run-cycle.sh                   # abrufen (nur Fälliges) → exportieren 
 | `app/collectors/` | `nina`, `dwd_warnungen`, `brightsky`, `pegelonline`, `autobahn`, Basisklasse `base.py` (Retry, Backoff, Circuit Breaker) |
 | `app/collect.py` | Runner: `--once`, `--due` (nur Fälliges, für Cron), `--only`, `--healthcheck` |
 | `app/export.py`, `app/payloads.py` | Datenbank → `meta, events, gewaesser, wetter, status, sources` als JSON |
-| `web/` | Die Seite: `index.html`, `status.html`, `quellen.html`, `js/`, `css/`, `geo/`, `vendor/maplibre-gl/`, `.htaccess` |
+| `web/` | Die Seite: `index.html`, `status.html`, `quellen.html`, `js/`, `css/`, `geo/`, `vendor/maplibre-gl/` |
 | `web/js/rules.js` | Zeitfenster und Quellenzustand, rechnen im Browser gegen die aktuelle Uhr |
-| `deploy/` | `run-cycle.sh`, `publish.sh`, `crontab.example` |
-| `tools/` | `backup.py`, `build_orientation.py` (Kreisgrenzen für die Karte) |
+| `desktop/` | Tauri-Hülle um den lokalen Dienst `app/desktop.py` |
+| `tools/` | `zyklus.py`, `serve-local.py`, `backup.py`, `build_orientation.py` (Kreisgrenzen für die Karte) |
 | `tests/` | Python-Tests, `tests/js/` (Node), `fixtures/` mit echten Antworten |
 
-Die Sammelstelle liest aus dem Netz und schreibt in ihre Datenbank und den Exportordner, sonst nichts. Der Webspace enthält nur die Seite und die fertigen JSON-Dateien: keine Datenbank, keine Zugangsdaten, kein Code, der etwas ausführt.
+Der Sammelzyklus liest aus dem Netz und schreibt in seine Datenbank und den Exportordner, sonst nichts. Der lokale Dienst liefert die Seite und die fertigen JSON-Dateien aus, an 127.0.0.1 und sonst nirgends.
 
 ## Das Quellenregister (`sources.yaml`)
 
@@ -95,7 +80,6 @@ Zeitfenster („Jetzt“, 24 Std., 7 Tage): Der Export liefert die Obermenge fü
    - **HTTP 4xx**: Endpunkt oder Parameter geändert. Doku des Betreibers lesen, Fixture neu aufnehmen, Collector anpassen.
    - **„Schlüssel … fehlt“ / „ohne 'features'“**: Schema geändert. Der Collector rät nicht, er meldet. Fixture ersetzen, Test rot sehen, dann fixen.
    - **Timeout, 5xx, 429**: Quelle down oder drosselt. Retry mit Backoff läuft, nach 5 Fehlläufen pausiert der Collector 15 Minuten (Circuit Breaker). Abwarten oder Intervall erhöhen.
-   - **Upload schlägt fehl**: `deploy/publish.sh --data` von Hand laufen lassen. Meist Zugang, Host-Schlüssel oder Netz. Der nächste Cron-Lauf versucht es erneut.
 4. Quelle vorübergehend abschalten: `aktiv: false` in `sources.yaml`.
 
 Bei Ausfall bleibt die Seite stehen: „Quelle nicht erreichbar seit …“, die letzten guten Daten sind sichtbar und als veraltet markiert (Chaos-Test in `tests/test_payloads_export.py`).
@@ -106,19 +90,17 @@ Bei Ausfall bleibt die Seite stehen: „Quelle nicht erreichbar seit …“, die
 
 ### Zeitplan
 
-Drei Wege, derselbe Inhalt: Cron (`deploy/crontab.example`), launchd auf dem Mac (`deploy/de.thorin.landblick-*.plist`), systemd auf Linux (`deploy/systemd/`). Kein Docker.
+Den Zeitplan legt `install.py` an: Aufgabenplanung unter Windows, launchd auf dem Mac, systemd auf Linux. Kein Docker.
 
-systemd, einmalig als root, Pfad `/opt/landblick` und Benutzer `landblick` in den Units anpassen:
+systemd auf Linux, einmalig (`--system` legt die Units systemweit an, sonst auf Benutzerebene):
 
 ```
-cp deploy/systemd/landblick-*.{service,timer} /etc/systemd/system/
-systemctl daemon-reload
-systemctl enable --now landblick-cycle.timer landblick-backup.timer landblick-health.timer
-systemctl list-timers 'landblick-*'
-journalctl -u landblick-cycle -n 50
+sudo python install.py --kontakt mail@example.org --system
+systemctl list-timers 'de.thorin.landblick-*'
+journalctl -u de.thorin.landblick-zyklus -n 50
 ```
 
-Der Zyklus läuft alle fünf Minuten, die Sicherung um 03:15 (mit Rückspielprobe), die Gesundheitsprüfung alle zehn Minuten. Die Units laufen ohne Rechte außer Schreiben in `data/` und `web/data`. Schlägt `landblick-health` mit „kritisch“ an, steht die Unit in `systemctl --failed`; eine Benachrichtigung hängt man bei Bedarf per `OnFailure=` an.
+Der Zyklus läuft alle fünf Minuten, die Sicherung um 03:15 (mit Rückspielprobe), die Gesundheitsprüfung alle zehn Minuten. Die Units laufen ohne Rechte außer Schreiben in `data/` und `web/data`. Schlägt die Gesundheitsprüfung mit „kritisch“ an, steht die Unit in `systemctl --failed`; eine Benachrichtigung hängt man bei Bedarf per `OnFailure=` an.
 
 ### Backup
 
@@ -126,7 +108,7 @@ Der Zyklus läuft alle fünf Minuten, die Sicherung um 03:15 (mit Rückspielprob
 
 Wiederherstellungstest: `python tools/backup.py --verify` spielt die neueste Sicherung in einen Wegwerf-Ordner zurück, prüft Prüfsumme, `PRAGMA integrity_check`, die Zeilenzahlen gegen die Prüfsummendatei und ob die Anwendungsschicht die Kopie lesen kann. Der Test läuft nach jeder Sicherung mit und kippt bei jeder Abweichung. Das ersetzt nicht die Probe von Hand vor dem Livegang: einmal wirklich zurückspielen, `python -m app.export` laufen lassen, Seite ansehen.
 
-Wiederherstellen im Ernstfall: Zyklus pausieren (Timer stoppen oder `launchctl bootout`), neueste Sicherung als `data/landblick.sqlite` zurückkopieren (alte `-wal`/`-shm`-Dateien daneben löschen), `python tools/backup.py --verify` zur Kontrolle, Zyklus wieder starten. Der Webspace braucht kein Backup außer dem Projektordner selbst: alles dort lässt sich mit `publish.sh --site` neu aufspielen.
+Wiederherstellen im Ernstfall: Zyklus pausieren (Timer stoppen oder `launchctl bootout`), neueste Sicherung als `data/landblick.sqlite` zurückkopieren (alte `-wal`/`-shm`-Dateien daneben löschen), `python tools/backup.py --verify` zur Kontrolle, Zyklus wieder starten.
 
 ### Chaos-Tests
 
@@ -136,17 +118,17 @@ Von Hand, vor jeder Vorführung: eine wichtige Quelle in `sources.yaml` auf `akt
 
 ### Updates
 
-Alle Abhängigkeiten sind gepinnt (`requirements.txt`, `requirements-dev.txt`, ein Test prüft das). CI führt `pip-audit` für beide Dateien und `npm audit --audit-level=high` für `desktop/` aus. Rhythmus: einmal im Monat `pip-audit` lokal, Treffer sofort, sonst gesammelt. Ablauf pro Paket: Pin in der Datei ändern, `pytest` und `node --test tests/js/*.test.mjs` laufen lassen, Branch, Pull Request. Nie mehrere Hauptversionen auf einmal. MapLibre liegt unter `web/vendor/` (Version 6.11.2, BSD-3-Clause, Dateiendung auf `.js` geändert, siehe `README.txt` dort); Updates dort von Hand und mit Blick auf die Layer-Ausdrücke (zoom-Interpolation, siehe `web/js/lage/abfluss.js`). Seite geändert: `deploy/publish.sh --site`.
+Alle Abhängigkeiten sind gepinnt (`requirements.txt`, `requirements-dev.txt`, ein Test prüft das). CI führt `pip-audit` für beide Dateien und `npm audit --audit-level=high` für `desktop/` aus. Rhythmus: einmal im Monat `pip-audit` lokal, Treffer sofort, sonst gesammelt. Ablauf pro Paket: Pin in der Datei ändern, `pytest` und `node --test tests/js/*.test.mjs` laufen lassen, Branch, Pull Request. Nie mehrere Hauptversionen auf einmal. MapLibre liegt unter `web/vendor/` (Version 6.11.2, BSD-3-Clause, Dateiendung auf `.js` geändert, siehe `README.txt` dort); Updates dort von Hand und mit Blick auf die Layer-Ausdrücke (zoom-Interpolation, siehe `web/js/lage/abfluss.js`).
 
 ### Dauerlauf (R6)
 
-Gemessen wird nicht geschätzt: `tools/dauerlauf.py sample` hängt alle zehn Minuten eine Probe (Gesundheitszustand, Problemquellen, Exportalter) an `data/dauerlauf.jsonl` (launchd: `de.thorin.landblick-dauerlauf.plist`). Jeder Eingriff von Hand wird mit `tools/dauerlauf.py note "…"` vermerkt, auch ein Neustart. Nach sieben Tagen erzeugt `tools/dauerlauf.py report --out docs/rlp/r6-bericht.md` den Bericht: Laufzeit, Anteile OK/Warnung/kritisch, Pausen, längste Störung je Quelle, Vermerke. Bestanden heißt: mindestens sieben Tage, keine Pause über 30 Minuten, kein Vermerk. Die Vorlage und die Reihenfolge stehen in `docs/rlp/r6-dauerlauf.md`. Schläft der Mac, entsteht eine Pause; für den Dauerlauf Ruhezustand abschalten (`caffeinate -s` oder Energiesparen-Einstellung).
+Gemessen wird nicht geschätzt: `tools/dauerlauf.py sample` hängt alle zehn Minuten eine Probe (Gesundheitszustand, Problemquellen, Exportalter) an `data/dauerlauf.jsonl` (launchd: `de.thorin.landblick-dauerlauf`). Jeder Eingriff von Hand wird mit `tools/dauerlauf.py note "…"` vermerkt, auch ein Neustart. Nach sieben Tagen erzeugt `tools/dauerlauf.py report --out docs/rlp/r6-bericht.md` den Bericht: Laufzeit, Anteile OK/Warnung/kritisch, Pausen, längste Störung je Quelle, Vermerke. Bestanden heißt: mindestens sieben Tage, keine Pause über 30 Minuten, kein Vermerk. Die Vorlage und die Reihenfolge stehen in `docs/rlp/r6-dauerlauf.md`. Schläft der Mac, entsteht eine Pause; für den Dauerlauf Ruhezustand abschalten (`caffeinate -s` oder Energiesparen-Einstellung).
 
 ## Datenschutz und Sicherheit in Kürze
 
 - Keine personenbezogenen Daten. Externe Texte werden beim Sammeln bereinigt (`app/sanitize.py`), das Frontend setzt sie nur per `textContent`. Ein Test prüft, dass keine Kontaktadresse oder Zugangsdaten in den Exportdateien landen.
 - CSP ohne `unsafe-inline`, keine Drittanbieter-Anfragen (per Browsertest geprüft), keine Cookies, keine Speicherung der Ansicht, kein `eval`.
-- Zugriffsprotokolle führt der Hoster (IONOS), nicht die Anwendung. Speicherdauer und IP-Kürzung dort prüfen.
+- Keine Zugriffsprotokolle eines Hosters: der lokale Dienst hört nur auf 127.0.0.1, zwischen Oberfläche und Daten steht niemand.
 - Sammelstelle: keine Zugangsdaten im Code, `.env` mit Rechten 600 und in `.gitignore`. Für den Upload ein eigener SFTP-Zugang, der nur auf den Zielordner beschränkt ist.
 - Entwürfe: `docs/dsfa-entwurf.md`; „Datenschutz“ und „Impressum“ sind Platzhalter bis zur rechtlichen Endabnahme.
 
@@ -154,16 +136,14 @@ Gemessen wird nicht geschätzt: `tools/dauerlauf.py sample` hängt alle zehn Min
 
 1. **Lizenzen nicht bestätigt.** Alle zwölf Quellen laufen, kein Lizenztext ist an der Primärquelle geprüft (`lizenz_geprueft: false`). NINA und Autobahn-API nennen in ihrer OpenAPI-Beschreibung keine Datenlizenz. Am heikelsten ist `hochwasser_rlp`: Die JSON-Schnittstelle der Seite hochwasser.rlp.de ist nicht als offene API dokumentiert und trägt keine Lizenzangabe. Vor jeder öffentlichen Nutzung beim Landesamt für Umwelt RLP anfragen; solange bleibt es ein interner Demo-Betrieb.
 2. **DWD-Warnungen nur gegen Doku gebaut.** Am Testtag lag bundesweit keine Warnung vor, die Fixture `dwd_wfs_SYNTHETISCH_landkreise.json` ist nachgebaut. Beim ersten echten Warnfall Feldnamen prüfen und durch eine echte Aufnahme ersetzen. Verifiziert: Endpunkt, Layer, BBox-Achsenreihenfolge (lon,lat; lat,lon liefert leere Antworten).
-3. **Kein Live-Test auf IONOS.** Upload, Skripte und Seite laufen gegen einen lokalen SFTP-Server und einen lokalen Webserver. Ob `.htaccess` (Header, MIME-Typen, Umleitung) auf dem Tarif greift, zeigt erst der erste Upload (`curl -sI`, siehe oben).
-4. **Kein Server-Push.** Die Seite holt die Dateien alle 60 Sekunden. Die Aktualität ist damit höchstens so gut wie der Cron-Takt (5 Minuten) plus Abrufintervall der Quelle.
-5. **Keine Basiskarte.** Radius, Kreisgrenzen (DWD), Orte, Ereignisse. Luxemburg und Belgien haben keine Grenzen. Eigene Tiles folgen in Phase 2 und brauchen auf statischem Webspace Platz (PMTiles-Datei, wenige zehn MB, Range-Requests). Ob IONOS die unterstützt, ist vorher zu klären.
-6. **Pegel aus zwei Quellen.** PEGELONLINE (WSV: Mosel, Saar) und die Hochwasservorhersagezentrale RLP (Prüm, Kyll, Sauer, Our, Nebengewässer; WSA-Stellen werden dort verworfen, damit nichts doppelt steht). Eigene Hochwasserstufen gibt es nicht; angezeigt wird der Zustand laut Legende der jeweiligen Quelle. Die Luxemburger Pegel kommen nur soweit, wie die RLP-Seite sie führt.
-7. **Baustellen-Zeiträume** stehen nur als Fließtext in der Autobahn-API. Der erste Termin wird per Muster gelesen, sonst bleibt der Beginn leer und der Eintrag „(geplant)“.
-8. **Öffentliche Bright-Sky-Instanz** im Dauerbetrieb ist unhöflich. Eigene Instanz in Phase 2 (braucht dann etwas mehr als den Cron-Rechner).
-9. **Sammelstelle ist ein Einzelpunkt.** Fällt sie aus, wird die Seite ehrlich veraltet, aber nicht aktueller. Wer das nicht will, braucht einen zweiten Rechner oder Überwachung auf `--healthcheck`.
-10. **7-Tage-Dauerlauf** (Definition of Done) steht aus.
-11. **Rate Limiting** für eine öffentliche Demo entfällt bei statischen Dateien weitgehend, Missbrauch fängt der Hoster ab. Trotzdem im Vertrag nachsehen.
-12. **Offene Punkte aus Abschnitt 12** der Projektanweisung (Name/Domain, Hosting, GPU, Quellenpflege, Luxemburg) sind weiter offen. Hosting ist mit IONOS entschieden; „GPU“ entfällt, solange die lokalen Modelle (Phase 3) nicht kommen.
+3. **Kein Server-Push.** Die Seite holt die Dateien alle 60 Sekunden. Die Aktualität ist damit höchstens so gut wie der Zyklustakt (5 Minuten) plus Abrufintervall der Quelle.
+4. **Keine Basiskarte.** Radius, Kreisgrenzen (DWD), Orte, Ereignisse. Luxemburg und Belgien haben keine Grenzen. Eigene Tiles folgen in Phase 2 (PMTiles-Datei, Teilabrufe).
+5. **Pegel aus zwei Quellen.** PEGELONLINE (WSV: Mosel, Saar) und die Hochwasservorhersagezentrale RLP (Prüm, Kyll, Sauer, Our, Nebengewässer; WSA-Stellen werden dort verworfen, damit nichts doppelt steht). Eigene Hochwasserstufen gibt es nicht; angezeigt wird der Zustand laut Legende der jeweiligen Quelle. Die Luxemburger Pegel kommen nur soweit, wie die RLP-Seite sie führt.
+6. **Baustellen-Zeiträume** stehen nur als Fließtext in der Autobahn-API. Der erste Termin wird per Muster gelesen, sonst bleibt der Beginn leer und der Eintrag „(geplant)“.
+7. **Öffentliche Bright-Sky-Instanz** im Dauerbetrieb ist unhöflich. Eigene Instanz in Phase 2.
+8. **Der Sammelzyklus ist ein Einzelpunkt.** Steht er, wird die Seite ehrlich veraltet, aber nicht aktueller. Überwachung läuft über `--healthcheck`.
+9. **7-Tage-Dauerlauf** (Definition of Done) steht aus.
+10. **Offene Punkte aus Abschnitt 12** der Projektanweisung (Name, Quellenpflege, Luxemburg) sind weiter offen. Hosting entfällt: die App läuft lokal. „GPU“ entfällt, solange die lokalen Modelle (Phase 3) nicht kommen.
 
 ## Installation auf einem Dauerläufer (Windows, Linux, macOS)
 
@@ -209,23 +189,22 @@ Der Windows-Teil ist unter Linux nur durch Tests der erzeugten Aufgabendateien a
 6. Nach Neustart ohne Anmeldung (nur mit `-System`) laufen `web` und `live` wieder an.
 7. Windows Defender oder Firewall melden etwas: Python im Ordner `.venv` freigeben, Fund notieren (bei PyInstaller-Programmen bekannt, hier nicht zu erwarten).
 
-Bekannte Grenzen: `lauf.py --timeout` greift nur, solange der Befehl Ausgabe schreibt; die harte Grenze setzt der Zeitplaner (ExecutionTimeLimit bzw. TimeoutStartSec). Der Upload (`PUBLISH_ENABLED=1`) braucht bash und lftp und ist unter Windows nicht vorgesehen. Kartenbau und Landesdaten-Werkzeuge außer `build_region_tiles.py` (Höhenmodell, Gebäude, Abfluss) gehören nicht zum Installer; ihre Ergebnisse (`web/tiles/*.pmtiles`) kopiert man vom Bau-Rechner in `web/tiles/`.
+Bekannte Grenzen: `lauf.py --timeout` greift nur, solange der Befehl Ausgabe schreibt; die harte Grenze setzt der Zeitplaner (ExecutionTimeLimit bzw. TimeoutStartSec). Kartenbau und Landesdaten-Werkzeuge außer `build_region_tiles.py` (Höhenmodell, Gebäude, Abfluss) gehören nicht zum Installer; ihre Ergebnisse (`web/tiles/*.pmtiles`) kopiert man vom Bau-Rechner in `web/tiles/`.
 
-## Sammelstelle auf dem Mac (launchd)
+## Dauerläufer auf dem Mac (launchd)
 
-Stand: läuft auf dem Mac des Betreibers, Python 3.11 in `.venv`, Zyklus alle 5 Minuten.
+Stand: läuft auf dem Mac des Betreibers, Python 3.11 in `.venv`, Zyklus alle 5 Minuten. Eingerichtet mit `install.py`.
 
 ```
-launchctl print gui/$(id -u)/de.thorin.landblick-cycle | grep -E 'state|last exit'
-tail -f ~/Library/Logs/landblick-cycle.log
-launchctl bootout gui/$(id -u)/de.thorin.landblick-cycle      # anhalten
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/de.thorin.landblick-cycle.plist   # starten
+launchctl print gui/$(id -u)/de.thorin.landblick-zyklus | grep -E 'state|last exit'
+tail -f data/logs/zyklus.log
+launchctl bootout gui/$(id -u)/de.thorin.landblick-zyklus      # anhalten
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/de.thorin.landblick-zyklus.plist   # starten
 ```
 
 Lokale Ansicht: http://127.0.0.1:8080 (Job `de.thorin.landblick-web`, nur localhost).
 Fallstricke: Schläft der Mac, steht der Zyklus; die Seite zeigt dann nach 20 Minuten
-"Datenstand veraltet". Upload bleibt aus, bis `PUBLISH_ENABLED=1` und die IONOS-Werte in `.env` stehen
-(lftp fehlt noch: `brew install lftp`). `LANDBLICK_CONTACT` in `.env` ist noch der Platzhalter.
+"Datenstand veraltet".
 
 ## Luftverkehr (adsb.lol) und warum keine Schiffe
 
@@ -249,9 +228,7 @@ Die Karte nutzt keine Kacheln von Dritten. `web/tiles/region.pmtiles` ist ein Au
 
 Ehrlich bei Ausfall: Fehlt die Datei oder kann der Server keine Teilabrufe, bleibt die Karte ohne Basis benutzbar und der Kartenhinweis sagt „Basiskarte nicht verfügbar“.
 
-**Vor dem Produktivbetrieb auf IONOS prüfen:** `python tools/check_range.py https://<domain>/tiles/region.pmtiles` muss „Teilabrufe funktionieren“ melden (Status 206, keine Kompression). `deploy/publish.sh --site` lädt die Dateien mit hoch (beim ersten Mal rund 410 MB, ein Schritt für sich; die Datei ändert sich nur bei neuem Kartenbau). Die `.htaccess` nimmt `.pmtiles` bewusst aus der Kompression aus. Antwortet der Webspace mit 200 statt 206: Kachelverzeichnis (`z/x/y.pbf`) statt einer Datei bauen, das läuft auf jedem Webspace.
-
-Die lokale Ansicht auf dem Mac nutzt `deploy/serve-local.py` (versteht Range), nicht `python -m http.server`.
+Die lokale Ansicht auf dem Mac nutzt `tools/serve-local.py` (versteht Range), nicht `python -m http.server`.
 
 Offen: Beschriftungen (Straßen, Orte) brauchen Schriftdateien (Glyphen) auf dem Server; Zoom über 13 wird nur hochskaliert; Kartenstand ist der Build vom 29.09.2026, Aktualisierung von Hand.
 
@@ -287,12 +264,12 @@ Inhalt: 2324 Gemeinden als Flächen (vereinfacht auf rund 5 m, ganzzahlige Delta
 
 ## Live, Stau, Icons
 
-**Flüge live.** Ein Webspace ohne Server kann nicht schieben, und der Browser darf keine Drittserver anfragen (CSP, Datenschutz). „Live“ heißt deshalb: Die Live-Schleife (`python -m app.live`, launchd-Job `deploy/de.thorin.landblick-live.plist`) holt adsb.lol alle 15 Sekunden (Untergrenze 10 s), schreibt nur `data/aircraft.json` und `data/status.json` und lädt sie hoch, wenn `PUBLISH_ENABLED=1` (höchstens alle `LANDBLICK_LIVE_PUBLISH_S`, Standard 30 s; läuft ein Upload noch, wird übersprungen). Der Browser holt `aircraft.json` alle 15 s, solange die Ebene an und der Tab sichtbar ist, und lässt die Flugzeuge dazwischen auf Kurs und Tempo weiterrücken (`advance()` in `rules.js`, rein optisch, nichts wird gemerkt; bei „weniger Bewegung“ im System aus). Der Fünf-Minuten-Zyklus überspringt Quellen mit `params.live` (`--skip-live`; `LANDBLICK_LIVE=0` in `.env` legt sie zurück in den Zyklus). Steht die Schleife, laufen die Punkte nach 90 s ab und die Quelle zeigt „veraltet“. Ratenlimit von adsb.lol ist unveröffentlicht: vor öffentlichem Start nachfragen.
+**Flüge live.** Der lokale Dienst schiebt nichts, und die Oberfläche darf keine Drittserver anfragen (CSP, Datenschutz). „Live“ heißt deshalb: Die Live-Schleife (`python -m app.live`, Job `de.thorin.landblick-live`) holt adsb.lol alle 15 Sekunden (Untergrenze 10 s) und schreibt nur `data/aircraft.json` und `data/status.json`. Die Oberfläche holt `aircraft.json` alle 15 s, solange die Ebene an und der Tab sichtbar ist, und lässt die Flugzeuge dazwischen auf Kurs und Tempo weiterrücken (`advance()` in `rules.js`, rein optisch, nichts wird gemerkt; bei „weniger Bewegung“ im System aus). Der Fünf-Minuten-Zyklus überspringt Quellen mit `params.live` (`--skip-live`; `LANDBLICK_LIVE=0` in `.env` legt sie zurück in den Zyklus). Steht die Schleife, laufen die Punkte nach 90 s ab und die Quelle zeigt „veraltet“. Ratenlimit von adsb.lol ist unveröffentlicht: vor öffentlichem Start nachfragen.
 
 ```
 python -m app.live --once             # ein Durchlauf zum Testen
 launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/de.thorin.landblick-live.plist
-tail -f ~/Library/Logs/landblick-live.log
+tail -f data/logs/live.log
 ```
 
 **Stau und zähfließender Verkehr.** Kommt aus derselben Autobahn-API (`warning` mit `abnormalTrafficType`): `QUEUING_TRAFFIC` = Stau, `SLOW_TRAFFIC` = zähfließend, `STATIONARY_TRAFFIC` = Stillstand, dazu Verzögerung (Minuten) und Durchschnittstempo. Eigener Ereignistyp `congestion`, gezeichnet als Linie von Anfang bis Ende der Meldung (gerade Verbindung, nur Näherung des Straßenverlaufs). Stau ab 30 Minuten Verzögerung und Stillstand sind `warning`, gewöhnlicher Stau `notice`, zähfließend `info`. Sie erscheinen nicht im Warnband, das bleibt für NINA/DWD/Pegel. Eine eigene Stufe „Stop-and-go“ kennt die API nicht. Der Autobahn-Lauf kommt jetzt alle 3 Minuten (vorher 10). Grenzen: nur Autobahnen (A1, A48, A60, A64), keine Bundes- und Landesstraßen, kein Luxemburg. Die Kennungen tragen den Vermerk INRIX; das gehört in die Lizenzanfrage an die Autobahn GmbH. Fixture: `tests/fixtures/autobahn_A64_warning_STAU_SYNTHETISCH.json` (echte Struktur, Orte verlegt).
@@ -312,10 +289,10 @@ Zwei Schritte, beide einmalig und wiederaufnehmbar:
     .venv/bin/python tools/build_dem_rlp.py --keep-raw           # wie oben, legt die 1-m-Rohkacheln zusätzlich in <work>/raw/ ab (rund 22 GB); die Felswände laden dann nicht ein zweites Mal
 
 Die Landesdaten kommen von `geobasis-rlp.de/data/dgm1/` (Dateiliste `meta4/dgm1_tif_07.meta4`, Prüfsummen werden verglichen). Das Werkzeug legt `tiles/dem/meta.json` mit dem Namensnennungstext an (Jahre der Befliegung); die Karte zeigt ihn unten rechts. Außerhalb von RLP sind die Kacheln ab Zoom 13 nur aus Mapzen hochgerechnet (kein Gewinn an Genauigkeit, aber lückenlos). An der Kante der Landesabdeckung weicht Mapzen im Mittel um etwa 10 m vom DGM1 ab. Damit daraus keine sichtbare Stufe (gerade Naht in Schummerung und Höhenlinien) wird, setzt `blend_bias()` den Versatz zwischen beiden Quellen über `FADE_PX` (120 px, rund 730 m bei Zoom 14) nach außen fort und blendet ihn mit cos² aus; Kacheln werden mit gleichem Rand gerechnet, damit Nachbarn ohne Sprung anschließen. Nach einer Änderung daran muss `web/tiles/dem` neu gebaut und das Relief neu gepackt werden (`python tools/build_dem_rlp.py --no-fetch --force --only-gaps`, dann `tools/pack_tiles.py`). Für Luxemburg, Saarland, NRW, Hessen, Baden-Württemberg gibt es eigene offene Geländemodelle, die sich im selben Schema einbauen ließen (noch nicht geprüft, Lizenzen offen).
-Die Kacheln liegen nicht im Repository (`.gitignore`) und müssen mit auf den Webspace (`web/tiles/dem/`, inkl. `README.txt` als Prüfdatei und `meta.json`). `dem-base/` und `_scratch/` bleiben lokal.
+Die Kacheln liegen nicht im Repository (`.gitignore`) und gehören in den Kachelordner (`web/tiles/dem/`, inkl. `README.txt` als Prüfdatei und `meta.json`). `dem-base/` und `_scratch/` bleiben lokal.
 Höhenlinien rechnet `web/vendor/maplibre-contour` (BSD-3) im Browser in einem Worker (ab Zoom 7, bis 2,5 m Abstand bei Zoom 16); Ziffern kommen aus `web/fonts/` (Noto Sans, OFL).
 Fehlt `tiles/dem/README.txt`, bleibt die Karte ohne Relief und läuft normal. Code: `web/js/relief.js`.
-Im Ebenenmenü (Kartengrundlage) gibt es zwei Schalter: „Schummerung und Höhenfärbung“ (`relief`) und „Höhenlinien“ (`contours`, mit Beschriftung). Beide laufen über dieselben Höhenkacheln und sind einzeln schaltbar; die Lichtquelle am Zeiger hängt an der Schummerung, die Höhe unter dem Zeiger und die Legende an einem von beiden.
+Im Menü Geographie (Gelände und Gebäude) gibt es zwei Schalter: „Berge und Täler (Schattierung und Farbe)“ (`relief`) und „Höhenlinien“ (`contours`, mit Beschriftung). Beide laufen über dieselben Höhenkacheln und sind einzeln schaltbar; die Lichtquelle am Zeiger hängt an der Schummerung, die Höhe unter dem Zeiger und die Legende an einem von beiden.
 Namensnennung steht auf `quellen.html`. Höhenwerte sind Raster (in RLP ca. 6 m, sonst ca. 30 m), keine Vermessung.
 
 Zoom 15 und 16 aus dem 1-m-Raster (optional, setzt den Rohordner der Felswände voraus):
@@ -394,7 +371,7 @@ Ab 1800 px Breite skaliert die Oberfläche über die Schriftgröße der Wurzel (
 
 ## Karte: Aufbau, Straßen, Radar-Sweep
 
-**Layout.** Ab 1001 px Breite füllt die Karte den ganzen Rahmen. Zeitraum/Ebenen (links, einklappbar) und die Liste (rechts) schweben darüber; darunter stehen die Teile untereinander. Kartensteuerung und Höhenlegende weichen den schwebenden Karten aus (`app.css`, letzter Abschnitt).
+**Layout.** Ab 1001 px Breite füllt die Karte den ganzen Rahmen. Zeitraum, Darstellung, Ereignisse und Geographie (links, einklappbar) und die Liste (rechts) schweben darüber; darunter stehen die Teile untereinander. Kartensteuerung und Höhenlegende weichen den schwebenden Karten aus (`app.css`, letzter Abschnitt).
 
 **Grenzen.** Alle Verwaltungsgrenzen der Kacheln (Staat, Land, Kreis, Gemeinde; `BOUNDS` in `stil.js`) sehen gleich aus: Punktlinie in einer Farbe je Ansicht, Schalter wie bisher je Ebene. Die Landesgrenze von Rheinland-Pfalz ist die einzige Ausnahme: rote Linie, 2 px, darunter fünf graue Linien (je 1 px, Abstand 1,5 bis 5,5 px nach außen, Deckkraft fallend) als Verlauf. Die Kacheln tragen keine Eigenschaft, die RLP von anderen Ländern trennt; die Linie kommt deshalb aus `web/geo/rlp.geojson` (BKG VG250, `VG250_LAN`, auf 20 m vereinfacht), gebaut mit `python tools/build_landesgrenze.py --zip <vg250…zip>`. Die Datei ist eine eigene Quelle (`rlp-grenze`) und läuft mit dem Schalter „Landesgrenzen". Abweichung zur OSM-Linie der Kacheln: Zehnermeter, bei Zoom 13 und höher sieht man daneben stellenweise einzelne Punkte der Kachellinie. Fehlt die Datei, bleibt die Karte ohne rote Linie, die gepunktete Landesgrenze aus den Kacheln bleibt. Das Vorzeichen des Verlaufs (negativer `line-offset` = außen) ist an der Karte geprüft; wer die Datei anders orientiert, dreht den Verlauf nach innen.
 
@@ -402,11 +379,11 @@ Ab 1800 px Breite skaliert die Oberfläche über die Schriftgröße der Wurzel (
 
 **LGB Daten (Kartendienste des Landesamts für Geologie und Bergbau).** Eigene Gruppe im Ebenenmenü, 16 ausgewählte Ebenen in den Themen Bergbau, Boden, Erdbeben, Geologie, Geothermie, Hydrogeologie, Ingenieurgeologie, je Dienst die Ebenen als Schalter, dazu Deckkraft und „Alle LGB-Ebenen aus“. Aufbau: `web/geo/lgb.json` (Katalog, 13 Dienste, 16 Ebenen) wird mit `python tools/build_lgb_katalog.py` aus den GetCapabilities unter `mapserver.lgb-rlp.de/cgi-bin/mc_*` gebaut (ein Abruf je Dienst, eine Sekunde Pause; `--from-dir` liest gespeicherte XML, `--save-dir` legt sie ab). Technische Hilfsebenen der Dienste (Kachelquelle, Vektorabfrage, Download-Auswahl) stehen in `AUSGEBLENDET` und fehlen im Katalog. Die Seite fragt nie Capabilities ab, sie holt nur GetMap-Kacheln (EPSG:3857, 256 px) für eingeschaltete Ebenen; Code: `web/js/lage/lgb.js`, reine Funktionen in `web/js/lgb-katalog.js`.
 
-Datenschutz: Das ist (zusammen mit „Landesdaten“, siehe unten) der einzige Fall, in dem der Browser etwas bei einem Dritten holt. Deshalb ist alles aus, bis die Besucherin den Hinweis im Menü bestätigt („Verstanden, Karte laden“); die Bestätigung gilt nur bis zum Neuladen und wird nicht gespeichert. Die Content-Security-Policy erlaubt `https://mapserver.lgb-rlp.de` nur in `web/index.html` und im globalen Header (`web/.htaccess`), die übrigen Seiten bleiben bei `'self'`. Datenschutzerklärung und Quellenregister (`lgb_wms`, `art: client`) nennen das. Quellenvermerk laut LGB („©LGB-RLP <Jahr>, dl-de/by-2-0, www.lgb-rlp.de [Daten bearbeitet]“) steht unter der Karte, solange eine Ebene an ist. Höchstens sechs Ebenen gleichzeitig. Fällt ein Dienst aus, steht „n nicht erreichbar“ im Menü, der Rest der Karte bleibt. Die Ebenen liegen über der Basiskarte und unter Straßen und Beschriftung; nach einem Themenwechsel werden sie wieder dorthin gesetzt (`placeLgb`).
+Datenschutz: Das ist (zusammen mit „Landesdaten“, siehe unten) der einzige Fall, in dem der Browser etwas bei einem Dritten holt. Deshalb ist alles aus, bis die Besucherin den Hinweis im Menü bestätigt („Verstanden, Karte laden“); die Bestätigung gilt nur bis zum Neuladen und wird nicht gespeichert. Die Content-Security-Policy erlaubt `https://mapserver.lgb-rlp.de` nur in `web/index.html`, die übrigen Seiten bleiben bei `'self'`. Datenschutzerklärung und Quellenregister (`lgb_wms`, `art: client`) nennen das. Quellenvermerk laut LGB („©LGB-RLP <Jahr>, dl-de/by-2-0, www.lgb-rlp.de [Daten bearbeitet]“) steht unter der Karte, solange eine Ebene an ist. Höchstens sechs Ebenen gleichzeitig. Fällt ein Dienst aus, steht „n nicht erreichbar“ im Menü, der Rest der Karte bleibt. Die Ebenen liegen über der Basiskarte und unter Straßen und Beschriftung; nach einem Themenwechsel werden sie wieder dorthin gesetzt (`placeLgb`).
 
 Nicht enthalten: Objektabfrage (GetFeatureInfo), WFS, die Karte „Cross Compliance Erosion“ (sie steht auf der Onlinekarten-Seite, aber nicht in der OGC-Dienste-Liste), Legenden. Der Katalog ist ein Stand vom Tag des Abrufs; ändert das LGB sein Angebot, wird er neu gebaut.
 
-**Landesdaten (offene Kartendienste weiterer Landesstellen).** Zweite Gruppe im Ebenenmenü, gleiche Bedienung wie „LGB Daten“ (ein Code in `lage/lgb.js`, zwei Menüs mit eigenem Hinweis, eigener Deckkraft, eigenem Vermerk und je höchstens sechs Ebenen). Gruppiert nach Landesstelle (Vermessung und Geobasisdaten, Umwelt, Wasserwirtschaft, Straßen, Ländlicher Raum). Die Auswahl (16 Ebenen) steht in `tools/katalog_auswahl.json` und gilt für beide Menüs; `--alle` baut den vollen Katalog. Verworfen wurde, was die App schon hat (Straßen, Gewässer, Grenzen, Gelände, Hochwasser-Pegel, Wetter, Warnungen), Mehrfach-Fassungen derselben Karte, Nischenthemen und Dienste ohne CORS oder mit unvollständiger Zertifikatskette. Die Geoportal-Suche (nur offene Daten) liefert die Kandidaten: `python tools/crawl_geoportal.py --out M.json`, dann `python tools/build_landesdaten_katalog.py --meta M.json` schreibt `web/geo/landesdaten.json`. Lizenz und Vermerk stehen je Dienst im Katalog. Zugelassen sind nur https-Server, die im Katalog unter `hosts` stehen; jeder davon steht auch in der Content-Security-Policy (`web/index.html` und `web/.htaccess`). Neuer Server im Katalog heißt: CSP an beiden Stellen nachziehen (der Test prüft das).
+**Landesdaten (offene Kartendienste weiterer Landesstellen).** Zweite Gruppe im Ebenenmenü, gleiche Bedienung wie „LGB Daten“ (ein Code in `lage/lgb.js`, zwei Menüs mit eigenem Hinweis, eigener Deckkraft, eigenem Vermerk und je höchstens sechs Ebenen). Gruppiert nach Landesstelle (Vermessung und Geobasisdaten, Umwelt, Wasserwirtschaft, Straßen, Ländlicher Raum). Die Auswahl (16 Ebenen) steht in `tools/katalog_auswahl.json` und gilt für beide Menüs; `--alle` baut den vollen Katalog. Verworfen wurde, was die App schon hat (Straßen, Gewässer, Grenzen, Gelände, Hochwasser-Pegel, Wetter, Warnungen), Mehrfach-Fassungen derselben Karte, Nischenthemen und Dienste ohne CORS oder mit unvollständiger Zertifikatskette. Die Geoportal-Suche (nur offene Daten) liefert die Kandidaten: `python tools/crawl_geoportal.py --out M.json`, dann `python tools/build_landesdaten_katalog.py --meta M.json` schreibt `web/geo/landesdaten.json`. Lizenz und Vermerk stehen je Dienst im Katalog. Zugelassen sind nur https-Server, die im Katalog unter `hosts` stehen; jeder davon steht auch in der Content-Security-Policy von `web/index.html`. Neuer Server im Katalog heißt: CSP dort nachziehen (der Test prüft das).
 
 Was fehlt und warum, steht im Katalog unter `ausgelassen`: Kommunen (bewusst nicht), Dienste nur mit WMS 1.1.1 oder ohne EPSG:3857, Server ohne CORS (Umgebungslärm, Naturschutzkarten), und Server, deren Zertifikatskette ich nicht prüfen konnte (Statistisches Landesamt mit 64 Diensten, SGD Nord ROK, LANIS). Letzteres ist kein Urteil über die Server, sondern eine Grenze der Prüfumgebung; Wiederholung von einem Rechner mit normalem Zertifikatsspeicher.
 
@@ -442,9 +419,9 @@ Abbruch ist unkritisch: `dem-hoch.pmtiles.part` wächst Teil für Teil, jeder La
 
 ### Gebäude, Straßenschilder, Beschriftung, Verkehrsfarben
 
-- **Gebäude** bordeaux (`#800020` hell, `#9c2a4b` dunkel), 60 % transparent (`BUILDING_OPACITY` in `web/js/lage/stil.js`). Standardmäßig an. Die Ebene beginnt bei Zoom 13 (nur große Gebäude, die Kacheln führen darunter nicht mehr). Alle Gebäude gibt es ab Kartenzoom 14: der Kern wird mit `tileSize: 256` eingebunden, dadurch gelten die Zoom-15-Kacheln eine Stufe früher. Weiter vorzuziehen (Zoom 13) würde viermal so viele Kacheln je Bild laden; dafür bräuchte es eigene Gebäudekacheln.
+- **Gebäude** bordeaux (`#800020` hell, `#9c2a4b` dunkel), Deckkraft nach Zoom: 40 % bis Zoom 14, linear bis 75 % bei Zoom 17 (`BUILDING_OPACITY` in `web/js/lage/stil.js`). Standardmäßig an. Die Ebene beginnt bei Zoom 13 (nur große Gebäude, die Kacheln führen darunter nicht mehr). Alle Gebäude gibt es ab Kartenzoom 14: der Kern wird mit `tileSize: 256` eingebunden, dadurch gelten die Zoom-15-Kacheln eine Stufe früher. Weiter vorzuziehen (Zoom 13) würde viermal so viele Kacheln je Bild laden; dafür bräuchte es eigene Gebäudekacheln.
 - **Autobahnen** blau mit schwarzer Kontur; auf der Strecke Schilder mit der OSM-Nummer (`ref`): A blau/weiß, B gelb, L und K weiß. Nur Nummern bis 8 Zeichen ohne Semikolon; Anschlussstellen tragen kein Schild.
-- **Straßennamen** ab Zoom 13, **Hausnummern** ab Zoom 16 (Kacheln bis Zoom 15, darüber wird vergrößert). Es sind Kartenbeschriftungen aus OSM, keine Adresssuche und kein Geocoding; die Daten liegen in den Kacheln, nicht in der Datenbank. Wo OSM keine Namen oder Nummern kennt (kleine Weiler), bleibt die Karte leer.
+- **Straßennamen** ab Zoom 14 (aus `core.pmtiles` und `ring.pmtiles`; die Region-Kacheln bis Zoom 13 tragen Namen nur an größeren Straßen), **Hausnummern** ab Zoom 16 (Kacheln bis Zoom 15, darüber wird vergrößert). Es sind Kartenbeschriftungen aus OSM, keine Adresssuche und kein Geocoding; die Daten liegen in den Kacheln, nicht in der Datenbank. Wo OSM keine Namen oder Nummern kennt (kleine Weiler), bleibt die Karte leer.
 - **Verkehrsmeldungen** in vier Stufen (`trafficLevel` in `rules.js`): gelb Baustelle, orange Behinderung oder Stau, rot langer Stau (ab 30 Min.) oder eine Richtung gesperrt, schwarz Vollsperrung. Die Stufe folgt aus `type`, `severity` und `attrs.sperr` (`voll`/`richtung`, gesetzt von den Collectoren `lbm_baustellen` und `autobahn`); die Liste rechts zeigt weiter die Stufe der Quelle. Schwarze Linien bekommen einen weißen Saum.
 - **Detailfeld** rechts lässt sich mit dem Knopf „Details ausblenden“ einklappen; Ebenen, Höhenlegende und Detailfeld haben dasselbe Material (Deckkraft, Unschärfe, Rand, Schatten).
 - **Prüfzugang:** mit `#debug` in der Adresse reagiert die Seite auf das Ereignis `landblick-debug` (Auftrag als JSON in `data-debug-in`, Zählwerte in `data-debug-out`). Nur zum Testen, nichts geht nach außen.
@@ -473,9 +450,9 @@ Die Karte im Stil des 15. Jahrhunderts hat keine Papiertextur mehr (Foto und Üb
 
 **Wasserbewegung** (Ebene „Wasserbewegung“, standardmäßig aus, `web/js/fluss.js`): Striche und Pfeile entlang der Gewässerlinien zeigen die Fließrichtung (Digitalisierungsrichtung der OSM-Linien, geprüft an Mosel, Saar, Our, Sûre, Kyll, Prüm, Nims, Alzette, Lieser, Ruwer). Tempo ist eine Klasse (Bach, Fluss, gestaut), kein gemessener Abfluss. `IMPOUNDED` (Mosel, Saar) bewegt sich kaum: staugeregelt. Seen, Teiche und Becken zeigen Wellenzeichen, die mit dem Modellwind (ICON-D2, Kartenmitte) ziehen; bei Flaute oder ohne Windmodell bleibt das Wasser glatt. Flächen ohne Gewässerart gelten als Stillgewässer. Bei `prefers-reduced-motion` stehen die Zeichen still. Tests: `node tests/js/fluss.test.mjs`. Prüfhilfe: `#debug` schreibt Seitenfehler nach `data-debug-err` am `<html>`.
 
-## Lichtquelle am Zeiger
+## Licht am Zeiger
 
-Ebene „Lichtquelle am Zeiger“ (aus, unter Kartengrundlage; braucht Höhenrelief). `web/js/licht.js` rechnet im Fragment-Shader (WebGL2): Höhenmosaik aus den sichtbaren Terrarium-Kacheln (höchstens 48, Zoom 6 bis 12), Hangneigung per Sobel, Punktlicht über dem Zeiger (Höhe einstellbar), Schatten durch Strahlverfolgung mit weichem Rand (48 Schritte). Ohne Maus gilt die Bildmitte bzw. der letzte Tippunkt. Gilt nur bei Nordausrichtung ohne Neigung. Prüfzugang: `licht:{on,lon,lat,hoehe}` im `#debug`-Auftrag.
+Ebene „Licht am Zeiger“ (aus, unter Kartengrundlage; braucht Höhenrelief). `web/js/licht.js` rechnet im Fragment-Shader (WebGL2): Höhenmosaik aus den sichtbaren Terrarium-Kacheln (höchstens 48, Zoom 6 bis 12), Hangneigung per Sobel, Punktlicht über dem Zeiger (Höhe einstellbar), Schatten durch Strahlverfolgung mit weichem Rand (48 Schritte). Ohne Maus gilt die Bildmitte bzw. der letzte Tippunkt. Gilt nur bei Nordausrichtung ohne Neigung. Prüfzugang: `licht:{on,lon,lat,hoehe}` im `#debug`-Auftrag.
 
 ## Desktop-App (Tauri, lokal, GPU)
 
@@ -490,7 +467,7 @@ Tauri-Hülle (Rust) ──startet──▶ landblick-core (Python, Sidecar) ─�
 
 Es gibt keine Auswahl eines Mittelpunkts: Das Gebiet steht fest in `region.yaml` (Rheinland-Pfalz plus 80 km). Beim ersten Start zeigt `einrichtung.html` nur den Fortschritt, die App lädt die Karte für die ganze Fläche (rund 1,5 GB mit Höhenmodell, einmalig, wiederaufnehmbar: Stücke in `tiles-work/chunks`, jeder Lauf macht dort weiter) und beginnt zu sammeln. Der Sidecar braucht dafür `shapely` und `pmtiles` (Python) sowie die pmtiles-CLI; ob das gebündelte Programm sie enthält, ist nicht geprüft.
 
-Zugangsdaten in der App: Quellen, die einen Schlüssel oder ein Login brauchen, tragen im Register ein Feld `zugang` (Name der Umgebungsvariable, Art: `schluessel`, `benutzername` oder `passwort`, Bezeichnung). Die Seite „Quellen und Lizenzen“ zeigt in der Desktop-App je Quelle Eingabefelder; auf dem statischen Webspace erscheinen sie nicht. Die Werte liegen in `zugang.json` im Datenordner (Rechte 600, Klartext, nicht im Schlüsselbund) und gehen nur als Umgebungsvariable an die Sammler-Kindprozesse. Angenommen werden nur Variablen, die im Register stehen. Die Oberfläche erfährt nie einen Wert, nur „gesetzt“. Neue Quelle mit Schlüssel: `zugang` im Register eintragen, der Collector liest die Variable wie bisher. Gilt ab dem nächsten Abruf der Quelle.
+Zugangsdaten in der App: Quellen, die einen Schlüssel oder ein Login brauchen, tragen im Register ein Feld `zugang` (Name der Umgebungsvariable, Art: `schluessel`, `benutzername` oder `passwort`, Bezeichnung). Die Seite „Quellen und Lizenzen“ zeigt in der Desktop-App und auf dem lokalen Webserver (`tools/serve-local.py`, nur auf Loopback) je Quelle Eingabefelder. Die Werte liegen in `zugang.json` im Datenordner (Rechte 600, Klartext, nicht im Schlüsselbund). Die Desktop-App reicht sie als Umgebungsvariable an die Sammler-Kindprozesse; beim lokalen Webserver liegt die Datei in `data/zugang.json` und `app/config.py` liest sie nach der `.env` (`.env` und Shell gehen vor). Langlaufende Prozesse (Livemodul) lesen sie erst nach einem Neustart. Angenommen werden nur Variablen, die im Register stehen. Die Oberfläche erfährt nie einen Wert, nur „gesetzt“. Neue Quelle mit Schlüssel: `zugang` im Register eintragen, der Collector liest die Variable wie bisher. Gilt ab dem nächsten Abruf der Quelle.
 
 Ablauf in der App: Als Hintergrund der Einrichtungsseite dient die mitgelieferte Weltkarte `web/basis/welt.pmtiles` (Zoom 0 bis 5, rund 15 MB, Herkunft in `web/basis/README.txt`). Der Balken zeigt beim Kartenabruf die fertigen Stücke, beim Sammeln „n von m abgerufen, läuft noch: <Name>" (`.collect-progress.json` im Datenordner, nur Quellennamen). Der erste Lauf überspringt die Quellen mit `erstlauf: spaeter`; sobald der erste Export steht, zeigt die App „Bereit", die langsamen Quellen laufen im Hintergrund (`--due`) und erscheinen mit dem nächsten Export (alle 5 Minuten). Spätere Zyklen holen nur noch fällige Quellen (`--due`), nicht mehr jede Quelle bei jedem Zyklus.
 
@@ -504,10 +481,11 @@ desktop/build-sidecar.sh && cd desktop && npm install --include=dev && npx tauri
 
 ### Windows-Installer
 
-Der Installer (NSIS, eine `Landblick - RLP_<Version>_x64-setup.exe`, rund 50 MB) wird auf einem Windows-Runner gebaut, nicht lokal: GitHub → Actions → **windows-installer** → *Run workflow*; nach rund 8 Minuten steht er im Lauf unter *Artifacts* (`landblick-windows-installer`, Zip mit der Setup.exe). Ein Tag `windows-v*` startet den Lauf ebenfalls. Lokal auf Windows: `powershell -File desktop\build-sidecar.ps1`, danach `cd desktop; npm install --include=dev; npx tauri build --bundles nsis` (Python 3.11+, Node 22, Rust und die Visual-Studio-Build-Tools nötig).
+Der Installer (NSIS, eine `Landblick - RLP_<Version>_x64-setup.exe`, rund 1,8 GB mit Basiskarte, Relief, Hangneigung und Felswänden) wird auf einem Windows-Runner gebaut, nicht lokal: GitHub → Actions → **windows-installer** → *Run workflow*. Die Kachelpakete lädt der Lauf vom Release `kacheln-1` (Eingabe `kacheln_tag`; `keine` baut einen Installer ohne Kacheln, rund 50 MB, der die Karte beim ersten Start holt). Nach der Bauzeit steht er im Lauf unter *Artifacts* (`landblick-windows-installer`, Zip mit der Setup.exe). Ein Tag `windows-v*` startet den Lauf ebenfalls. Lokal auf Windows: `powershell -File desktop\build-sidecar.ps1`, danach `cd desktop; npm install --include=dev; npx tauri build --bundles nsis` (Python 3.11+, Node 24, Rust und die Visual-Studio-Build-Tools nötig).
 
 - **Installation:** pro Benutzer (`currentUser`, ohne Administratorrechte), Deutsch, Eintrag im Startmenü und Deinstallation über „Apps“. Der Installer holt bei Bedarf WebView2 nach (Windows 11 hat es, Windows 10 braucht eine Internetverbindung dafür).
 - **Erster Start:** Die App öffnet die Einrichtungsseite, lädt die Karte für das ganze Gebiet (rund 1,5 GB, einmalig, wiederaufnehmbar) und beginnt zu sammeln. Daten und Zugangsdaten liegen in `%APPDATA%\de.thorin.landblick`; Deinstallieren lässt sie stehen (zum Zurücksetzen den Ordner löschen).
+- **Wenn etwas klemmt:** `%APPDATA%\de.thorin.landblick\logs\dienst.log` (rotierend, 5 Dateien zu 2 MB). Dort steht die Startzeile mit Version, System und Datenordner, dazu alles, was der Dienst und seine Kindprozesse (`app.collect`, `app.export`) melden. Die App hat unter Windows keine Konsole; ohne diese Datei wäre nichts davon zu sehen. Was einzelne Quellen angeht, steht auch auf der Seite „Status“.
 - **Nicht signiert:** Windows SmartScreen meldet „Der Computer wurde durch Windows geschützt“. *Weitere Informationen → Trotzdem ausführen*. Ein Code-Signing-Zertifikat ist offen.
 - **Nicht getestet auf echter Hardware:** Der Bau läuft durch, der Rauchtest des Sidecars (`app.region` im gebündelten Programm) ist Teil des Baus; der Lauf der App unter Windows ist beim ersten Test auf dem PC zu prüfen (Windows-Firewall-Abfrage für den lokalen Dienst, Pfade, Antivirus-Fehlalarme bei PyInstaller-Programmen).
 

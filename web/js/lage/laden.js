@@ -5,6 +5,7 @@ import { renderEvents } from './ereignisliste.js';
 import { pushAir } from './flugverkehr.js';
 import { pushMapData } from './messnetz.js';
 import { applyNature } from './natur.js';
+import { applyEnergie } from './energie.js';
 import { applyInfra, applyRoutes, applyStops } from './orte.js';
 import { renderGewaesser, renderUmwelt, renderWarnband, renderWetter, renderWxBand } from './panels.js';
 import { sourceLine } from './popup.js';
@@ -17,7 +18,7 @@ export const WARN_TYPES = ['warning', 'weather', 'flood', 'radiation', 'air', 'e
 
 // Flachdateien, die es immer gibt (landesweit oder klein); die Raumdaten kommen im Zellenbetrieb aus den Zellen (zellenlauf.js)
 const GLOBAL = ['meta', 'wetter', 'status', 'radar', 'wind', 'blitz', 'indizes'];
-const FLAT_SPATIAL = ['events', 'gewaesser', 'umwelt', 'haltestellen', 'landmarks', 'kraftstoff', 'infrastruktur', 'routen'];
+const FLAT_SPATIAL = ['events', 'gewaesser', 'umwelt', 'haltestellen', 'landmarks', 'kraftstoff', 'infrastruktur', 'routen', 'energie'];
 
 export async function refresh() {
   const cellMode = await ladeIndex();
@@ -38,6 +39,7 @@ export async function refresh() {
     state.fuel = got.kraftstoff ?? state.fuel;
     state.infra = got.infrastruktur ?? state.infra;
     state.routen = got.routen ?? state.routen;
+    state.energie = got.energie ?? state.energie;
   }
   if (!state.net) state.net = await getJSON('data/gewaessernetz.json').catch(() => null);   // statisch, einmal laden; fehlt sie, bleibt die flache Liste
   state.wx = got.wetter ?? state.wx;
@@ -83,10 +85,18 @@ export function render() {
   applyNature();
   applyInfra();
   applyRoutes();
+  applyEnergie();
   $('#count').textContent = `${state.events.length} Ereignisse`;
 }
 
 setzeAenderungsfunktion(render);
+
+/** Detailfenster nach Kartenbewegung neu füllen: nur, was im Ausschnitt liegt (ausschnitt.js). Entprellt. */
+let tAusschnitt = 0;
+export function detailNachBewegung() {
+  clearTimeout(tAusschnitt);
+  tAusschnitt = setTimeout(() => { renderEvents(state.statuses); renderGewaesser(); renderUmwelt(); }, 250);
+}
 
 export let timer;
 export const debounced = () => { clearTimeout(timer); timer = setTimeout(refresh, 800); };

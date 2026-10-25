@@ -3,10 +3,15 @@ import { PMTiles, Protocol } from '../../vendor/pmtiles/pmtiles.js';
 import { createFlow, registerArrow } from '../fluss.js';
 import { MIL_COLOUR, iconStatus, registerIcons, registerMedieval, registerSigns } from '../icons.js';
 import { registerInfra } from '../infra.js';
+import { ENERGIE_LAYER_IDS, registerEnergie } from './energie.js';
+import { initMessen, messenAktiv } from './messen.js';
 import { buildRainLegend } from '../legend.js';
 import { createLight } from '../licht.js';
 import { FAUNA_SOURCE, faunaPoints, registerFauna, registerMedievalPatterns } from '../medieval.js';
 import { ping as pingSound, silence as silenceSound, sizzle as sizzleSound, zap as zapSound } from '../ping-sound.js';
+import { detailNachBewegung } from './laden.js';
+import { initPlaketten, plakettenEbene } from './plakette.js';
+import { initFont } from './schrift.js';
 import { RELIEF_ATTRIBUTION, demTile, glyphsUrl, setupRelief } from '../relief.js';
 import { createRipples } from '../ripples.js';
 import { SWEEP_GREEN, createSweep } from '../sweep.js';
@@ -27,7 +32,7 @@ import { INFRA_LAYER_IDS } from './orte.js';
 import { showPopup } from './popup.js';
 import { initKontext } from './kontext.js';
 import { initSearch } from './suche-karte.js';
-import { applyWind, fillTempLegend, showFlowWind, trackLegendBottom } from './wetterkarte.js';
+import { applyWind, fillTempLegend, showFlowWind } from './wetterkarte.js';
 import { CORE_URL, GEB_JAHR, GEB_URL, RING_URL, START_VIEW, SYMBOL_LAYERS, TILES_URL, light, map, gebOk, reduceMotion, reliefOk, ripples, setBasemapOk, setCoreOk, setFlow, setGebOk, setHangOk, setKlippenOk, setLight, setMap, setMapReady, setPopup, setReliefOk, setRingOk, setRipples, setSweep, setWind, setWindLow, state, sweep, wind, windLow } from './zustand.js';
 
 // ------------------------------------------------------------------ Karte
@@ -73,10 +78,19 @@ export async function initMap() {
     maxBounds: RLP_RAHMEN,   // um Rheinland-Pfalz zentriert: ganz herausgezoomt sitzt das Land mittig, egal wo der Start liegt
   }));
   map.touchZoomRotate.disableRotation();
+  initFont();
+  map.on('moveend', detailNachBewegung);   // Detailfenster folgt dem Kartenausschnitt
   zentriereLand(map);
-  map.addControl(new NavigationControl({ showCompass: false }), 'top-right');
-  if (document.fullscreenEnabled || document.webkitFullscreenEnabled) map.addControl(new FullscreenControl({ container: document.querySelector('.map-wrap') }), 'top-right');      // Karte samt Cartouche, Windrose und Legende
-  map.addControl(new ScaleControl({ unit: 'metric' }), 'bottom-right');
+  // Werkzeugleiste unten mittig, wie ein Dock: Zoom, Vollbild, Messen und Maßstab in einer Glasleiste. Die Kartensteuerungen von MapLibre bauen ihre
+  // Knöpfe selbst (onAdd); wir hängen sie nur um, damit Beschriftung, Tastatur und Vollbildwechsel unverändert bleiben.
+  const dock = document.createElement('div');
+  dock.className = 'maplibregl-ctrl map-dock'; dock.setAttribute('role', 'toolbar'); dock.setAttribute('aria-label', 'Kartenwerkzeuge');
+  const sep = () => { const e = document.createElement('span'); e.className = 'dock-sep'; e.setAttribute('aria-hidden', 'true'); return e; };
+  dock.append(...new NavigationControl({ showCompass: false }).onAdd(map).querySelectorAll('button'), sep());
+  if (document.fullscreenEnabled || document.webkitFullscreenEnabled) dock.append(new FullscreenControl({ container: document.querySelector('.lage') }).onAdd(map).querySelector('button'));      // Vollbild für die ganze Lageseite: Karte samt Cartouche, Windrose, Legende, Menü und Detailfeld
+  map.getContainer().parentElement.append(dock);
+  initMessen(dock);
+  dock.append(sep(), new ScaleControl({ unit: 'metric' }).onAdd(map));
   setPopup(new Popup({ closeButton: true, maxWidth: '320px' }));
 
   await new Promise((res) => map.on('load', res));
@@ -100,7 +114,7 @@ export async function initMap() {
   state.signsOk = registerSigns(map);
   registerArrow(map);
   state.iconsOk = await registerIcons(map, palette());
-  try { registerMedieval(map); registerMedievalPatterns(map); registerFauna(map); registerInfra(map); map.addSource(FAUNA_SOURCE, { type: 'geojson', data: faunaPoints() }); } catch (err) { console.warn('Zeichen der historischen Karte fehlen:', err); }
+  try { registerMedieval(map); registerMedievalPatterns(map); registerFauna(map); registerInfra(map); registerEnergie(map); map.addSource(FAUNA_SOURCE, { type: 'geojson', data: faunaPoints() }); } catch (err) { console.warn('Zeichen der historischen Karte fehlen:', err); }
   if (!state.iconsOk) $('.map-note')?.append(` · Symbole nicht geladen, Ersatzdarstellung (${iconStatus.errors[0] ?? 'Dateien fehlen'})`);
   // Rückfall ohne Icons (Dateien fehlen): die früheren Kreise
   map.addLayer({ id: 'ev-point', type: 'circle', source: 'events', filter: ['==', ['geometry-type'], 'Point'],
@@ -127,19 +141,14 @@ export async function initMap() {
   // ohne dieses Feld (alter Export) je Rasterzelle. Von Einzelmeldungen wichtig nach unwichtig: Warnungen stehen schon hier als Punkte.
   map.addSource('dichte', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
   const LAND = ['==', ['get', 'level'], 'land'], KREIS = ['==', ['get', 'level'], 'kreis'];
-  const rad = (lo, hi) => ['interpolate', ['linear'], ['sqrt', ['get', 'n']], 1, lo, 60, hi];
-  const circ = (id, filter, r, minzoom, maxzoom) => map.addLayer({ id, type: 'circle', source: 'dichte', minzoom, maxzoom, filter,
-    layout: { 'circle-sort-key': ['*', -1, ['get', 'n']] },
-    paint: { 'circle-radius': r, 'circle-color': sevColor(c, 'sev'), 'circle-opacity': 0.88, 'circle-stroke-color': c.white, 'circle-stroke-width': 1.5 } });
-  const num = (id, filter, size, minzoom, maxzoom) => map.addLayer({ id, type: 'symbol', source: 'dichte', minzoom, maxzoom, filter,
-    layout: { 'text-field': ['to-string', ['get', 'n']], 'text-font': ['Noto Sans Regular'], 'text-size': size, 'text-allow-overlap': true },
-    paint: { 'text-color': ['match', ['get', 'sev'], 'warning', '#111', 'notice', '#111', c.white] } });   // dunkle Schrift auf Orange und Gelb (Kontrast), weiß auf Rot und Blau
   const name = (id, filter, size, off, minzoom, maxzoom) => map.addLayer({ id, type: 'symbol', source: 'dichte', minzoom, maxzoom, filter,
     layout: { 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Regular'], 'text-size': size, 'text-anchor': 'top', 'text-offset': off, 'text-optional': true,
       'symbol-sort-key': ['*', -1, ['get', 'n']], 'text-max-width': 8 },
     paint: { 'text-color': c.ink ?? '#222', 'text-halo-color': c.white, 'text-halo-width': 2, 'text-halo-blur': 0.3 } });
-  circ('dichte-land', LAND, rad(16, 34), 0, LAND_MAX_ZOOM);  num('dichte-land-zahl', LAND, 14, 0, LAND_MAX_ZOOM);  name('dichte-land-name', LAND, 13, [0, 2.2], 0, LAND_MAX_ZOOM);
-  circ('dichte-kreis', KREIS, rad(8, 22), LAND_MAX_ZOOM, KIND_MIN_ZOOM.events);  num('dichte-kreis-zahl', KREIS, 12, LAND_MAX_ZOOM, KIND_MIN_ZOOM.events);
+  // Kreis und Zahl als ein Bild, nach der Tinte der Ziffern zentriert (plakette.js); Radius wächst mit sqrt(n)
+  initPlaketten(c);
+  plakettenEbene('dichte-land', 'land', LAND, 0, LAND_MAX_ZOOM, c);  name('dichte-land-name', LAND, 13, [0, 2.2], 0, LAND_MAX_ZOOM);
+  plakettenEbene('dichte-kreis', 'kreis', KREIS, LAND_MAX_ZOOM, KIND_MIN_ZOOM.events, c);
   name('dichte-kreis-name', KREIS, 11, [0, 1.6], 7, KIND_MIN_ZOOM.events);
 
   // Luftverkehr: eigene Quelle, weil sie sich jede Sekunde bewegt
@@ -188,15 +197,16 @@ export async function initMap() {
     'text-size': 11, 'text-offset': [0, 1.2], 'text-anchor': 'top', 'text-optional': true },
     paint: { 'text-color': '#8a3d06', 'text-halo-color': '#fff', 'text-halo-width': 1.8 } });
 
-  for (const id of ['ev-fill', 'ev-outline', 'ev-line', 'ev-point', ...SYMBOL_LAYERS, 'air-circle', 'air-sym', 'st-circle', 'st-sym', 'env-circle', 'env-sym', 'tank-circle', 'tank-sym', ...INFRA_LAYER_IDS, 'routes-hit']) {
+  for (const id of ['ev-fill', 'ev-outline', 'ev-line', 'ev-point', ...SYMBOL_LAYERS, 'air-circle', 'air-sym', 'st-circle', 'st-sym', 'env-circle', 'env-sym', 'tank-circle', 'tank-sym', ...INFRA_LAYER_IDS, 'routes-hit', 'en-sym', 'en-line-hit']) {
     map.on('mouseenter', id, () => (map.getCanvas().style.cursor = 'pointer'));
     map.on('mouseleave', id, () => (map.getCanvas().style.cursor = ''));
   }
   map.on('click', (e) => {
-    const order = ['air-sym', 'air-circle', ...SYMBOL_LAYERS, ...INFRA_LAYER_IDS, 'routes-hit', 'ev-point', 'env-sym', 'env-circle', 'tank-sym', 'tank-circle', 'st-sym', 'st-circle', 'ev-line', 'ev-fill'];
+    if (messenAktiv()) return;   // Messwerkzeug an: Klicks setzen Punkte, keine Popups
+    const order = ['air-sym', 'air-circle', ...SYMBOL_LAYERS, ...INFRA_LAYER_IDS, 'en-sym', 'routes-hit', 'en-line-hit', 'en-area-fill', 'ev-point', 'env-sym', 'env-circle', 'tank-sym', 'tank-circle', 'st-sym', 'st-circle', 'ev-line', 'ev-fill'];
     const hit = map.queryRenderedFeatures(e.point, { layers: order.filter((l) => map.getLayer(l)) })[0];
     if (!hit) return;
-    showPopup(hit.properties, hit.layer.id === 'routes-hit' ? 'route' : hit.layer.id.startsWith('inf-') ? 'infra' : hit.layer.id.startsWith('tank-') ? 'tank' : hit.layer.id.startsWith('st-') ? 'station' : hit.layer.id.startsWith('env-') ? 'env' : 'event', e.lngLat);
+    showPopup(hit.properties, hit.layer.id === 'routes-hit' ? 'route' : hit.layer.id.startsWith('inf-') ? 'infra' : hit.layer.id.startsWith('en-') ? 'energie' : hit.layer.id.startsWith('tank-') ? 'tank' : hit.layer.id.startsWith('st-') ? 'station' : hit.layer.id.startsWith('env-') ? 'env' : 'event', e.lngLat);
   });
 
   map.fitBounds(RLP_BBOX, { padding: 24, animate: false });   // Start: ganz Rheinland-Pfalz, mittig (das Gebiet steht fest, es gibt keinen gewählten Mittelpunkt)
@@ -220,7 +230,6 @@ export async function initMap() {
   const windBar = $('#wind-bar'); if (windBar) fillWindLegend(windBar);
   const windBarLow = $('#wind-bar-low'); if (windBarLow) fillWindLegend(windBarLow, undefined, true);
   fillTempLegend();
-  trackLegendBottom();
   buildRainLegend($('#rain-strip'), $('#rain-labels'));
   setSweep(createSweep(map, { center: state.meta.center, radiusKm: state.meta.radius_km, mil: MIL_COLOUR, reducedMotion: reduceMotion, onPing: (e) => (e.zap ? zapSound(e) : pingSound(e)) }));
   const laserBtn = $('#laser');   // Radarstrahl als Laser: verdampft den Regen, der fällt später wieder herab

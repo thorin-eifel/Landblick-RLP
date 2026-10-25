@@ -32,24 +32,6 @@ export function applyRadarVisibility() {
 }
 // Zeichenerklärung: je aktiver Ebene ein Abschnitt (Regenradar, Wind, Blitze, Verkehr, Luftverkehr)
 // Legendenleiste der Wetterstationen: dieselben Farbfelder wie die Symbole, ausgeschnitten auf -20 bis 40 °C
-// Legende neben den Details: gleiche Unterkante wie die Detailkarte. Die Karte ist oben verankert und so hoch wie ihr Inhalt, ihre Unterkante
-// lässt sich nur messen. Gesetzt wird --legend-bottom (Abstand zur Unterkante der Karte); ohne Messwert gilt der Standard im CSS.
-export function trackLegendBottom() {
-  const side = $('#side'), legend = $('#map-legend'), wrap = document.querySelector('.map-wrap');
-  if (!side || !legend || !wrap || !window.ResizeObserver) return;
-  const set = () => {
-    const wide = window.matchMedia('(min-width: 1001px)').matches, min = side.dataset.min === 'true';
-    if (!wide || min) { wrap.style.removeProperty('--legend-bottom'); return; }
-    const w = wrap.getBoundingClientRect(), r = side.getBoundingClientRect();
-    const gap = Math.max(0, Math.round(w.bottom - r.bottom));
-    wrap.style.setProperty('--legend-bottom', `${gap}px`);
-  };
-  const ro = new ResizeObserver(set);
-  ro.observe(side); ro.observe(wrap);
-  new MutationObserver(set).observe(side, { attributes: true, attributeFilter: ['data-min'] });
-  window.addEventListener('resize', set);
-  set();
-}
 export function fillTempLegend() {
   const bar = $('#temp-bar'); if (!bar) return;
   const stops = TEMP_COLOURS.map((c, k) => [TEMP_MIN + TEMP_STEP * k, c]).filter(([t]) => t >= -23 && t <= 43);

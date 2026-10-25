@@ -6,7 +6,7 @@ Stand 9. Oktober 2026. Teil A ist der Ablaufplan. Der Prompt für Claude Code st
 
 ### Ausgangslage
 
-Heute deckt das Lagebild einen Kreis von 120 km um Irrel ab. Rund 40 Quellen laufen über Python-Sammler in eine SQLite-Datenbank, ein Export schreibt JSON-Dateien, ein statisches Frontend (Vanilla-JS, MapLibre, eigene PMTiles-Karte) liest sie vom IONOS-Webspace. Es gibt eine Desktop-Hülle (Tauri) mit lokalem Dienst. Die Kartendateien sind zusammen etwa 530 MB groß, die Startseite braucht noch 30 bis 45 Sekunden, bis die Karte steht.
+Heute deckt das Lagebild einen Kreis von 120 km um Irrel ab. Rund 40 Quellen laufen über Python-Sammler in eine SQLite-Datenbank, ein Export schreibt JSON-Dateien, ein Frontend (Vanilla-JS, MapLibre, eigene PMTiles-Karte) liest sie vom lokalen Dienst. Ausgeliefert wird als Desktop-App (Tauri-Hülle um den lokalen Dienst). Die Kartendateien sind zusammen etwa 530 MB groß, die Startseite braucht noch 30 bis 45 Sekunden, bis die Karte steht.
 
 Was wir beim Arbeiten gelernt haben und was den Plan prägt:
 

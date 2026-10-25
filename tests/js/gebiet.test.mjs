@@ -34,3 +34,13 @@ test('Land wechseln verwirft unpassenden Kreis, Kreis wählen setzt das Land', (
   assert.deepEqual(kreisWaehlen(GEBIET_LEER, '10041', kreise), { land: 'DE-SL', ars: '10041' });
   assert.deepEqual(kreisWaehlen({ land: 'DE-SL', ars: '10041' }, '', kreise), { land: 'DE-SL', ars: '' });
 });
+
+test('gebietAusEinheit: Kreis- und Landschlüssel der Übersichtszahlen', async () => {
+  const { gebietAusEinheit } = await import('../../web/js/gebiet.js');
+  const kreise = [{ ars: '07232', name: 'Eifelkreis Bitburg-Prüm', land: 'DE-RP' }];
+  assert.deepEqual(gebietAusEinheit('kreis:07232', kreise), { land: 'DE-RP', ars: '07232' });
+  assert.deepEqual(gebietAusEinheit('land:LU', kreise), { land: 'LU', ars: '' });
+  assert.equal(gebietAusEinheit('kreis:99999', kreise), null);
+  assert.equal(gebietAusEinheit('quatsch', kreise), null);
+  assert.equal(gebietAusEinheit(undefined, kreise), null);
+});

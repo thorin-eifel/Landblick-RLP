@@ -211,3 +211,37 @@ async def test_osm_natur_queries_every_tile_and_dedupes(registry, storage, setti
     n_tiles = len(osm_tiles.tiles())
     assert n_tiles >= 2 and len(router.calls) == n_tiles
     assert len(items) <= 1
+
+
+async def test_tank_zeiger_besucht_alle_punkte_auch_bei_unregelmaessigem_takt(registry, storage, settings, monkeypatch):
+    """Befund M3: Rotation nach der Uhr ließ Punkte aus, wenn die Läufe nicht im Intervall kamen."""
+    monkeypatch.setenv("TANKERKOENIG_API_KEY", "k-test")
+    monkeypatch.setattr(tankerkoenig, "REGION", SimpleNamespace(mode="polygon"))
+    entry = registry.get("tankerkoenig")
+    asked = []
+
+    def h(req):
+        asked.append((req.url.params["lat"], req.url.params["lng"]))
+        return httpx.Response(200, json=_tank_reply(1))
+
+    n = len(tankerkoenig.query_points(entry.params))
+    for t in (1000, 1300, 1600, 1900, 2200, 2500, 2800) * 2 + (3100,) * n:   # 300-s-Takt statt 120 s
+        monkeypatch.setattr(tankerkoenig.time, "time", lambda t=t: float(t))
+        client, _ = make_client(h)
+        c = tankerkoenig.COLLECTOR(entry, storage, client, settings, backoff_base_s=0.0)
+        c.pause_s = 0
+        await c.collect()
+        await client.aclose()
+    # nach dem ersten Lauf bestimmt der Zeiger, nicht die Uhr: die letzten n Läufe decken alle Punkte ab
+    assert len(set(asked[-n:])) == n
+
+
+async def test_fetch_text_lehnt_weiterleitung_ab(registry, storage, settings):
+    """Befund M4: ein 3xx-Rumpf darf nicht als Text durchgehen."""
+    from app.collectors.base import SourceError
+    entry = registry.get("tankerkoenig")
+    client, _ = make_client(lambda req: httpx.Response(301, headers={"location": "https://example.invalid/x"}, text="moved"))
+    c = tankerkoenig.COLLECTOR(entry, storage, client, settings, backoff_base_s=0.0)
+    with pytest.raises(SourceError, match="Weiterleitung"):
+        await c.fetch_text("https://example.invalid/a?key=SECRET", secrets=("SECRET",))
+    await client.aclose()

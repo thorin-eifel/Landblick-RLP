@@ -43,8 +43,20 @@ def load_dotenv(path: Path | None = None) -> int:
     return n
 
 
+def load_zugang(path: Path | None = None) -> int:
+    """Zugangsdaten aus data/zugang.json (Eingabe in der Quellenübersicht) in die Umgebung; .env und Shell gewinnen. Werte werden nie geloggt."""
+    from .zugang import env_from_file
+    n = 0
+    for key, value in env_from_file(path or Path(os.environ.get("LANDBLICK_ZUGANG", BASE_DIR / "data" / "zugang.json"))).items():
+        if key not in os.environ:
+            os.environ[key] = value
+            n += 1
+    return n
+
+
 if not os.environ.get("LANDBLICK_NO_DOTENV"):
     load_dotenv()
+    load_zugang()
 
 # Räumlicher Zuschnitt kommt aus region.yaml (app/region.py), nicht mehr aus Konstanten. Erst nach .env laden,
 # damit LANDBLICK_REGION und LANDBLICK_CENTER_* aus der Datei wirken.

@@ -20,8 +20,6 @@ Sie stehen in `.env` im Projektordner (nicht im Repository, Vorlage `.env.exampl
 | `LANDBLICK_LIVE` | – | `1`: der Live-Dienst übernimmt schnelle Quellen, der Zyklus lässt sie aus |
 | `TANKERKOENIG_API_KEY` | – | Schlüssel für Spritpreise Deutschland |
 | `FIRMS_MAP_KEY` | – | Schlüssel für NASA FIRMS |
-| `PUBLISH_ENABLED` | – | `1`: der Zyklus lädt Änderungen hoch (nur wenn Upload eingerichtet ist) |
-| `IONOS_SFTP_HOST`, `_USER`, `_KEY`, `_PASSWORD`, `IONOS_REMOTE_DIR` | – | Zugang zum Webspace für den Upload |
 
 ## 10.2 Befehle
 
@@ -34,11 +32,11 @@ Sie stehen in `.env` im Projektordner (nicht im Repository, Vorlage `.env.exampl
 | `python -m app.export` | Export schreiben (`--out`, `--db`, `--no-cells`, `--no-legacy`) |
 | `python -m app.region` | Gebiet anzeigen |
 | `python -m app.live` | Live-Dienst |
-| `python tools/zyklus.py` | ein Zyklus: Abruf, Export, optional Upload |
+| `python tools/zyklus.py` | ein Zyklus: Abruf und Export |
 | `python tools/gesundheit.py` | Gesundheitsprüfung (`--json`) |
 | `python tools/backup.py --out DIR --keep 14 --verify-after` | Sicherung |
 | `python tools/dauerlauf.py sample / note / report` | 7-Tage-Lauf |
-| `python deploy/serve-local.py --dir web --port 8080 --bind 127.0.0.1` | lokaler Webserver |
+| `python tools/serve-local.py --dir web --port 8080 --bind 127.0.0.1` | lokaler Webserver |
 | `python install.py --status / --deinstall / --dry-run` | Installer verwalten |
 | `python tools/update_readme.py [--check]` | Stand der README erzeugen oder prüfen |
 | `python tools/handbuch.py` | dieses Handbuch bauen (`--check` prüft die Quellentabelle) |
@@ -80,8 +78,8 @@ Sie stehen in `.env` im Projektordner (nicht im Repository, Vorlage `.env.exampl
 
 ## 10.6 Glossar
 
-**ARS** – amtlicher Regionalschlüssel. **Collector / Sammler** – Modul, das eine Quelle abruft. **Delta-Upload** – nur geänderte Dateien hochladen. **Export** – fertige JSON-Dateien für das Frontend. **Lagebild** – Überblick über die Lage einer Region. **PMTiles** – ein Kartenarchiv in einer Datei, das der Browser stückweise liest. **Quellenregister** – `sources.yaml`. **Region** – das Gebiet in `region.yaml`. **WAL** – Write-Ahead-Log, SQLite-Modus, in dem Lesen und Schreiben sich nicht blockieren. **WMS** – Dienst für Kartenbilder.
+**ARS** – amtlicher Regionalschlüssel. **Collector / Sammler** – Modul, das eine Quelle abruft. **Export** – fertige JSON-Dateien für das Frontend. **Lagebild** – Überblick über die Lage einer Region. **PMTiles** – ein Kartenarchiv in einer Datei, das der Browser stückweise liest. **Quellenregister** – `sources.yaml`. **Region** – das Gebiet in `region.yaml`. **WAL** – Write-Ahead-Log, SQLite-Modus, in dem Lesen und Schreiben sich nicht blockieren. **WMS** – Dienst für Kartenbilder.
 
 ## 10.7 Versionen und Lizenz
 
-Version 1.0.0-alpha.1. Lizenz GPL-3.0 (siehe `LICENSE`). Daten haben die Lizenzen ihrer Quellen (Kapitel 4). Autor und Betreiber: Thorsten Schleicher, Ferschweiler.
+Version 1.0.0-beta.1. Lizenz GPL-3.0 (siehe `LICENSE`). Daten haben die Lizenzen ihrer Quellen (Kapitel 4). Autor und Betreiber: Thorsten Schleicher, Ferschweiler.

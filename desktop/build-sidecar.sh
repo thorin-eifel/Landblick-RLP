@@ -15,17 +15,20 @@ mkdir -p "${BIN}"
 
 WORK="$(mktemp -d)"; trap 'rm -rf "${WORK}"' EXIT
 python3 -m venv "${WORK}/venv"; PY="${WORK}/venv/bin/python"; [[ -x "${PY}" ]] || PY="${WORK}/venv/Scripts/python.exe"
-"${PY}" -m pip install -q -r "${ROOT}/requirements.txt" "pyinstaller==6.*"
+"${PY}" -m pip install -q -r "${ROOT}/requirements.txt" "pyinstaller==6.*" "shapely==2.2.0" "pmtiles==3.8.1"   # shapely, pmtiles: Kartenbau beim ersten Start (tools/build_region_tiles.py)
 
 # Weboberfläche ohne Beispieldaten und ohne Höhenkacheln
 mkdir -p "${WORK}/web"
 rsync -a --exclude 'data/' --exclude 'tiles/' "${ROOT}/web/" "${WORK}/web/"
 SEP=":"; [[ "${TRIPLE}" == *windows* ]] && SEP=";"
 ( cd "${ROOT}" && "${PY}" -m PyInstaller --onefile --name landblick-core --distpath "${WORK}/dist" --workpath "${WORK}/build" --specpath "${WORK}" \
-    --paths "${ROOT}" --collect-submodules app --collect-data app --collect-data certifi \
+    --paths "${ROOT}" --collect-submodules app --collect-data app --collect-data certifi --collect-all shapely --collect-submodules pmtiles \
+    --add-data "${ROOT}/tools/build_region_tiles.py${SEP}tools" --add-data "${ROOT}/tools/tile_cores.yaml${SEP}tools" \
     --add-data "${WORK}/web${SEP}web" --add-data "${ROOT}/sources.yaml${SEP}." --add-data "${ROOT}/region.yaml${SEP}." app/desktop.py )
 # Rauchtest: das Paket muss Region und Quellenregister finden (fehlende Datendateien fielen sonst erst im Betrieb auf)
 ( cd "${WORK}" && LANDBLICK_NO_DOTENV=1 "${WORK}/dist/landblick-core${EXT}" --run app.region >/dev/null ) || die "Rauchtest fehlgeschlagen: app.region lässt sich im Paket nicht laden"
+# Zweiter Rauchtest: der Kartenbau (Python-Pakete und Dateien im Paket), ohne Netz
+( cd "${WORK}" && LANDBLICK_NO_DOTENV=1 "${WORK}/dist/landblick-core${EXT}" --run tools.build_region_tiles --dry-run >/dev/null 2>&1 ) || die "Rauchtest fehlgeschlagen: tools.build_region_tiles lässt sich im Paket nicht ausführen"
 cp "${WORK}/dist/landblick-core${EXT}" "${BIN}/landblick-core-${TRIPLE}${EXT}"
 
 # pmtiles-CLI (go-pmtiles)

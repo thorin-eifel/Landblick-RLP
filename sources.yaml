@@ -436,7 +436,7 @@ sources:
       OpenStreetMap bereits. Fair-Use der Overpass-Instanz: 25 kurze Abfragen je Woche mit Pause und ehrlichem User-Agent.
       Gespeichert werden nur Art, Koordinate, OSM-Kennung und ein Sachwert (Leistung, Zahl der Ladepunkte, Name der Feuerwache
       oder des Krankenhauses). Schulen und Rathäuser mit dem Namen der Einrichtung, Friedhöfe nur als Mittelpunkt ohne Namen. Defibrillatoren nur als Standort, ohne Name, Betreiber, Kontakt oder Freitext. Keine Adressen,
-      keine Bearbeiternamen. Friedhöfe, Mühlen, Brunnen, Grenzsteine, Wegkreuze, Rast- und Schutzhütten-Punkte bekommen bewusst keinen Namen (Familiennamen, Stifter). Sirenen, Hydranten, Umspannwerke und Wasserwerke sind mit Absicht nicht enthalten.
+      keine Bearbeiternamen. Friedhöfe, Mühlen, Brunnen, Grenzsteine, Wegkreuze, Rast- und Schutzhütten-Punkte bekommen bewusst keinen Namen (Familiennamen, Stifter). Sirenen, Hydranten und Wasserwerke sind mit Absicht nicht enthalten; Umspannwerke, Kraftwerke und Leitungen führt seit Oktober 2026 die Quelle osm_energie (Entscheidung des Betreibers, nur Übertragungsnetz ab 110 kV).
       Die Angaben stammen von Mitwirkenden und sind unvollständig; die Karte ersetzt weder das Defibrillator-Register noch den Notruf 112.
     namensnennung: "© OpenStreetMap-Mitwirkende (ODbL)"
     intervall: 604800
@@ -448,6 +448,59 @@ sources:
     zuletzt_geprüft: "2026-10-08"
     erstlauf: spaeter
     collector: osm_infra
+
+  - id: sgdnord_energie
+    name: "Windenergieanlagen und Freiflächen-Photovoltaik (SGD Nord, Raumordnungskataster RLP)"
+    kurzname: Wind und Solar (SGD Nord)
+    betreiber: Struktur- und Genehmigungsdirektion Nord, Obere Landesplanungsbehörde (Raumordnungskataster ROK25 Online); Bereitstellung über das Geoportal Rheinland-Pfalz
+    url: https://www.geoportal.rlp.de/spatial-objects/539
+    lizenz: Datenlizenz Deutschland Namensnennung 2.0 (dl-de/by-2.0)
+    lizenz_geprueft: true
+    lizenz_hinweis: >-
+      Lizenz und Quellenvermerk stehen in den Metadaten der beiden Datensätze im Geoportal RLP (geprüft am 2026-10-16:
+      "dl-de-by-2.0, Quelle: Raumordnungskataster ROK25 Online SGD Nord Koblenz"). Der Sammlungskopf der OGC-API-Schnittstelle meldet
+      dagegen "license: none"; maßgeblich ist die Metadatenangabe, bei Zweifel beim Ansprechpartner der SGD Nord nachfragen (Referat 41).
+      Gebiet: Verwaltungsbereich der SGD Nord (Norden von Rheinland-Pfalz, etwa 2.600 Windräder, 490 Freiflächenanlagen). Für den Süden
+      (SGD Süd) wurde kein offener Dienst gefunden; dort zeigt die Karte OpenStreetMap. Gespeichert werden nur Koordinate, Nennleistung,
+      Höhen, Stand des Verfahrens (am Netz, genehmigt, beantragt) und Gemeinde; Betreiber, Typbezeichnung, Aktenlinks und Antragsdaten
+      bleiben weg (Betreiber können Privatpersonen sein). Aufgegebene, abgelehnte, zurückgebaute und stillgelegte Anlagen werden nicht gezeigt.
+      Wasserkraftanlagen und Bioenergie derselben Dienstgruppe sind nicht eingebunden: Wasserkraft trägt "Bedingungen unbekannt, behördenintern".
+    namensnennung: "Quelle: Raumordnungskataster ROK25 Online SGD Nord Koblenz (Datenlizenz Deutschland Namensnennung 2.0)"
+    intervall: 86400
+    ratenlimit: nicht veröffentlicht; zwei Abrufe (ca. 1,8 MB und 0,6 MB) je Tag
+    auth: keine
+    geo_bezug: Objekte in der Region (Feinfilter am Rand)
+    datenschutz_risiko: niedrig
+    aktiv: true
+    zuletzt_geprüft: "2026-10-16"
+    erstlauf: spaeter
+    collector: rlp_energie
+
+  - id: osm_energie
+    name: "Energie (OpenStreetMap: Kraftwerke, Solarparks, Umspannwerke, Transformatoren, Hochspannungsleitungen)"
+    kurzname: Energie
+    betreiber: OpenStreetMap-Mitwirkende; Abfrage über die Overpass API (overpass-api.de)
+    url: https://overpass-api.de/api/interpreter
+    lizenz: ODbL 1.0 (© OpenStreetMap-Mitwirkende)
+    lizenz_geprueft: false
+    lizenz_hinweis: >-
+      ODbL verlangt Namensnennung und Weitergabe abgeleiteter Datenbanken unter gleichen Bedingungen; die Kartenquelle nennt
+      OpenStreetMap bereits. Fair-Use der Overpass-Instanz: vier Abfragen je Kachel und Woche mit Pause und ehrlichem User-Agent.
+      Amtliche Netzdaten gibt es nicht offen (Betreiber, kritische Infrastruktur); OpenStreetMap ist die einzige offene Quelle für Leitungen
+      und Umspannwerke. Auswahl: Übertragungsnetz ab 110 kV (Leitungen, Umspannwerke, Transformatoren), Kraftwerke (power=plant) und Solarparks.
+      Mittelspannung, Masten, Ortsnetzstationen und Erdkabel fehlen mit Absicht. Gespeichert werden Art, Koordinate oder vereinfachte Linie,
+      OSM-Kennung, Spannung und Leistung; Namen nur bei technischen Bezeichnungen (Kraftwerk, Umspannwerk, Talsperre), nie bei Solar- und
+      Biogasanlagen. Die Angaben stammen von Mitwirkenden, sind unvollständig und nicht amtlich; die Karte ersetzt keine Netzauskunft.
+    namensnennung: "© OpenStreetMap-Mitwirkende (ODbL)"
+    intervall: 604800
+    ratenlimit: Fair Use; vier Abfragen je Kachel und Woche (Leitungen bis etwa 20 MB)
+    auth: keine
+    geo_bezug: Objekte in der Region
+    datenschutz_risiko: niedrig
+    aktiv: true
+    zuletzt_geprüft: "2026-10-16"
+    erstlauf: spaeter
+    collector: osm_energie
 
   - id: osm_anbau
     name: "Weinberge und Obstanlagen (OpenStreetMap)"

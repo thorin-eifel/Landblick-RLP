@@ -1,16 +1,19 @@
+import { PIG } from './pigmente.js';
 // Infrastruktur-Zeichen (Windrad, Ladesäule, Defibrillator, Feuerwache, Krankenhaus) und ihre Karteneben-Beschreibung.
 // Alles eigene Zeichnung auf Canvas, keine Vorlage, nichts wird nachgeladen. Daten: infrastruktur.json (OpenStreetMap über Overpass, wöchentlich).
-// Karte um 1450: nur Windmühle (statt Windrad) und Spital (statt Krankenhaus); Ladesäule, Defibrillator und Feuerwache gab es nicht und werden dort ausgeblendet.
+// Alte Karte: nur Windmühle (statt Windrad) und Spital (statt Krankenhaus); Ladesäule, Defibrillator und Feuerwache gab es nicht und werden dort ausgeblendet.
 // Aufrufer: lage.js (initMap: registerInfra, applyInfra).
 export const INFRA_KINDS = ['wind', 'charging', 'aed', 'fire_station', 'hospital', 'weir', 'lock', 'bridge', 'tunnel', 'ferry', 'picnic', 'shelter', 'bathing', 'school', 'townhall', 'cemetery'];
-export const SACRAL_KINDS = ['church', 'chapel', 'cross', 'shrine', 'watermill', 'windmill', 'ford', 'border', 'gallows', 'well'];   // nur auf der Karte um 1450 gezeichnet
-export const INFRA_WORD = { wind: 'Windrad', charging: 'Ladesäule', aed: 'Defibrillator (AED)', fire_station: 'Feuerwache', hospital: 'Krankenhaus', weir: 'Wehr', lock: 'Schleuse', bridge: 'Brücke', tunnel: 'Tunnel', ferry: 'Fähranleger', picnic: 'Rastplatz', shelter: 'Schutzhütte', bathing: 'Badestelle', church: 'Kirche', chapel: 'Kapelle', cross: 'Wegkreuz', shrine: 'Bildstock', school: 'Schule', townhall: 'Rathaus', cemetery: 'Friedhof' };
+export const SACRAL_KINDS = ['church', 'chapel', 'cross', 'shrine', 'watermill', 'windmill', 'ford', 'border', 'gallows', 'well'];   // Kultur und Geschichte; Datei sakral.json, in jeder Darstellung wählbar
+export const SACRAL_LAYERS = ['herChurch', 'herChapel', 'herCross', 'herMill', 'herFord', 'herBorder', 'herGallows', 'herWell'];   // Schalter dieser Arten
+export const sakralAn = (layers) => SACRAL_LAYERS.some((n) => layers[n]);
+export const INFRA_WORD = { wind: 'Windrad', charging: 'Ladesäule', aed: 'Defibrillator (AED)', fire_station: 'Feuerwache', hospital: 'Krankenhaus', weir: 'Wehr', lock: 'Schleuse', bridge: 'Brücke', tunnel: 'Tunnel', ferry: 'Fähranleger', picnic: 'Rastplatz', shelter: 'Schutzhütte', bathing: 'Badestelle', church: 'Kirche', chapel: 'Kapelle', cross: 'Wegkreuz', shrine: 'Bildstock', watermill: 'Wassermühle', windmill: 'Windmühle', ford: 'Furt', border: 'Grenzstein', gallows: 'Richtstätte', well: 'Brunnen', school: 'Schule', townhall: 'Rathaus', cemetery: 'Friedhof' };
 export const INFRA_WORD_MED = { wind: 'Windmühle', hospital: 'Spital', watermill: 'Mühle', windmill: 'Windmühle', ford: 'Furt', ferry: 'Fähre', gallows: 'Galgen', border: '', well: '' };
 export const INFRA_COLOR = { wind: '#0f766e', charging: '#0369a1', aed: '#15803d', fire_station: '#8b1e3f', hospital: '#1e3a8a',
   weir: '#0e7490', lock: '#0e7490', ferry: '#0e7490', bridge: '#52525b', tunnel: '#52525b', picnic: '#a16207', shelter: '#a16207', bathing: '#0284c7', school: '#be185d', townhall: '#475569', cemetery: '#4d7c0f' };
 export const INFRA_MEDIEVAL = new Set(['wind', 'hospital', 'church', 'chapel', 'cross', 'shrine', 'watermill', 'windmill', 'ford', 'border', 'gallows', 'well', 'ferry', 'bridge']);   // Arten, die es auch auf der Karte um 1450 gibt (als Windmühle und Spital)
 const PX = 56;            // Plakette 28 px auf dem Schirm bei Pixelverhältnis 2
-const INK = '#3a2614', PAPER = '#efe0b0', ROOF = '#a33a22', STONE = '#d9c68f';
+
 
 const canvas = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d', { willReadFrequently: true }); x.lineCap = 'round'; x.lineJoin = 'round'; return x; };
 const put = (map, id, data) => { if (map.hasImage(id)) map.updateImage(id, data); else map.addImage(id, data, { pixelRatio: 2 }); };
@@ -109,61 +112,61 @@ function medDraw(kind) {
   const x = canvas(S, S);
   const P = (pts, fill, w = 1.4) => {
     x.beginPath(); pts.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); x.closePath();
-    x.lineWidth = 5; x.strokeStyle = PAPER; x.stroke(); x.fillStyle = fill; x.fill(); x.lineWidth = w; x.strokeStyle = INK; x.stroke();
+    x.lineWidth = 5; x.strokeStyle = PIG.paper; x.stroke(); x.fillStyle = fill; x.fill(); x.lineWidth = w; x.strokeStyle = PIG.ink; x.stroke();
   };
   if (kind === 'wind' || kind === 'windmill') {
-    P([[14, 41], [18, 19], [26, 19], [30, 41]], PAPER); P([[16, 19], [22, 10], [28, 19]], ROOF);
-    P([[20, 41], [20, 34], [24, 34], [24, 41]], INK);
+    P([[14, 41], [18, 19], [26, 19], [30, 41]], PIG.paper); P([[16, 19], [22, 10], [28, 19]], PIG.roof);
+    P([[20, 41], [20, 34], [24, 34], [24, 41]], PIG.ink);
     for (const [a, b] of [[22, 15, 7, 2], [22, 15, 37, 28], [22, 15, 37, 2], [22, 15, 7, 28]].map(([cx, cy, ex, ey]) => [[cx, cy], [ex, ey]])) {
-      x.beginPath(); x.moveTo(a[0], a[1]); x.lineTo(b[0], b[1]); x.lineWidth = 4.4; x.strokeStyle = PAPER; x.stroke(); x.lineWidth = 1.8; x.strokeStyle = INK; x.stroke();
+      x.beginPath(); x.moveTo(a[0], a[1]); x.lineTo(b[0], b[1]); x.lineWidth = 4.4; x.strokeStyle = PIG.paper; x.stroke(); x.lineWidth = 1.8; x.strokeStyle = PIG.ink; x.stroke();
     }
   } else if (kind === 'watermill') {   // Mühlhaus mit Wasserrad
-    P([[6, 40], [6, 20], [26, 20], [26, 40]], PAPER); P([[3, 20], [16, 9], [29, 20]], ROOF);
-    x.beginPath(); x.arc(33, 30, 9, 0, Math.PI * 2); x.lineWidth = 4.4; x.strokeStyle = PAPER; x.stroke(); x.lineWidth = 1.8; x.strokeStyle = INK; x.stroke();
+    P([[6, 40], [6, 20], [26, 20], [26, 40]], PIG.paper); P([[3, 20], [16, 9], [29, 20]], PIG.roof);
+    x.beginPath(); x.arc(33, 30, 9, 0, Math.PI * 2); x.lineWidth = 4.4; x.strokeStyle = PIG.paper; x.stroke(); x.lineWidth = 1.8; x.strokeStyle = PIG.ink; x.stroke();
     x.lineWidth = 1.4; for (let a = 0; a < 6; a++) { const t = (a * Math.PI) / 3; x.beginPath(); x.moveTo(33, 30); x.lineTo(33 + Math.cos(t) * 9, 30 + Math.sin(t) * 9); x.stroke(); }
-    P([[13, 40], [13, 31], [18, 31], [18, 40]], INK);
+    P([[13, 40], [13, 31], [18, 31], [18, 40]], PIG.ink);
   } else if (kind === 'ford') {   // Furt: zwei Wellenlinien und Trittsteine
-    x.lineWidth = 5; x.strokeStyle = PAPER; x.beginPath(); x.moveTo(5, 18); x.bezierCurveTo(13, 12, 19, 24, 27, 18); x.bezierCurveTo(33, 13, 37, 21, 40, 18); x.moveTo(5, 30); x.bezierCurveTo(13, 24, 19, 36, 27, 30); x.bezierCurveTo(33, 25, 37, 33, 40, 30); x.stroke();
-    x.lineWidth = 1.6; x.strokeStyle = INK; x.stroke();
-    x.fillStyle = INK; for (const [a, b] of [[12, 24], [20, 24], [28, 24], [36, 24]]) { x.beginPath(); x.arc(a, b, 2.4, 0, Math.PI * 2); x.fill(); }
+    x.lineWidth = 5; x.strokeStyle = PIG.paper; x.beginPath(); x.moveTo(5, 18); x.bezierCurveTo(13, 12, 19, 24, 27, 18); x.bezierCurveTo(33, 13, 37, 21, 40, 18); x.moveTo(5, 30); x.bezierCurveTo(13, 24, 19, 36, 27, 30); x.bezierCurveTo(33, 25, 37, 33, 40, 30); x.stroke();
+    x.lineWidth = 1.6; x.strokeStyle = PIG.ink; x.stroke();
+    x.fillStyle = PIG.ink; for (const [a, b] of [[12, 24], [20, 24], [28, 24], [36, 24]]) { x.beginPath(); x.arc(a, b, 2.4, 0, Math.PI * 2); x.fill(); }
   } else if (kind === 'ferry') {   // Fähre: Kahn mit Mast
-    P([[6, 28], [38, 28], [32, 38], [12, 38]], PAPER); x.strokeStyle = INK; x.lineWidth = 1.8; x.beginPath(); x.moveTo(22, 28); x.lineTo(22, 7); x.stroke();
-    P([[22, 8], [34, 24], [22, 24]], PAPER);
+    P([[6, 28], [38, 28], [32, 38], [12, 38]], PIG.paper); x.strokeStyle = PIG.ink; x.lineWidth = 1.8; x.beginPath(); x.moveTo(22, 28); x.lineTo(22, 7); x.stroke();
+    P([[22, 8], [34, 24], [22, 24]], PIG.paper);
     x.lineWidth = 1.4; x.beginPath(); x.moveTo(5, 42); x.bezierCurveTo(12, 38, 17, 45, 23, 42); x.bezierCurveTo(29, 38, 34, 45, 40, 42); x.stroke();
   } else if (kind === 'border') {   // Grenzstein: kleiner Pfeiler mit Kreuzzeichen
-    P([[14, 41], [15, 18], [22, 12], [29, 18], [30, 41]], STONE);
-    x.strokeStyle = INK; x.lineWidth = 1.6; x.beginPath(); x.moveTo(22, 20); x.lineTo(22, 31); x.moveTo(17.5, 25); x.lineTo(26.5, 25); x.stroke();
+    P([[14, 41], [15, 18], [22, 12], [29, 18], [30, 41]], PIG.stone);
+    x.strokeStyle = PIG.ink; x.lineWidth = 1.6; x.beginPath(); x.moveTo(22, 20); x.lineTo(22, 31); x.moveTo(17.5, 25); x.lineTo(26.5, 25); x.stroke();
   } else if (kind === 'gallows') {   // Galgen: Pfosten, Balken, Strebe
-    x.lineCap = 'butt'; x.strokeStyle = PAPER; x.lineWidth = 6; x.beginPath(); x.moveTo(12, 41); x.lineTo(12, 7); x.lineTo(34, 7); x.moveTo(12, 17); x.lineTo(21, 7); x.stroke();
-    x.strokeStyle = INK; x.lineWidth = 3; x.stroke(); x.lineWidth = 1.2; x.beginPath(); x.moveTo(30, 7); x.lineTo(30, 16); x.stroke();
+    x.lineCap = 'butt'; x.strokeStyle = PIG.paper; x.lineWidth = 6; x.beginPath(); x.moveTo(12, 41); x.lineTo(12, 7); x.lineTo(34, 7); x.moveTo(12, 17); x.lineTo(21, 7); x.stroke();
+    x.strokeStyle = PIG.ink; x.lineWidth = 3; x.stroke(); x.lineWidth = 1.2; x.beginPath(); x.moveTo(30, 7); x.lineTo(30, 16); x.stroke();
   } else if (kind === 'well') {   // Brunnen: Rand mit Dach und Eimer
-    P([[9, 41], [9, 29], [35, 29], [35, 41]], STONE); P([[7, 14], [22, 6], [37, 14]], ROOF);
-    x.strokeStyle = INK; x.lineWidth = 2.2; x.beginPath(); x.moveTo(11, 14); x.lineTo(11, 29); x.moveTo(33, 14); x.lineTo(33, 29); x.stroke();
-    x.lineWidth = 1.2; x.beginPath(); x.moveTo(22, 14); x.lineTo(22, 23); x.stroke(); P([[19, 23], [25, 23], [24, 28], [20, 28]], PAPER, 1.2);
+    P([[9, 41], [9, 29], [35, 29], [35, 41]], PIG.stone); P([[7, 14], [22, 6], [37, 14]], PIG.roof);
+    x.strokeStyle = PIG.ink; x.lineWidth = 2.2; x.beginPath(); x.moveTo(11, 14); x.lineTo(11, 29); x.moveTo(33, 14); x.lineTo(33, 29); x.stroke();
+    x.lineWidth = 1.2; x.beginPath(); x.moveTo(22, 14); x.lineTo(22, 23); x.stroke(); P([[19, 23], [25, 23], [24, 28], [20, 28]], PIG.paper, 1.2);
   } else if (kind === 'bridge') {   // alte Brücke: gemauerter Bogen
-    P([[3, 22], [41, 22], [41, 28], [3, 28]], STONE);
-    P([[7, 28], [37, 28], [37, 40], [30, 40], [30, 36], [22, 30], [14, 36], [14, 40], [7, 40]], STONE);
-    x.strokeStyle = INK; x.lineWidth = 1.4; x.beginPath(); x.moveTo(14, 40); x.quadraticCurveTo(22, 26, 30, 40); x.stroke();
+    P([[3, 22], [41, 22], [41, 28], [3, 28]], PIG.stone);
+    P([[7, 28], [37, 28], [37, 40], [30, 40], [30, 36], [22, 30], [14, 36], [14, 40], [7, 40]], PIG.stone);
+    x.strokeStyle = PIG.ink; x.lineWidth = 1.4; x.beginPath(); x.moveTo(14, 40); x.quadraticCurveTo(22, 26, 30, 40); x.stroke();
   } else if (kind === 'church') {   // Langhaus mit Turm und Kreuz
-    P([[6, 40], [6, 24], [26, 24], [26, 40]], PAPER); P([[3, 24], [16, 14], [29, 24]], ROOF);
-    P([[26, 40], [26, 14], [36, 14], [36, 40]], PAPER); P([[25, 14], [31, 3], [37, 14]], ROOF);
-    x.strokeStyle = INK; x.lineWidth = 1.6; x.beginPath(); x.moveTo(31, 3); x.lineTo(31, -1); x.moveTo(29, 1); x.lineTo(33, 1); x.stroke();
-    P([[14, 40], [14, 32], [18, 32], [18, 40]], INK);
+    P([[6, 40], [6, 24], [26, 24], [26, 40]], PIG.paper); P([[3, 24], [16, 14], [29, 24]], PIG.roof);
+    P([[26, 40], [26, 14], [36, 14], [36, 40]], PIG.paper); P([[25, 14], [31, 3], [37, 14]], PIG.roof);
+    x.strokeStyle = PIG.ink; x.lineWidth = 1.6; x.beginPath(); x.moveTo(31, 3); x.lineTo(31, -1); x.moveTo(29, 1); x.lineTo(33, 1); x.stroke();
+    P([[14, 40], [14, 32], [18, 32], [18, 40]], PIG.ink);
   } else if (kind === 'chapel') {   // Kapelle: kleines Haus mit Dachreiter
-    P([[10, 40], [10, 22], [32, 22], [32, 40]], PAPER); P([[7, 22], [21, 11], [35, 22]], ROOF);
-    P([[18, 40], [18, 31], [24, 31], [24, 40]], INK);
-    x.strokeStyle = INK; x.lineWidth = 1.6; x.beginPath(); x.moveTo(21, 11); x.lineTo(21, 4); x.moveTo(18.5, 6.5); x.lineTo(23.5, 6.5); x.stroke();
+    P([[10, 40], [10, 22], [32, 22], [32, 40]], PIG.paper); P([[7, 22], [21, 11], [35, 22]], PIG.roof);
+    P([[18, 40], [18, 31], [24, 31], [24, 40]], PIG.ink);
+    x.strokeStyle = PIG.ink; x.lineWidth = 1.6; x.beginPath(); x.moveTo(21, 11); x.lineTo(21, 4); x.moveTo(18.5, 6.5); x.lineTo(23.5, 6.5); x.stroke();
   } else if (kind === 'cross') {   // Wegkreuz auf Steinsockel
-    P([[14, 41], [16, 33], [28, 33], [30, 41]], STONE);
-    x.lineCap = 'butt'; x.strokeStyle = PAPER; x.lineWidth = 7; x.beginPath(); x.moveTo(22, 33); x.lineTo(22, 6); x.moveTo(14, 15); x.lineTo(30, 15); x.stroke();
-    x.strokeStyle = INK; x.lineWidth = 3; x.beginPath(); x.moveTo(22, 33); x.lineTo(22, 6); x.moveTo(14, 15); x.lineTo(30, 15); x.stroke();
+    P([[14, 41], [16, 33], [28, 33], [30, 41]], PIG.stone);
+    x.lineCap = 'butt'; x.strokeStyle = PIG.paper; x.lineWidth = 7; x.beginPath(); x.moveTo(22, 33); x.lineTo(22, 6); x.moveTo(14, 15); x.lineTo(30, 15); x.stroke();
+    x.strokeStyle = PIG.ink; x.lineWidth = 3; x.beginPath(); x.moveTo(22, 33); x.lineTo(22, 6); x.moveTo(14, 15); x.lineTo(30, 15); x.stroke();
   } else if (kind === 'shrine') {   // Bildstock: Pfeiler mit Nische und Dach
-    P([[16, 41], [16, 17], [28, 17], [28, 41]], STONE); P([[13, 17], [22, 8], [31, 17]], ROOF);
-    P([[19.5, 32], [19.5, 22], [24.5, 22], [24.5, 32]], INK);
+    P([[16, 41], [16, 17], [28, 17], [28, 41]], PIG.stone); P([[13, 17], [22, 8], [31, 17]], PIG.roof);
+    P([[19.5, 32], [19.5, 22], [24.5, 22], [24.5, 32]], PIG.ink);
   } else {   // hospital: Haus mit Kreuz
-    P([[8, 41], [8, 21], [36, 21], [36, 41]], PAPER); P([[5, 21], [22, 9], [39, 21]], ROOF);
-    x.fillStyle = ROOF; x.fillRect(19.5, 25, 5, 13); x.fillRect(16, 28.5, 12, 5);
-    x.strokeStyle = INK; x.lineWidth = 1; x.strokeRect(19.5, 25, 5, 13); x.strokeRect(16, 28.5, 12, 5);
+    P([[8, 41], [8, 21], [36, 21], [36, 41]], PIG.paper); P([[5, 21], [22, 9], [39, 21]], PIG.roof);
+    x.fillStyle = PIG.roof; x.fillRect(19.5, 25, 5, 13); x.fillRect(16, 28.5, 12, 5);
+    x.strokeStyle = PIG.ink; x.lineWidth = 1; x.strokeRect(19.5, 25, 5, 13); x.strokeRect(16, 28.5, 12, 5);
   }
   return x.getImageData(0, 0, S, S);
 }
@@ -171,12 +174,13 @@ function medDraw(kind) {
 export function registerInfra(map) {
   for (const k of INFRA_KINDS) put(map, `inf-${k}`, plaque(k));
   for (const k of INFRA_MEDIEVAL) put(map, `med-inf-${k}`, medDraw(k));
+  for (const k of SACRAL_KINDS) put(map, `inf-${k}`, medDraw(k));   // Kirchen, Mühlen … in der Darstellung Landblick mit denselben Zeichen (Tinte, Pergamentfüllung, heller Saum)
 }
 
 // Eigenschaften je Objekt für die Karte: Beschriftung nur bei Wache, Krankenhaus und benanntem Windrad
 export function infraFeatures(items) {
   return { type: 'FeatureCollection', features: (items ?? []).map((i) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [i.lon, i.lat] },
-    properties: { kind: i.kind, old: i.old ?? 0, name: i.name || '', label: i.name || (['wind', 'fire_station', 'hospital'].includes(i.kind) ? INFRA_WORD[i.kind] : ''), labelMed: ['cross', 'shrine', 'border', 'well'].includes(i.kind) ? '' : ['watermill', 'windmill', 'ford', 'gallows'].includes(i.kind) ? INFRA_WORD_MED[i.kind] : i.kind === 'wind' ? (i.name || INFRA_WORD_MED.wind) : ['church', 'chapel', 'bridge', 'ferry'].includes(i.kind) ? (i.name || (i.kind === 'ferry' ? INFRA_WORD_MED.ferry : '')) : (i.name || INFRA_WORD_MED[i.kind] || ''), kw: i.kw ?? null, points: i.points ?? null } })) };
+    properties: { kind: i.kind, old: i.old ?? 0, name: i.name || '', label: i.name || (['wind', 'fire_station', 'hospital'].includes(i.kind) ? INFRA_WORD[i.kind] : ''), labelMed: ['cross', 'shrine', 'border', 'well'].includes(i.kind) ? '' : ['watermill', 'windmill', 'ford', 'gallows'].includes(i.kind) ? INFRA_WORD_MED[i.kind] : i.kind === 'wind' ? (i.name || INFRA_WORD_MED.wind) : ['church', 'chapel', 'bridge', 'ferry'].includes(i.kind) ? (i.name || (i.kind === 'ferry' ? INFRA_WORD_MED.ferry : '')) : (i.name || INFRA_WORD_MED[i.kind] || ''), kw: i.kw ?? null, points: i.points ?? null, plan: i.state && i.state !== 'netz' ? 1 : 0, state: i.state ?? '', hub: i.hub ?? null, top: i.top ?? null, place: i.place ?? '', src: i.src ?? 'osm' } })) };
 }
 
 // Text für das Popup: Art, Sachwert, Herkunft. Reiner Text, kein HTML.
@@ -184,6 +188,12 @@ export function infraText(p) {
   const bits = [INFRA_WORD[p.kind] ?? p.kind];
   if (p.name && !['aed', 'cross', 'shrine', 'picnic', 'shelter'].includes(p.kind)) bits.push(p.name);
   if (p.kind === 'wind' && p.kw) bits.push(p.kw >= 1000 ? `${(p.kw / 1000).toLocaleString('de-DE', { maximumFractionDigits: 1 })} MW` : `${p.kw} kW`);
+  if (p.kind === 'wind') {
+    if (p.state && p.state !== 'netz') bits.push(p.state === 'genehmigt' ? 'genehmigt, nicht gebaut' : 'beantragt');
+    if (p.hub) bits.push(`Nabe ${p.hub} m`);
+    if (p.top) bits.push(`Gesamthöhe ${p.top} m`);
+    if (p.place) bits.push(p.place);
+  }
   if (p.kind === 'charging' && p.points) bits.push(`${p.points} Ladepunkt${p.points === 1 ? '' : 'e'}`);
   return bits.join(' · ');
 }

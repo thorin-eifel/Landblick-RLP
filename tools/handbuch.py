@@ -4,7 +4,7 @@
 Zweck:      Setzt die Kapitel zu einer Datei zusammen und erzeugt HTML und PDF. Die Quellentabelle in Kapitel 4 wird aus
             sources.yaml geschrieben (zwischen den Marken quellen:start / quellen:ende), damit sie nicht vom Register abweicht.
 Parameter:  --out DIR     Ausgabeordner (Standard build/handbuch)
-            --version V   Versionsangabe auf dem Deckblatt (Standard: aus pyproject.toml / CHANGELOG-frei: 1.0.0-alpha.1)
+            --version V   Versionsangabe auf dem Deckblatt (Standard: aus pyproject.toml / CHANGELOG-frei: 1.0.0-beta.1)
             --update      Quellentabelle in docs/handbuch/04-datenquellen.md neu schreiben
             --check       nur prüfen, ob die Tabelle zum Register passt (Exit 1 bei Abweichung)
             --nur-md      nur die zusammengesetzte Markdown-Datei, ohne pandoc
@@ -53,7 +53,7 @@ def quellen_tabelle(register: Path | None = None) -> str:
             f"`{s['id']}`", _zelle(s.get("kurzname") or s["name"]) + art, _zelle(s.get("betreiber", "")), _zelle(s.get("lizenz", "")),
             "—" if s.get("art") == "client" else _intervall(s.get("intervall")), _zelle(s.get("datenschutz_risiko", "")),
             "ja" if s.get("lizenz_geprueft") else "nein", "ja" if s.get("aktiv", True) else "nein"]) + " |")
-    return "\n".join(kopf + zeilen) + f"\n\n{len(daten)} Quellen im Register, davon {sum(1 for s in daten if s.get('aktiv', True))} aktiv.\n"
+    return "\n".join(kopf + zeilen) + f"\n\n{len(daten)} Quellen im Register, davon {sum(1 for s in daten if s.get('aktiv', True))} aktiv ({sum(1 for s in daten if s.get('aktiv', True) and s.get('art') != 'client')} mit Sammler, {sum(1 for s in daten if s.get('aktiv', True) and s.get('art') == 'client')} nur im Browser).\n"
 
 
 def ersetze(text: str, tabelle: str) -> str:
@@ -100,7 +100,7 @@ def chrome() -> str | None:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--out", default=str(ROOT / "build" / "handbuch"))
-    ap.add_argument("--version", default="1.0.0-alpha.1")
+    ap.add_argument("--version", default="1.0.0-beta.1")
     ap.add_argument("--update", action="store_true")
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--nur-md", action="store_true")

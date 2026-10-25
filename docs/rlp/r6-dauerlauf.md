@@ -6,7 +6,7 @@ Stand: **offen**. Das Werkzeug ist gebaut und getestet, der Lauf selbst braucht 
 
 1. Sammelstelle läuft stabil im Fünf-Minuten-Zyklus (launchd `de.thorin.landblick-cycle` oder systemd `landblick-cycle.timer`).
 2. Ruhezustand des Rechners aus, Netzteil dran.
-3. Probe-Job einrichten (mit dem Installer: `-Dauerlauf` bzw. `--dauerlauf`, siehe `docs/betrieb.md`, Abschnitt Installation auf einem Dauerläufer), von Hand: `deploy/de.thorin.landblick-dauerlauf.plist` (Pfade prüfen) oder Cron: `*/10 * * * * cd /opt/landblick && .venv/bin/python tools/dauerlauf.py sample`.
+3. Probe-Job einrichten (mit dem Installer: `-Dauerlauf` bzw. `--dauerlauf`, siehe `docs/betrieb.md`, Abschnitt Installation auf einem Dauerläufer), von Hand: `*/10 * * * * cd <Projekt> && .venv/bin/python tools/dauerlauf.py sample`.
 4. Backup-Job und Gesundheitsjob laufen (`de.thorin.landblick-backup`, `de.thorin.landblick-health` bzw. die systemd-Timer).
 5. Start und Version hier eintragen (kein `note`, denn jeder Vermerk gilt im Bericht als Handeingriff):
 

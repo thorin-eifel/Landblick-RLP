@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import threading
 from pathlib import Path
 from typing import Any
@@ -26,9 +27,47 @@ class ZugangError(ValueError):
     """Eingabe abgelehnt (unbekannte Variable, ungültiger Wert). Die Meldung enthält nie den Wert."""
 
 
+NAME = re.compile(r"^[A-Z][A-Z0-9_]{1,63}$")
+
+
+def env_from_file(path: Path) -> dict[str, str]:
+    """Liest eine zugang.json für Sammler, die ohne die App laufen (Zeitplan, Kommandozeile). Nur gültige Variablennamen und Texte;
+    welche Namen erlaubt sind, hat schon ZugangStore beim Schreiben anhand des Quellenregisters entschieden."""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    return {k: v for k, v in data.items() if isinstance(k, str) and NAME.match(k) and isinstance(v, str) and v and "\n" not in v}
+
+
+def handle_post(store: "ZugangStore", raw: bytes) -> tuple[int, dict[str, Any]]:
+    """Gemeinsame Annahme für App und lokalen Webserver: {"env": "NAME", "wert": "…"} setzt, {"env": "NAME", "loeschen": true} entfernt.
+    Rückgabe (HTTP-Status, Antwort); Antworten enthalten nie den Wert."""
+    try:
+        body = json.loads(raw[:4096] or b"{}")
+        env = body["env"]
+        if not isinstance(env, str):
+            raise ZugangError("Unbekannte Zugangsvariable")
+        if body.get("loeschen") is True:
+            store.delete(env)
+        else:
+            store.set(env, body.get("wert"))
+    except ZugangError as err:
+        return 400, {"error": str(err)}
+    except (ValueError, KeyError, TypeError):
+        return 400, {"error": "Eingabe ungültig"}
+    except OSError:
+        log.exception("Zugangsdatei nicht schreibbar")
+        return 500, {"error": "Datei im Datenordner nicht schreibbar"}
+    return 200, {"ok": True, "quellen": store.status()}
+
+
 class ZugangStore:
-    def __init__(self, path: Path, entries: list[Any]) -> None:
+    def __init__(self, path: Path, entries: list[Any], dotenv: Path | None = None) -> None:
         self.path = path
+        self.dotenv = dotenv   # nur für die Anzeige: Variablen, die schon in dieser .env stehen (Werte werden nicht gelesen)
         self._lock = threading.Lock()
         self.allowed: dict[str, tuple[Any, Any]] = {f.env: (e, f) for e in entries for f in getattr(e, "zugang", [])}
 
@@ -84,11 +123,25 @@ class ZugangStore:
         with self._lock:
             return self._read()
 
+    def _extern(self) -> set[str]:
+        """Namen, die außerhalb dieser Datei gesetzt sind: Umgebung des Prozesses oder .env. Nur Namen, nie Werte."""
+        names = {k for k in self.allowed if os.environ.get(k)}
+        if self.dotenv:
+            try:
+                for line in self.dotenv.read_text(encoding="utf-8").splitlines():
+                    k, sep, v = line.strip().partition("=")
+                    if sep and k.strip() in self.allowed and v.strip().strip("'\""):
+                        names.add(k.strip())
+            except OSError:
+                pass
+        return names
+
     def status(self) -> list[dict[str, Any]]:
-        """Je Quelle mit Zugangsfeldern: Felder samt "gesetzt". Nie mit Werten."""
+        """Je Quelle mit Zugangsfeldern: Felder samt "gesetzt" (in dieser Datei) und "extern" (.env oder Umgebung). Nie mit Werten."""
         have = self._read()
+        extern = self._extern()
         out: dict[str, dict[str, Any]] = {}
         for env, (entry, f) in self.allowed.items():
             src = out.setdefault(entry.id, {"source_id": entry.id, "name": entry.kurzname or entry.name, "hinweis": entry.auth, "url": entry.url, "felder": []})
-            src["felder"].append({"env": env, "art": f.art, "bezeichnung": f.bezeichnung, "gesetzt": env in have})
+            src["felder"].append({"env": env, "art": f.art, "bezeichnung": f.bezeichnung, "gesetzt": env in have, "extern": env in extern and env not in have})
         return list(out.values())
