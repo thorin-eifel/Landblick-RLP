@@ -4,6 +4,9 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unreleased]
 
+### Geändert (Installer)
+- Der Windows-Installer bringt die selbst gebauten Kacheln mit: Basiskarte (Region, Kern, Ring), Relief, Hangneigung und Felswände, zusammen rund 1,8 GB. Der Workflow lädt sie beim Bau vom Release `kacheln-1` und prüft die Prüfsummen; die App muss die Karte beim ersten Start nicht mehr holen. Gebäude (201 MB) bleiben draußen, damit der NSIS-Installer unter 2 GB bleibt. Ohne Tag (`kacheln_tag` leer) entsteht wie bisher ein Installer ohne Kacheln.
+
 ### Behoben (Installer)
 - Erster Start der Desktop-App brach bei 5 % mit „Kartenabruf fehlgeschlagen (Code 1)“ ab: Im gebündelten Programm fehlten `tools/build_region_tiles.py`, `tools/tile_cores.yaml` und die Python-Pakete `shapely` und `pmtiles`. Beide Build-Skripte (`build-sidecar.sh`/`.ps1`) bündeln sie jetzt und prüfen den Kartenbau im Rauchtest (`--dry-run`, ohne Netz). Die Fehlermeldung nennt die letzten Zeilen der Fehlerausgabe. Eine bereits installierte App braucht den neuen Installer.
 - Windows-Installer und Desktop-Bau schlugen seit dem Ressourcenordner `pakete/` im Schritt „Installer“ fehl, weil der Ordner (gitignore) auf dem Runner fehlte. Beide Workflows legen jetzt einen Platzhalter an; die App sucht ohne Pakete im Datenordner.

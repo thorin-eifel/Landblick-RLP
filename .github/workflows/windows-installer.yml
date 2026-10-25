@@ -2,7 +2,13 @@
 # Start: Actions → windows-installer → Run workflow. Die Datei steht danach unter "Artifacts" des Laufs (Zip mit der Setup.exe).
 # Der Installer ist nicht signiert: Windows SmartScreen warnt beim ersten Start ("Weitere Informationen" → "Trotzdem ausführen").
 name: windows-installer
-on: { workflow_dispatch: {}, push: { tags: ["windows-v*"] } }
+on:
+  workflow_dispatch:
+    inputs:
+      kacheln_tag:
+        description: "Release-Tag mit den Kachelpaketen (leer = Installer ohne Kacheln, Karte kommt beim ersten Start per Download)"
+        default: "kacheln-1"
+  push: { tags: ["windows-v*"] }
 permissions: { contents: read }
 jobs:
   build:
@@ -17,12 +23,32 @@ jobs:
       - name: Sidecar (Python-Dienst und pmtiles)
         shell: pwsh
         run: ./desktop/build-sidecar.ps1
-      - name: Platzhalter für die Kachelpakete
-        # tauri.conf.json verlangt den Ressourcenordner pakete/; er liegt nicht im Git (gitignore). Ohne Pakete sucht die App im Datenordner.
+      - name: Kachelpakete (Release laden, Prüfsummen prüfen)
+        # Die Pakete liegen nicht im Git, sondern als Dateien an einem Release (Tag kacheln-1, siehe desktop/stage-pakete.sh für das Layout).
+        # tauri.conf.json verlangt den Ordner pakete/ in jedem Fall; ohne Tag bleibt dort nur ein Platzhalter, die App lädt die Karte dann beim ersten Start.
         shell: pwsh
+        env:
+          KACHELN_TAG: ${{ github.event.inputs.kacheln_tag || 'kacheln-1' }}
         run: |
-          New-Item -ItemType Directory -Force desktop/src-tauri/pakete | Out-Null
-          Set-Content desktop/src-tauri/pakete/LIESMICH.txt 'Platzhalter: Kachelpakete liegen nicht im Repository.'
+          $ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue'
+          $out = 'desktop/src-tauri/pakete'
+          New-Item -ItemType Directory -Force "$out/tiles", "$out/data" | Out-Null
+          if (-not $env:KACHELN_TAG) { Set-Content "$out/LIESMICH.txt" 'Platzhalter: Installer ohne Kachelpakete.'; return }
+          $base = "https://github.com/${{ github.repository }}/releases/download/$($env:KACHELN_TAG)"
+          $sums = Join-Path $env:RUNNER_TEMP 'SHA256SUMS'
+          Invoke-WebRequest -UseBasicParsing "$base/SHA256SUMS" -OutFile $sums
+          foreach ($zeile in Get-Content $sums) {
+            if ($zeile -notmatch '^([0-9a-f]{64}) \*(.+)$') { continue }
+            $hash = $Matches[1]; $name = $Matches[2]
+            $ziel = if ($name -like '*.pmtiles') { "$out/tiles/$name" } else { "$out/data/$name" }
+            Write-Output "lade $name"
+            Invoke-WebRequest -UseBasicParsing "$base/$name" -OutFile $ziel
+            $ist = (Get-FileHash $ziel -Algorithm SHA256).Hash.ToLower()
+            if ($ist -ne $hash) { throw "Prüfsumme falsch: $name" }
+          }
+          $bytes = (Get-ChildItem $out -Recurse -File | Measure-Object Length -Sum).Sum
+          Write-Output ("Ressourcen: {0:N0} MB" -f ($bytes / 1e6))
+          if ($bytes -gt 1.9e9) { throw 'Ressourcen über 1,9 GB: der NSIS-Installer verträgt höchstens 2 GB' }
       - name: Installer
         shell: pwsh
         working-directory: desktop
