@@ -350,3 +350,12 @@ def test_kindausgabe_auch_ohne_err_tail_im_log(srv, caplog, monkeypatch):
     with caplog.at_level(logging.INFO, logger="osint.desktop"):
         assert app._run(["app.export"]) == 0
     assert "Export geschrieben" in caplog.text
+
+
+def test_state_sagt_ob_der_erste_export_schon_da_ist(srv):
+    """Daran entscheidet die Oberfläche, ob sie die Aufbauseite zeigt: ohne data/meta.json hat die Karte nichts anzuzeigen."""
+    app, port, _ = srv
+    j = json.loads(call(port, "/api/state")[1])
+    assert j["daten"] is False
+    (app.data_dir / "data" / "meta.json").write_text("{}", encoding="utf-8")
+    assert json.loads(call(port, "/api/state")[1])["daten"] is True

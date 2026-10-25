@@ -188,6 +188,11 @@ class App:
         self.worker.start()
         return True
 
+    def daten_da(self) -> bool:
+        """Hat es schon einen Export gegeben? Das Frontend holt als Erstes data/meta.json; fehlt die Datei, hat die Karte
+        nichts zu zeigen und der Aufbau läuft noch. Darüber entscheidet die Oberfläche, ob sie die Aufbauseite zeigt."""
+        return (self.data_dir / "data" / "meta.json").is_file()
+
     def tiles_fehlen(self) -> bool:
         return not all(any((r / "tiles" / n).exists() for r in (self.data_dir, *self.pack_dirs)) for n in ("region.pmtiles", "core.pmtiles", "ring.pmtiles"))
 
@@ -354,7 +359,7 @@ def make_handler(app: App, port_box: list[int]):
                 return self.json({"error": "host"}, 403)
             u = urllib.parse.urlsplit(self.path)
             if u.path == "/api/state":
-                return self.json({"configured": True, "job": app.job_snapshot(), "nachladen": app.nachladen.snapshot()})
+                return self.json({"configured": True, "daten": app.daten_da(), "job": app.job_snapshot(), "nachladen": app.nachladen.snapshot()})
             if u.path == "/api/zugang":
                 return self.json({"quellen": app.zugang.status()})   # nur gesetzt/nicht gesetzt, nie Werte
             if u.path.startswith("/api/"):

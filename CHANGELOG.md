@@ -4,6 +4,10 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [1.0.0-beta.1] - 2026-10-25
 
+### Behoben (erster Start)
+- Beim ersten Start stand die Karte offen, während die Quellen noch abgerufen wurden — zu sehen war dort nur „Die Datendateien konnten nicht geladen werden“, ohne Hinweis, dass etwas läuft. Die Aufbauseite griff bisher nur in den Phasen `idle`, `tiles` und `error`, nicht während `collect` und `export`. `api/state` meldet jetzt zusätzlich `daten` (gibt es schon einen Export, also `data/meta.json`?); solange nicht, führt die Aufbauseite mit Fortschrittsbalken und „Quellen: n von m abgerufen“. Im laufenden Betrieb bleibt die Karte stehen, auch wenn der Takt alle fünf Minuten neu sammelt.
+- Der Text der Aufbauseite versprach den Kartendownload (1,5 GB) auch dann, wenn der Installer die Kacheln schon mitbringt.
+
 ### Neu (Desktop-App)
 - Der lokale Dienst schreibt ein Protokoll nach `<Datenordner>/logs/dienst.log` (rotierend, 5 Dateien zu 2 MB), mit einer Startzeile aus Version, System, Python-Fassung und Datenordner. Unter Windows läuft die App ohne Konsole: bisher war dort jede Meldung verloren.
 - Die Fehlerausgabe der Kindprozesse (`app.collect`, `app.export`) läuft jetzt immer durch dieses Protokoll statt ins geerbte stderr.
