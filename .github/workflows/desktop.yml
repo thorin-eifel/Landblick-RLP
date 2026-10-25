@@ -1,6 +1,14 @@
 # Baut die Desktop-App auf je einem Runner pro Betriebssystem (kein Cross-Build möglich: Sidecar und WebView sind plattformgebunden).
+# macOS bringt die Kachelpakete mit wie der Windows-Installer (DMG rund 1,8 GB, keine 2-GB-Grenze wie bei NSIS); Linux baut ohne.
 name: desktop
-on: { workflow_dispatch: {}, push: { tags: ["desktop-v*"] } }
+on:
+  workflow_dispatch:
+    inputs:
+      kacheln_tag:
+        description: "Release-Tag mit den Kachelpaketen für macOS; keine = DMG ohne Kacheln (die Karte kommt beim ersten Start per Download)"
+        default: "kacheln-1"
+  push: { tags: ["desktop-v*"] }
+permissions: { contents: read }
 jobs:
   build:
     strategy:
@@ -20,14 +28,44 @@ jobs:
       - name: Sidecar
         shell: bash
         run: desktop/build-sidecar.sh
-      - name: Platzhalter für die Kachelpakete
-        # tauri.conf.json verlangt den Ressourcenordner pakete/; er liegt nicht im Git (gitignore). Ohne Pakete sucht die App im Datenordner.
+      - name: Kachelpakete (macOS, Release laden, Prüfsummen prüfen)
+        # Wie in windows-installer.yml: die Pakete liegen als Dateien am Release (Tag kacheln-1, Layout siehe desktop/stage-pakete.sh).
+        # tauri.conf.json verlangt den Ordner pakete/ in jedem Fall; ohne Tag (und unter Linux) bleibt dort nur ein Platzhalter.
         shell: bash
+        env:
+          EREIGNIS: ${{ github.event_name }}
+          EINGABE: ${{ github.event.inputs.kacheln_tag }}
+          REPO: ${{ github.repository }}
+          OS: ${{ matrix.os }}
         run: |
-          mkdir -p desktop/src-tauri/pakete
-          echo 'Platzhalter: Kachelpakete liegen nicht im Repository.' > desktop/src-tauri/pakete/LIESMICH.txt
+          set -euo pipefail
+          out=desktop/src-tauri/pakete
+          mkdir -p "$out/tiles" "$out/data"
+          # Von Hand gestartet gilt die Eingabe wörtlich ('keine' = ohne Kacheln); bei einem Tag-Lauf gilt kacheln-1.
+          if [[ "$EREIGNIS" == workflow_dispatch ]]; then tag="$EINGABE"; else tag=kacheln-1; fi
+          if [[ "$OS" != macos-* || -z "$tag" || "$tag" == keine ]]; then
+            echo 'Platzhalter: Kachelpakete liegen nicht im Repository.' > "$out/LIESMICH.txt"; exit 0
+          fi
+          base="https://github.com/$REPO/releases/download/$tag"
+          sums="$RUNNER_TEMP/SHA256SUMS"
+          curl -fsSL --retry 3 -o "$sums" "$base/SHA256SUMS"
+          while read -r hash name; do
+            name="${name#\*}"
+            [[ "$hash" =~ ^[0-9a-f]{64}$ && -n "$name" ]] || continue
+            if [[ "$name" == *.pmtiles ]]; then ziel="$out/tiles/$name"; else ziel="$out/data/$name"; fi
+            echo "lade $name"
+            curl -fsSL --retry 3 -o "$ziel" "$base/$name"
+            ist="$(shasum -a 256 "$ziel" | cut -d' ' -f1)"
+            [[ "$ist" == "$hash" ]] || { echo "Prüfsumme falsch: $name" >&2; exit 1; }
+          done < "$sums"
+          echo "Ressourcen: $(( $(du -sk "$out" | cut -f1) / 1000 )) MB"
       - name: App
         shell: bash
         run: cd desktop && npm install --include=dev && npx tauri build
+      # macOS: nur das DMG (die .app steckt darin; beides zusammen wären mit Kacheln über 3,5 GB)
       - uses: actions/upload-artifact@v6
+        if: matrix.os == 'macos-latest'
+        with: { name: "app-${{ matrix.os }}", path: desktop/src-tauri/target/release/bundle/dmg/*.dmg }
+      - uses: actions/upload-artifact@v6
+        if: matrix.os != 'macos-latest'
         with: { name: "app-${{ matrix.os }}", path: desktop/src-tauri/target/release/bundle/** }

@@ -4,6 +4,9 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unveröffentlicht]
 
+### Geändert (macOS)
+- Das macOS-DMG bringt die Kachelpakete mit wie der Windows-Installer (Release `kacheln-1`, Prüfsummen geprüft; Eingabe `kacheln_tag`, `keine` baut ohne). Hochgeladen wird für macOS nur noch das DMG, nicht zusätzlich die .app.
+
 ### Geändert (R6)
 - Ein Name durchgehend: Umgebungsvariablen `LANDBLICK_*`, Datenbank `data/landblick.sqlite`, Sidecar `landblick-core`, Kennung `de.thorin.landblick` (launchd, Desktop-App), Logger `landblick.*`, Header `X-Landblick`. Bestehende Installationen ziehen einmal um (Schritte im Pull Request).
 - Abhängigkeiten: `pillow` 12.3.0 → 13.0.0, `certifi` 2026.7.22 → 2026.10.19 (pip-audit: 37 bzw. 1 bekannte Lücke).
