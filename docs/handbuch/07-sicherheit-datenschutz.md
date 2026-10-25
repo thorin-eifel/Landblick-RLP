@@ -14,7 +14,7 @@ Wo Quellen Freitext liefern (etwa Warnmeldungen), wird der Text vor dem Speicher
 - Keine externen Schriften, Bibliotheken oder Kacheln; alles kommt vom eigenen Server.
 - Eine Content-Security-Policy erlaubt für Skripte, Stile, Bilder, Schriften und Verbindungen ausschließlich die eigene Herkunft. Einzige Ausnahme sind die fünf Hosts der Landesdienste (siehe 7.3), und die nur in der Richtlinie der Kartenseite.
 - Links aus Fremdinhalten tragen `rel="noopener noreferrer"`. Fremdtexte werden escaped, nicht als HTML eingesetzt.
-- Der mitgelieferte Webserver protokolliert ohne Client-IP (Standardmeldungen sind überschrieben). Bei einem fremden Hoster entstehen Zugriffsprotokolle dort, nach dessen Regeln.
+- Der lokale Dienst protokolliert ohne Client-IP (Standardmeldungen sind überschrieben) und hört nur auf 127.0.0.1. Einen Hoster, bei dem Zugriffsprotokolle entstehen könnten, gibt es nicht.
 
 ## 7.3 Die Zustimmungsschranke
 
@@ -22,7 +22,7 @@ Die Ebenen aus den Landesdiensten (LGB und weitere Stellen) kommen nicht von Lan
 
 ## 7.4 Sicherheit im Betrieb
 
-- Keine Zugangsdaten im Code, im Repository oder in Logs. Schlüssel (Tankerkönig, NASA FIRMS, Zugangsdaten des Webspace) stehen in `.env`, die nicht eingecheckt wird und auf Unix-Systemen Rechte 600 bekommt.
+- Keine Zugangsdaten im Code, im Repository oder in Logs. Schlüssel (Tankerkönig, NASA FIRMS) stehen in `.env`, die nicht eingecheckt wird und auf Unix-Systemen Rechte 600 bekommt.
 - Eingaben werden validiert (Geometrien, Zeiträume, Filter); SQL läuft mit Parameterbindung; kein `eval` auf externe Daten.
 - Rechte sind klein gehalten: Sammler lesen aus dem Netz und schreiben in die Datenbank, sonst nichts. Das Frontend liest nur.
 - Der lokale Webserver bindet standardmäßig an `127.0.0.1`. Wer ihn im Netz erreichbar machen will, setzt `--bind` bewusst und stellt ihn hinter einen Proxy mit TLS.

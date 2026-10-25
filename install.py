@@ -80,7 +80,7 @@ def job_liste(bind: str, port: int, live: bool, dauerlauf: bool) -> list[Job]:
         Job("backup", ("tools/backup.py", "--keep", "14", "--verify-after"), "daily", um="03:15", limit_min=60,
             text="Datenbank sichern und Wiederherstellung prüfen"),
         Job("health", ("tools/gesundheit.py",), "periodic", 600, limit_min=5, text="Gesundheitsprüfung (Quellen, Regionen, Export)"),
-        Job("web", ("deploy/serve-local.py", "--dir", "web", "--port", str(port), "--bind", bind), "daemon", text="Lokaler Webserver"),
+        Job("web", ("tools/serve-local.py", "--dir", "web", "--port", str(port), "--bind", bind), "daemon", text="Lokaler Webserver"),
     ]
     if live:
         jobs.append(Job("live", ("-m", "app.live"), "daemon", text="Livemodul (Luftverkehr in kurzem Takt)"))
@@ -254,7 +254,6 @@ def schritt_env(kontakt: str | None, live: bool, dry: bool) -> None:
             raise Fehler("--kontakt MAIL fehlt (steht im User-Agent der Abrufe, Quellen sollen uns erreichen können)")
         text = env_setzen(text, "OSINT_CONTACT", input("Kontakt-Mail für den User-Agent: ").strip())
     text = env_setzen(text, "OSINT_LIVE", "1" if live else "0")
-    text = env_setzen(text, "PUBLISH_ENABLED", env_lesen(text, "PUBLISH_ENABLED") or "0")
     ausgabe(f"Konfiguration schreiben: {env.name}")
     if dry:
         return
@@ -515,7 +514,7 @@ def main(argv: list[str] | None = None) -> int:
             elif not a.dry_run:
                 ausgabe("Webserver antwortet noch nicht; python install.py --status zeigt den Zustand, data/logs/web.log den Grund.")
         else:
-            ausgabe("Fertig (ohne Dienste). Start von Hand: python deploy/serve-local.py --dir web")
+            ausgabe("Fertig (ohne Dienste). Start von Hand: python tools/serve-local.py --dir web")
         if not a.ohne_dienste and not a.dry_run and pruefe_web(a.bind, a.port, warte_s=5):
             schritt_aufraeumen(py, a.bind, a.port, a.rohdaten_loeschen, a.dry_run)
         ausgabe("Gesundheit prüfen: python tools/gesundheit.py · Betrieb: docs/betrieb.md, Abschnitt Installation auf einem Dauerläufer")

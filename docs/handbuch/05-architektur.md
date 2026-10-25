@@ -13,7 +13,7 @@ Quellen
 
 Ein Rechner ruft die Quellen ab, filtert auf die Region und schreibt fertige Dateien. Alles danach ist statisch: Der Webserver liefert HTML, CSS, JavaScript, JSON und Kartenarchive aus, mehr nicht. Es gibt keine Anwendung auf dem Server, die Anfragen der Besucher auswertet, und damit auch keine Datenbank, die ein Besucher erreichen könnte.
 
-Diese Trennung ist die wichtigste Entscheidung des Projekts. Sie macht den Betrieb einfach (jeder Webspace reicht), das Frontend robust (es zeigt, was da ist, auch wenn die Sammelstelle steht) und den Datenschutz leicht (der Server sieht von Besuchern nur, was jeder Webserver sieht).
+Diese Trennung ist die wichtigste Entscheidung des Projekts. Sie macht den Betrieb einfach (ein lokaler Dienst reicht), das Frontend robust (es zeigt, was da ist, auch wenn der Sammelzyklus steht) und den Datenschutz leicht (es gibt niemanden, der mitsieht).
 
 ## 5.2 Die Bausteine
 
@@ -45,7 +45,7 @@ Geschrieben wird atomar (temporäre Datei, dann umbenennen); eine halb geschrieb
 
 Semantisches HTML, JavaScript als ES-Module ohne Bauschritt und ohne Framework, MapLibre GL für die Karte, PMTiles für die Kartenkacheln. Schriften, Skripte und Kacheln liegen lokal (`web/fonts`, `web/vendor`, `web/tiles`). Die Dateien in `web/js/lage/` trennen Karte, Ebenen, Laden, Popup, Zustand und Suche; `web/js/rules.js` ist die Regel, nach der Quellen als ok, veraltet oder ausgefallen gelten, und wird gegen die Python-Fassung getestet, damit Statusseite und Gesundheitsprüfung nicht auseinanderlaufen.
 
-Die Karte liest ihre Kacheln per HTTP Range aus einem einzigen Archiv. Das ist der Grund, warum der mitgelieferte lokale Webserver (`deploy/serve-local.py`) Range-Anfragen beherrscht; ein Server, der sie nicht kann, zeigt eine leere Karte.
+Die Karte liest ihre Kacheln per HTTP Range aus einem einzigen Archiv. Das ist der Grund, warum der lokale Dienst der Desktop-App und der kleine Webserver `tools/serve-local.py` Range-Anfragen beherrschen; ein Server, der sie nicht kann, zeigt eine leere Karte.
 
 ## 5.4 Die Kartenbasis
 

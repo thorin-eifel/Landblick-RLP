@@ -17,7 +17,7 @@ Wird in jeder Phase fortgeschrieben (Plan: `plan.md`). Stand 18. Oktober 2026 (R
 ## Recht und Lizenz
 
 - **Quellen im privaten Betrieb neu bewerten.** Einige Entscheidungen hingen daran, dass der Betreiber eine GmbH war (adsb.lol, Blitzdaten/LightningMaps). Seit dem 9. Oktober 2026 ist das Projekt privat. Eine öffentliche Seite bleibt trotzdem ein Angebot an Dritte; die Bewertung gehört in die Rechtsprüfung vor dem öffentlichen Start, nicht in diese Datei. Bis dahin bleibt alles wie zuvor entschieden.
-- **Impressum und Datenschutzerklärung** nennen jetzt Name, Anschrift und E-Mail. Name in der Schreibweise "Schleicher" (laut Profil); bitte gegen den Personalausweis prüfen. Datenschutz: Angaben zu IONOS-Logs und Auftragsverarbeitung fehlen weiter.
+- **Impressum und Datenschutzerklärung** nennen jetzt Name, Anschrift und E-Mail. Name in der Schreibweise "Schleicher" (laut Profil); bitte gegen den Personalausweis prüfen.
 
 ## R3: offen geblieben
 
@@ -32,12 +32,11 @@ Wird in jeder Phase fortgeschrieben (Plan: `plan.md`). Stand 18. Oktober 2026 (R
 
 ## R4: offen geblieben
 
-- **Upload nicht gegen den echten Webspace getestet** (kein `lftp` im Sandkasten). Trockenlauf und Plan sind getestet. Erster echter Lauf auf dem Mac.
 - **Zelle `z/16_98/events.json` 509 KB** (Budget 500 KB): gemeldet, nicht gekürzt. Geometrien liegen über Zellgrenzen mehrfach (Ereignisse 5,6 MB statt 3,5 MB); Vereinfachung nach Zoomstufe gehört in R5.
 - **Flachdateien** (`events.json` usw.) bleiben bis R5; `events.json` dort weiter bei 2.000 Einträgen, im alten Frontend fehlen damit Ereignisse im Osten der Region. Abhilfe ist das Zellenfrontend, nicht eine größere Flachdatei.
 - **Radar, Wind, Suchindex** sind global (1,2 MB / 110 KB / 136 KB), nicht in Zellen; Nachladestrategie in R5.
 - **Herzschlag** (162 KB je Zyklus) trägt den Quellenzustand. Wird das zu viel, kann `start.json` auf Zustand und Warnband verkleinert werden.
-- Neue Kachelarchive (913 MB) und Höhenmodell (676 MB) liegen weiter auf dem Mac; Einspielen und Hochladen ist nicht Teil dieses PR (siehe PR-Text, Frage 1).
+- Neue Kachelarchive (913 MB) und Höhenmodell (676 MB) liegen weiter auf dem Mac; das Einspielen ist nicht Teil dieses PR (siehe PR-Text, Frage 1).
 
 ## Aus R5 (Frontend)
 

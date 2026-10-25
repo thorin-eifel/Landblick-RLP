@@ -15,12 +15,11 @@ Abruf offener Daten (Warnungen, Verkehr, Pegel, Wetter), Speicherung als Ereigni
 
 Social-Media-Quellen, Telegram, Kamerabilder, Fotos: **nicht Teil von Phase 1**.
 
-## Besucher und Hosting
-Keine Cookies, keine Drittanbieter, keine externen Schriften/Kacheln. Die Seite ist statisch und liegt bei IONOS (Webspace). Zugriffsprotokolle entstehen beim Hoster und liegen nicht in unserer Hand.
-Offen vor dem Start: Vertrag zur Auftragsverarbeitung mit IONOS abschließen, Speicherdauer und IP-Kürzung der Logs beim Hoster prüfen, Angaben in „Datenschutz“ ergänzen.
+## Auslieferung
+Keine Cookies, keine Drittanbieter, keine externen Schriften/Kacheln. Die Anwendung läuft auf dem Rechner der Nutzerin; die Oberfläche kommt von einem lokalen Dienst auf 127.0.0.1. Es gibt keinen Hoster, keine Zugriffsprotokolle und keine Besucherdaten.
 
-## Sammelstelle
-Ein Rechner des Betreibers ruft die Quellen ab und lädt ausschließlich fertige JSON-Dateien (Ereignisse, Messwerte, Quellenstatus) per SFTP hoch. Kontaktadresse im User-Agent gegenüber den Quellen ist eine Funktionsadresse, keine Personenadresse.
+## Abruf der Quellen
+Der Rechner ruft die Quellen laut Register ab und schreibt die Ergebnisse (Ereignisse, Messwerte, Quellenstatus) in seine eigene Datenbank und den Exportordner. Nichts verlässt den Rechner. Kontaktadresse im User-Agent gegenüber den Quellen ist eine Funktionsadresse, keine Personenadresse.
 
 ## Risiken und Restrisiko
 Gering. Offen: Prüfung der Freitexte aus NINA im Echtbetrieb (Stichprobe), Lizenz- und Nutzungsbedingungen je Quelle.

@@ -58,7 +58,6 @@ const mod = await import('../../web/js/lgb-katalog.js');
   const { kachelUrl, flacheEbenen, layerId, vermerke } = mod;
   const lad = JSON.parse(readFileSync(new URL('../../web/geo/landesdaten.json', import.meta.url)));
   const html = readFileSync(new URL('../../web/index.html', import.meta.url), 'utf8');
-  const htaccess = readFileSync(new URL('../../web/.htaccess', import.meta.url), 'utf8');
 
   test('Kachel-URL mit erlaubter Serverliste: fremde Server und http werden abgelehnt, vorhandene Parameter bleiben', () => {
     const hosts = ['geo4.service24.rlp.de'];
@@ -91,12 +90,10 @@ const mod = await import('../../web/js/lgb-katalog.js');
       for (const x of e) assert.doesNotThrow(() => kachelUrl(s, x.name, lad.hosts), s.id);
     }
   });
-  test('Jeder Server des Katalogs steht in der CSP von index.html und .htaccess (img-src und connect-src)', () => {
-    for (const quelle of [html, htaccess]) {
-      for (const dir of ['img-src', 'connect-src']) {
-        const teil = quelle.match(new RegExp(`${dir}[^;]*`))[0];
-        for (const h of lad.hosts) assert.ok(teil.includes(`https://${h}`), `${h} fehlt in ${dir}`);
-      }
+  test('Jeder Server des Katalogs steht in der CSP von index.html (img-src und connect-src)', () => {
+    for (const dir of ['img-src', 'connect-src']) {
+      const teil = html.match(new RegExp(`${dir}[^;]*`))[0];
+      for (const h of lad.hosts) assert.ok(teil.includes(`https://${h}`), `${h} fehlt in ${dir}`);
     }
   });
   test('Seite hat beide Menüs mit allen Elementen', () => {

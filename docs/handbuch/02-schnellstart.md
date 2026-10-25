@@ -12,7 +12,7 @@ Voraussetzung für A und C ist Python 3.11 oder neuer (getestet mit 3.11; unter 
 
 ## 2.1 Weg A: Installer für einen Dauerläufer
 
-Quelltext entpacken (Release-Datei `landblick-1.0.0-alpha.2-quelltext.zip` oder `.tar.gz`), in den Ordner wechseln und den Installer starten.
+Quelltext entpacken (Release-Datei `landblick-1.0.0-beta.1-quelltext.zip` oder `.tar.gz`), in den Ordner wechseln und den Installer starten.
 
 **Windows (PowerShell):**
 
@@ -70,10 +70,10 @@ python -m pytest -q && node --test tests/js/*.test.mjs     # Tests
 cp .env.example .env && chmod 600 .env                     # OSINT_CONTACT auf die eigene Adresse setzen
 python -m app.collect --once                               # alle Quellen einmal abrufen
 python -m app.export                                       # schreibt web/data/*.json
-python deploy/serve-local.py --dir web --port 8080         # http://127.0.0.1:8080
+python tools/serve-local.py --dir web --port 8080         # http://127.0.0.1:8080
 ```
 
-Der kleine Server `deploy/serve-local.py` versteht HTTP-Teilabrufe (Range), die die Kartendatei braucht; `python -m http.server` kann das nicht.
+Der kleine Server `tools/serve-local.py` versteht HTTP-Teilabrufe (Range), die die Kartendatei braucht; `python -m http.server` kann das nicht.
 
 ## 2.4 Erste Sichtprüfung
 

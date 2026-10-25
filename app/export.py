@@ -1,8 +1,7 @@
-"""Statischer Export: schreibt die JSON-Dateien, die das Frontend auf dem Webspace liest.
+"""Statischer Export: schreibt die JSON-Dateien, die das Frontend liest.
 
-Zweck:      Der Webspace (IONOS) führt kein Python aus. Der Collector läuft auf einem Rechner des Betreibers,
-            dieser Export macht aus der Datenbank kleine JSON-Dateien, ein Upload (deploy/publish.sh)
-            bringt sie auf den Webspace.
+Zweck:      Die Oberfläche rechnet nicht in der Datenbank, sie liest fertige Dateien. Dieser Export macht aus der
+            Datenbank kleine JSON-Dateien im Ordner web/data, die der lokale Server ausliefert.
 Parameter:  --out PFAD   Zielordner (Standard web/data)
             --db PFAD    Datenbank (Standard $OSINT_DB_PATH oder data/osint.sqlite)
 Beispiel:   python -m app.export --out web/data

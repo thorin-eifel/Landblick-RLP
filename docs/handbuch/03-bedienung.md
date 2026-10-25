@@ -122,7 +122,7 @@ Der Zustand einer Quelle ist einer von sechs:
 | offen (pending) | noch nie versucht |
 | aus (disabled) | im Register abgeschaltet |
 
-Ist der **Export selbst** älter als 20 Minuten, zeigt die Seite „Datenstand veraltet“. Das passiert, wenn die Sammelstelle steht oder der Upload klemmt, und es fällt dem Besucher auf, weil die Seite gegen seine Uhr rechnet. Laufen die Datendateien gar nicht mehr, steht oben „Die Datendateien konnten nicht geladen werden. Angezeigt wird, was zuletzt geladen wurde.“
+Ist der **Export selbst** älter als 20 Minuten, zeigt die Seite „Datenstand veraltet“. Das passiert, wenn der Sammelzyklus steht, und es fällt auf, weil die Seite gegen die eigene Uhr rechnet. Laufen die Datendateien gar nicht mehr, steht oben „Die Datendateien konnten nicht geladen werden. Angezeigt wird, was zuletzt geladen wurde.“
 
 Die **Statusseite** listet jede Quelle mit Zustand, letztem Erfolg, Fehlern in Folge, Fehlertext und den letzten Läufen. Nach fünf Fehlläufen in Folge pausiert ein Sammler für 15 Minuten (Circuit Breaker), damit er die Quelle nicht belastet. Die Seite **Quellen und Lizenzen** nennt je Quelle Betreiber, Lizenz, Intervall und Datenschutzrisiko. Wo die Lizenz noch nicht an der Primärquelle bestätigt ist, steht das offen dort.
 

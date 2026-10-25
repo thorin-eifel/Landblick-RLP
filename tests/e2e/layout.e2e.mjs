@@ -47,7 +47,7 @@ let server; let browser;
 
 before(async () => {
   if (skip) return;
-  server = spawn('python3', ['deploy/serve-local.py', '--port', String(PORT), '--bind', '127.0.0.1'], { cwd: ROOT, stdio: 'ignore' });
+  server = spawn('python3', ['tools/serve-local.py', '--port', String(PORT), '--bind', '127.0.0.1'], { cwd: ROOT, stdio: 'ignore' });
   for (let i = 0; i < 50; i++) {
     try { if ((await fetch(BASE)).ok) break; } catch { /* noch nicht da */ }
     await new Promise((r) => setTimeout(r, 200));

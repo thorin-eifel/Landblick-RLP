@@ -18,7 +18,7 @@ def _load(name: str, rel: str):
     return mod
 
 
-serve = _load("serve_local", "deploy/serve-local.py")
+serve = _load("serve_local", "tools/serve-local.py")
 check_range = _load("check_range", "tools/check_range.py")
 
 

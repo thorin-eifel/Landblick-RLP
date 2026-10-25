@@ -8,7 +8,7 @@ Ein laufendes Landblick besteht aus mehreren kleinen Aufgaben, jede für sich au
 
 | Job | Takt | Aufgabe |
 |---|---|---|
-| zyklus | alle 5 Minuten | fällige Quellen abrufen, danach Export schreiben, optional Delta-Upload |
+| zyklus | alle 5 Minuten | fällige Quellen abrufen, danach Export schreiben |
 | spaet | alle 30 Minuten | langsame Quellen (große Abrufe, OpenStreetMap) |
 | backup | täglich 03:15 | Datenbank online sichern, Prüfsumme prüfen, 14 Stände behalten |
 | health | alle 10 Minuten | Gesundheitsprüfung, Exit-Code für Monitoring |
@@ -25,8 +25,6 @@ Der Installer (Kapitel 2) legt die Jobs je nach System an:
 - **Windows:** Aufgabenplanung, Ordner „Landblick“, versteckt, ohne Konsolenfenster. Dauerprozesse starten bei der Anmeldung (bei `-System` beim Systemstart) und werden bei Absturz neu gestartet.
 - **Linux:** systemd-Einheiten (Benutzerebene mit `loginctl enable-linger`, oder systemweit mit `--system`).
 - **macOS:** launchd-Plisten `de.ctw.landblick-<job>` im Benutzerverzeichnis.
-
-Die Vorlagen für Handarbeit liegen unter `deploy/` (`systemd/`, `*.plist`, `crontab.example`).
 
 ## 6.3 Gesundheitsprüfung
 

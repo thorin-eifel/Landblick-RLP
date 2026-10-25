@@ -2,7 +2,17 @@
 
 Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt: läuft, ist aber nicht abgenommen (rechtliche Prüfung, Dauerbetrieb, Lizenzvermerke der Landesdienste stehen aus).
 
-## [Unreleased]
+## [1.0.0-beta.1] - 2026-10-25
+
+### Entfernt (reine Desktop-App)
+- Der Web-Zweig ist raus: `deploy/publish.sh` (SFTP-Upload per lftp), `tools/publish_delta.py`, `deploy/run-cycle.sh`, `deploy/crontab.example`, die launchd-Plisten `de.ctw.osint-*` und die systemd-Units unter `deploy/systemd/`. Den Zeitplan legt seit dem Installer ohnehin `install.py` an; die Vorlagen waren doppelt und veraltet.
+- `web/.htaccess` (Apache-Header für den Webspace) entfällt. Die Content-Security-Policy steht weiter als Meta-Tag in jeder Seite; der Test über die Kartendienste prüft jetzt nur noch `web/index.html`.
+- `PUBLISH_ENABLED` und die `IONOS_SFTP_*`-Werte sind aus `.env.example`, aus dem Installer und aus der Dokumentation verschwunden. `app/live.py` und `tools/zyklus.py` laden nichts mehr hoch.
+- `deploy/serve-local.py` liegt jetzt als `tools/serve-local.py` beim Rest der Werkzeuge; der Ordner `deploy/` ist weg.
+
+### Geändert
+- Version auf 1.0.0-beta.1.
+- Dokumentation (README, `docs/betrieb.md`, Handbuch, DSFA-Entwurf) beschreibt den lokalen Betrieb statt Sammelstelle plus Webspace.
 
 ### Geändert (Installer)
 - Die Workflows laufen auf Node 24: `checkout@v5`, `setup-python@v6`, `setup-node@v5`, `upload-artifact@v6` (alle auf der Node-24-Laufzeit von GitHub) und `node-version: 24` für unsere eigenen Schritte.

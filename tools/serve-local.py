@@ -3,9 +3,9 @@
 
 Zweck:    Ersatz für `python -m http.server`, der keine Range-Anfragen versteht und damit
           Kartenkacheln aus einer .pmtiles-Datei nicht liefern kann.
-Aufruf:   python deploy/serve-local.py --dir web --port 8080 [--bind 127.0.0.1]
+Aufruf:   python tools/serve-local.py --dir web --port 8080 [--bind 127.0.0.1]
 Beispiel: curl -s -H 'Range: bytes=0-15' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8080/tiles/region.pmtiles
-Hinweis:  Nur für die lokale Ansicht. Der Betrieb läuft auf dem Webspace (Apache).
+Hinweis:  Für die Ansicht ohne Desktop-App (Entwicklung, Installation auf einem Dauerläufer).
 Zugang:   Auf Loopback (127.0.0.1, ::1) nimmt der Server wie die Desktop-App unter /api/zugang Zugangsdaten (API-Schlüssel) für die Quellen
           entgegen und legt sie in data/zugang.json ab (--zugang ändert den Pfad, Rechte 600). Die Sammler lesen die Datei über app/config.py.
           Auf anderen Adressen (--bind 0.0.0.0) gibt es den Weg nicht.

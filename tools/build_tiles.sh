@@ -8,7 +8,6 @@
 # Braucht:  pmtiles-CLI (tools/bin/pmtiles oder im PATH), curl, python3, Netz zu build.protomaps.com
 # Hinweis:  Es wird nur der Ausschnitt geladen (Teilabrufe, je nach Zoom 200 bis 650 MB), nicht der Planet.
 #           Ausschnitt: etwas größer als die Bounding Box des Lagebilds (Südeifel + 120 km, inkl. Luxemburg).
-#           Danach hochladen: deploy/publish.sh --site, dann tools/check_range.py <URL der Datei>.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

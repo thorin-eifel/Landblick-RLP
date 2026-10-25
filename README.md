@@ -29,7 +29,7 @@ Das Gebiet steht fest in `region.yaml` (Rheinland-Pfalz plus 80 km, Polygon; ein
 Quellen → Sammler (app/collectors) → Geofilter (app/region.py) → SQLite → Export (JSON) → statisches Frontend (web/)
 ```
 
-Ein Rechner ruft die Quellen ab und schreibt fertige JSON-Dateien. Der Webspace liefert nur HTML, CSS, JavaScript und diese Dateien aus (kein Python dort). Fällt eine Quelle aus, bleibt der Rest stehen und die Kachel sagt es. Ausführlich mit Betrieb, IONOS-Einrichtung und Desktop-App: `docs/betrieb.md`.
+Alles läuft auf dem eigenen Rechner: Die Sammler rufen die Quellen ab und schreiben fertige JSON-Dateien, ein lokaler Dienst auf 127.0.0.1 liefert die Oberfläche und diese Dateien aus. Es gibt keinen Server und kein Hosting. Fällt eine Quelle aus, bleibt der Rest stehen und die Kachel sagt es. Ausführlich mit Betrieb und Desktop-App: `docs/betrieb.md`.
 
 ## Regeln, die nicht verhandelt werden
 
@@ -71,7 +71,7 @@ Plan und Begründung: `docs/rlp/plan.md`. Entscheidung: `docs/adr/0001-region-rl
 
 - Quellen im Register: 49, davon aktiv: 45
 - Sammler (Module in `app/collectors/`): 48
-- Tests: 655 Python, 158 JavaScript
+- Tests: 630 Python, 152 JavaScript
 
 ### Quellen und Lizenzen
 
