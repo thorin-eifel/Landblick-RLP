@@ -1,4 +1,6 @@
 import json
+import logging
+import subprocess
 import threading
 import urllib.request
 from http.server import ThreadingHTTPServer
@@ -289,3 +291,62 @@ def test_work_ueberlebt_timeout_und_exportfehler(tmp_path, monkeypatch):
         app.work()
     assert len(sleeps) == 3 and calls.count("app.collect") >= 2
     assert app.job.snapshot()["phase"] in ("ready", "error")
+
+
+# ---- Protokolldatei im Datenordner ----
+# Unter Windows läuft die App ohne Konsole: ohne diese Datei ist jeder Fehler des Dienstes unauffindbar.
+
+
+@pytest.fixture()
+def log_sauber():
+    """Handler, die ein Test an den Wurzel-Logger hängt, wieder abnehmen und schließen (sonst bleibt die Datei offen)."""
+    wurzel = logging.getLogger()
+    vorher = list(wurzel.handlers)
+    yield
+    for h in [h for h in wurzel.handlers if h not in vorher]:
+        wurzel.removeHandler(h)
+        h.close()
+
+
+def test_logdatei_nimmt_meldungen_auf(tmp_path, log_sauber):
+    datei = desktop.log_in_datei(tmp_path)
+    assert datei == tmp_path / "logs" / "dienst.log"
+    logging.getLogger("osint.desktop").warning("Prüfzeile mit Umlaut: Höhe")
+    assert "Prüfzeile mit Umlaut: Höhe" in datei.read_text(encoding="utf-8")
+
+
+def test_logdatei_rotiert_und_begrenzt_sich(tmp_path, monkeypatch, log_sauber):
+    monkeypatch.setattr(desktop, "LOG_BYTES", 2000)
+    monkeypatch.setattr(desktop, "LOG_KEEP", 2)
+    datei = desktop.log_in_datei(tmp_path)
+    for i in range(400):
+        logging.getLogger("osint.desktop").warning("Zeile %d %s", i, "x" * 80)
+    stand = sorted(p.name for p in (tmp_path / "logs").iterdir())
+    assert stand == ["dienst.log", "dienst.log.1", "dienst.log.2"]     # nicht mehr als LOG_KEEP Sicherungen
+    assert all(p.stat().st_size < 10_000 for p in (tmp_path / "logs").iterdir())
+
+
+def test_unbeschreibbarer_ordner_stoppt_den_dienst_nicht(tmp_path, log_sauber):
+    (tmp_path / "logs").write_text("keine Datei, sondern ein Ordnerplatz")   # mkdir scheitert daran
+    assert desktop.log_in_datei(tmp_path) is None
+
+
+def test_fehlerausgabe_des_kindes_steht_im_log(srv, caplog, monkeypatch):
+    """Die Ausgabe der Kindprozesse (app.collect, app.export) muss durch das Log laufen, nicht ins geerbte stderr."""
+    app, _, _ = srv
+    fertig = subprocess.CompletedProcess(args=[], returncode=1, stderr="erste Zeile\nZDM-Fehler: Quelle kaputt\n")
+    monkeypatch.setattr(desktop.subprocess, "run", lambda *a, **k: fertig)
+    schwanz: list[str] = []
+    with caplog.at_level(logging.WARNING, logger="osint.desktop"):
+        assert app._run(["app.collect"], err_tail=schwanz) == 1
+    assert "ZDM-Fehler: Quelle kaputt" in caplog.text and "[app.collect]" in caplog.text
+    assert schwanz == ["erste Zeile", "ZDM-Fehler: Quelle kaputt"]
+
+
+def test_kindausgabe_auch_ohne_err_tail_im_log(srv, caplog, monkeypatch):
+    app, _, _ = srv
+    fertig = subprocess.CompletedProcess(args=[], returncode=0, stderr="Export geschrieben\n")
+    monkeypatch.setattr(desktop.subprocess, "run", lambda *a, **k: fertig)
+    with caplog.at_level(logging.INFO, logger="osint.desktop"):
+        assert app._run(["app.export"]) == 0
+    assert "Export geschrieben" in caplog.text

@@ -16,7 +16,7 @@ Ein laufendes Landblick besteht aus mehreren kleinen Aufgaben, jede für sich au
 | live | dauernd | Dienst für schnelle Quellen (Flugverkehr) |
 | dauerlauf | alle 10 Minuten (optional) | Messpunkt für den 7-Tage-Lauf |
 
-Der Zyklus sperrt sich selbst: Läuft der vorige noch, überspringt der neue. Eine verwaiste Sperre gilt nach 30 Minuten als tot. Jeder Job schreibt in eine eigene, rotierende Logdatei unter `data/logs/`.
+Der Zyklus sperrt sich selbst: Läuft der vorige noch, überspringt der neue. Eine verwaiste Sperre gilt nach 30 Minuten als tot. Jeder Job schreibt in eine eigene, rotierende Logdatei unter `data/logs/`. Die Desktop-App schreibt entsprechend nach `<Datenordner>/logs/dienst.log` (unter Windows `%APPDATA%\de.ctw.osint\logs\`), weil sie dort ohne Konsole läuft.
 
 ## 6.2 Aufgaben starten: Windows, Linux, macOS
 

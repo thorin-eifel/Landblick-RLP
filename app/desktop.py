@@ -23,9 +23,11 @@ import time
 import urllib.parse
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 log = logging.getLogger("osint.desktop")
+LOG_BYTES, LOG_KEEP = 2_000_000, 5
 
 
 def use_certifi() -> str | None:
@@ -46,6 +48,27 @@ def use_certifi() -> str | None:
 
 
 use_certifi()
+
+
+def log_in_datei(data_dir: Path) -> Path | None:
+    """Protokoll zusätzlich in <Datenordner>/logs/dienst.log schreiben, rotierend (5 x 2 MB).
+
+    Grund: Unter Windows läuft die App ohne Konsole (die Hülle ist als Fenster-Programm gebaut). Alles, was der Dienst
+    und seine Kindprozesse nach stderr schreiben, wäre dort sonst verloren und jeder Fehler unauffindbar.
+    Lässt sich die Datei nicht anlegen, läuft die App weiter und sagt es nur."""
+    try:
+        ordner = data_dir / "logs"
+        ordner.mkdir(parents=True, exist_ok=True)
+        datei = ordner / "dienst.log"
+        h = RotatingFileHandler(datei, maxBytes=LOG_BYTES, backupCount=LOG_KEEP, encoding="utf-8")
+        h.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+        logging.getLogger().addHandler(h)
+        return datei
+    except OSError as err:
+        log.warning("Protokolldatei nicht möglich: %s", err)
+        return None
+
+
 _RANGE = re.compile(r"^bytes=(\d*)-(\d*)$")
 CYCLE_S = 300
 # Manifest des Nachladepakets (Relief Zoom 13/14), hängt am GitHub-Release. OSINT_PAKETE_MANIFEST überschreibt, "aus" schaltet ab.
@@ -134,14 +157,14 @@ class App:
     def _run(self, args: list[str], progress: Path | None = None, timeout: int = 1800, err_tail: list[str] | None = None) -> int:
         """Sammler und Export als Kindprozess. Im gebündelten Programm (PyInstaller) ruft es sich selbst mit --run auf."""
         cmd = [sys.executable, "--run", *args] if getattr(sys, "frozen", False) else [sys.executable, "-m", *args]
-        if err_tail is None:
-            return subprocess.run(cmd, cwd=self.repo_dir, env=self.env(progress), timeout=timeout).returncode
-        # Fehlerausgabe mitlesen, damit die Meldung die Ursache nennt (sonst nur "Code 1"); weiter auch ins Log
+        # Die Ausgabe des Kindes wird immer mitgelesen: geerbtes stderr geht unter Windows ins Leere (Fenster ohne Konsole),
+        # über das Log landet sie in der Datei im Datenordner. err_tail nimmt zusätzlich die letzten Zeilen für die Meldung auf.
         r = subprocess.run(cmd, cwd=self.repo_dir, env=self.env(progress), timeout=timeout, stderr=subprocess.PIPE, text=True, errors="replace")
         lines = [x for x in r.stderr.splitlines() if x.strip()]
-        for x in lines[-40:]:
-            sys.stderr.write(x + "\n")
-        err_tail[:] = lines[-3:]
+        for x in lines:
+            log.log(logging.INFO if r.returncode == 0 else logging.WARNING, "[%s] %s", args[0], x)
+        if err_tail is not None:
+            err_tail[:] = lines[-3:]
         return r.returncode
 
     def job_snapshot(self) -> dict:
@@ -459,6 +482,10 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
     logging.basicConfig(level=a.log_level, format="%(asctime)s %(levelname)s %(name)s: %(message)s", stream=sys.stderr)
     logging.getLogger("httpx").setLevel(logging.WARNING)
+    datei = log_in_datei(a.data_dir)
+    from app import __version__
+    log.info("Landblick %s, %s, Python %s, Datenordner %s, Protokoll %s",
+             __version__, sys.platform, sys.version.split()[0], a.data_dir, datei or "nur stderr")
     app = App(a.data_dir, a.web_dir, a.pmtiles, root, pack_dirs=[d for d in a.pack_dir if d.is_dir()])
     box = [0]
     srv = ThreadingHTTPServer(("127.0.0.1", a.port), make_handler(app, box))

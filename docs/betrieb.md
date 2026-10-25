@@ -485,6 +485,7 @@ Der Installer (NSIS, eine `Landblick - RLP_<Version>_x64-setup.exe`, rund 1,8 GB
 
 - **Installation:** pro Benutzer (`currentUser`, ohne Administratorrechte), Deutsch, Eintrag im Startmenü und Deinstallation über „Apps“. Der Installer holt bei Bedarf WebView2 nach (Windows 11 hat es, Windows 10 braucht eine Internetverbindung dafür).
 - **Erster Start:** Die App öffnet die Einrichtungsseite, lädt die Karte für das ganze Gebiet (rund 1,5 GB, einmalig, wiederaufnehmbar) und beginnt zu sammeln. Daten und Zugangsdaten liegen in `%APPDATA%\de.ctw.osint`; Deinstallieren lässt sie stehen (zum Zurücksetzen den Ordner löschen).
+- **Wenn etwas klemmt:** `%APPDATA%\de.ctw.osint\logs\dienst.log` (rotierend, 5 Dateien zu 2 MB). Dort steht die Startzeile mit Version, System und Datenordner, dazu alles, was der Dienst und seine Kindprozesse (`app.collect`, `app.export`) melden. Die App hat unter Windows keine Konsole; ohne diese Datei wäre nichts davon zu sehen. Was einzelne Quellen angeht, steht auch auf der Seite „Status“.
 - **Nicht signiert:** Windows SmartScreen meldet „Der Computer wurde durch Windows geschützt“. *Weitere Informationen → Trotzdem ausführen*. Ein Code-Signing-Zertifikat ist offen.
 - **Nicht getestet auf echter Hardware:** Der Bau läuft durch, der Rauchtest des Sidecars (`app.region` im gebündelten Programm) ist Teil des Baus; der Lauf der App unter Windows ist beim ersten Test auf dem PC zu prüfen (Windows-Firewall-Abfrage für den lokalen Dienst, Pfade, Antivirus-Fehlalarme bei PyInstaller-Programmen).
 

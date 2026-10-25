@@ -4,6 +4,10 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [1.0.0-beta.1] - 2026-10-25
 
+### Neu (Desktop-App)
+- Der lokale Dienst schreibt ein Protokoll nach `<Datenordner>/logs/dienst.log` (rotierend, 5 Dateien zu 2 MB), mit einer Startzeile aus Version, System, Python-Fassung und Datenordner. Unter Windows läuft die App ohne Konsole: bisher war dort jede Meldung verloren.
+- Die Fehlerausgabe der Kindprozesse (`app.collect`, `app.export`) läuft jetzt immer durch dieses Protokoll statt ins geerbte stderr.
+
 ### Entfernt (reine Desktop-App)
 - Der Web-Zweig ist raus: `deploy/publish.sh` (SFTP-Upload per lftp), `tools/publish_delta.py`, `deploy/run-cycle.sh`, `deploy/crontab.example`, die launchd-Plisten `de.ctw.osint-*` und die systemd-Units unter `deploy/systemd/`. Den Zeitplan legt seit dem Installer ohnehin `install.py` an; die Vorlagen waren doppelt und veraltet.
 - `web/.htaccess` (Apache-Header für den Webspace) entfällt. Die Content-Security-Policy steht weiter als Meta-Tag in jeder Seite; der Test über die Kartendienste prüft jetzt nur noch `web/index.html`.
