@@ -1,6 +1,6 @@
 # Dauerlauf-Bericht
 
-Zeitraum: 2026-10-25T18:38:03.340173Z bis 2026-10-25T21:38:23.815618Z (3.0 h, 7 Proben, UTC).
+Zeitraum: 2026-10-25T18:38:03.340173Z bis 2026-10-25T22:38:38.273962Z (4.0 h, 8 Proben, UTC).
 
 ## Kriterien R6
 
@@ -11,21 +11,22 @@ Zeitraum: 2026-10-25T18:38:03.340173Z bis 2026-10-25T21:38:23.815618Z (3.0 h, 7 
 ## Zustand über die Proben
 
 - OK: 0 (0.0 %)
-- WARNUNG: 7 (100.0 %)
+- WARNUNG: 8 (100.0 %)
 - KRITISCH: 0 (0.0 %)
 
 ## Pausen
 
 - 2026-10-25T19:37:30.155940Z bis 2026-10-25T20:38:34.661997Z: 61 min
 - 2026-10-25T20:38:34.661997Z bis 2026-10-25T21:38:23.815618Z: 60 min
+- 2026-10-25T21:38:23.815618Z bis 2026-10-25T22:38:38.273962Z: 60 min
 
 ## Längste Störung je Quelle
 
-- adsblol: 180 min seit 2026-10-25T18:38:03.340173Z (stale)
-- nasa_firms: 180 min seit 2026-10-25T18:38:03.340173Z (down)
-- tankerkoenig: 180 min seit 2026-10-25T18:38:03.340173Z (down)
-- osm_tankstellen_lu: 170 min seit 2026-10-25T18:48:03.842330Z (down)
-- osm_routen: 160 min seit 2026-10-25T18:58:03.433043Z (down)
+- adsblol: 241 min seit 2026-10-25T18:38:03.340173Z (stale)
+- nasa_firms: 241 min seit 2026-10-25T18:38:03.340173Z (down)
+- tankerkoenig: 241 min seit 2026-10-25T18:38:03.340173Z (down)
+- osm_tankstellen_lu: 231 min seit 2026-10-25T18:48:03.842330Z (down)
+- osm_routen: 221 min seit 2026-10-25T18:58:03.433043Z (down)
 - gtfs_rt_de: 10 min seit 2026-10-25T18:38:03.340173Z (down)
 - nina: 0 min seit 2026-10-25T19:37:30.155940Z (stale)
 - dwd_warnungen: 0 min seit 2026-10-25T19:37:30.155940Z (stale)
