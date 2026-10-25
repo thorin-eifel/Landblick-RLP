@@ -71,7 +71,7 @@ Plan und Begründung: `docs/rlp/plan.md`. Entscheidung: `docs/adr/0001-region-rl
 
 - Quellen im Register: 49, davon aktiv: 45
 - Sammler (Module in `app/collectors/`): 48
-- Tests: 630 Python, 152 JavaScript
+- Tests: 647 Python, 158 JavaScript
 
 ### Quellen und Lizenzen
 
