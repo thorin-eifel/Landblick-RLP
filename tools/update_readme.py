@@ -37,7 +37,9 @@ def count_py_tests() -> int:
 def count_js_tests() -> int:
     files = sorted((ROOT / "tests" / "js").glob("*.test.mjs"))
     try:
-        out = subprocess.run(["node", "--test", *map(str, files)], cwd=ROOT, capture_output=True, text=True, check=False).stdout
+        # Reporter fest auf TAP: ab Node 23 ist auch ohne Terminal "spec" Standard ("ℹ tests N"), dann griffe nur
+        # die Zählung der test(-Zeilen und lokal und CI kämen auf verschiedene Zahlen.
+        out = subprocess.run(["node", "--test", "--test-reporter=tap", *map(str, files)], cwd=ROOT, capture_output=True, text=True, check=False).stdout
         m = re.search(r"^# tests (\d+)", out, re.M)
         if m:
             return int(m.group(1))

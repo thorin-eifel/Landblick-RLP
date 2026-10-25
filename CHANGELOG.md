@@ -7,6 +7,7 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 ### Geändert (R6)
 - Ein Name durchgehend: Umgebungsvariablen `LANDBLICK_*`, Datenbank `data/landblick.sqlite`, Sidecar `landblick-core`, Kennung `de.thorin.landblick` (launchd, Desktop-App), Logger `landblick.*`, Header `X-Landblick`. Bestehende Installationen ziehen einmal um (Schritte im Pull Request).
 - Abhängigkeiten: `pillow` 12.3.0 → 13.0.0, `certifi` 2026.7.22 → 2026.10.19 (pip-audit: 37 bzw. 1 bekannte Lücke).
+- `tools/update_readme.py` zählt die JavaScript-Tests mit festem TAP-Reporter; unter Node 24 kam sonst die Ersatzzählung (157 statt 163) heraus und `--check` war in der CI rot.
 - `.env`: Kommentar am Zeilenende gehört nicht mehr zum Wert. Vorher landete er aus der Vorlage im User-Agent, und der Umlaut darin ließ jeden Abruf scheitern.
 
 ## [1.0.0-beta.1] - 2026-10-25
