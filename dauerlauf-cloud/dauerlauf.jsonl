@@ -7,3 +7,5 @@
 {"t": "2026-10-25T20:37:04.226611Z", "note": "VM der Cloud-Sitzung erneut neu gestartet (letzte Probe 19:37Z), beim Wecken 20:36Z neu gestartet"}
 {"t": "2026-10-25T20:38:34.661997Z", "overall": "WARNUNG", "exit": 1, "reasons": ["4 Quelle(n) ausgefallen", "1 veraltet, 0 gestört"], "counts": {"ok": 36, "pending": 4, "degraded": 0, "stale": 1, "down": 4}, "export_age_min": 0.1, "problem": {"adsblol": "stale", "nasa_firms": "down", "osm_routen": "down", "tankerkoenig": "down", "osm_tankstellen_lu": "down"}}
 {"t": "2026-10-25T21:36:53.904273Z", "note": "VM der Cloud-Sitzung neu gestartet 21:26Z (letzte Probe 20:38Z), beim Wecken 21:36Z neu gestartet"}
+{"t": "2026-10-25T21:38:23.815618Z", "overall": "WARNUNG", "exit": 1, "reasons": ["4 Quelle(n) ausgefallen", "1 veraltet, 0 gestört"], "counts": {"ok": 36, "pending": 4, "degraded": 0, "stale": 1, "down": 4}, "export_age_min": 0.1, "problem": {"adsblol": "stale", "nasa_firms": "down", "osm_routen": "down", "tankerkoenig": "down", "osm_tankstellen_lu": "down"}}
+{"t": "2026-10-25T22:37:10.727389Z", "note": "VM der Cloud-Sitzung erneut neu gestartet, beim Wecken 22:37Z neu gestartet"}
