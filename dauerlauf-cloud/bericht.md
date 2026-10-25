@@ -37,5 +37,6 @@ Keine.
 ## Handeingriffe und Vermerke
 
 - 2026-10-25T19:37:29.836130Z: VM der Cloud-Sitzung schlief nach Leerlauf (Prozesse weg, letzte Probe 19:08Z), beim Wecken 19:36Z neu gestartet
+- 2026-10-25T20:37:04.226611Z: VM der Cloud-Sitzung erneut neu gestartet (letzte Probe 19:37Z), beim Wecken 20:36Z neu gestartet
 
 Der Bericht misst, er entscheidet nicht. Ob R6 damit fertig ist, entscheidet der Mensch.
