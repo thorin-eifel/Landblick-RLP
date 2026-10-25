@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       kacheln_tag:
-        description: "Release-Tag mit den Kachelpaketen (leer = Installer ohne Kacheln, Karte kommt beim ersten Start per Download)"
+        description: "Release-Tag mit den Kachelpaketen; keine = Installer ohne Kacheln (rund 50 MB, die Karte kommt beim ersten Start per Download)"
         default: "kacheln-1"
   push: { tags: ["windows-v*"] }
 permissions: { contents: read }
@@ -33,10 +33,10 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue'
           $out = 'desktop/src-tauri/pakete'
-          # Von Hand gestartet gilt die Eingabe wörtlich (leer = ohne Kacheln); bei einem Tag-Lauf gilt kacheln-1.
+          # Von Hand gestartet gilt die Eingabe wörtlich ('keine' = ohne Kacheln; ein leeres Feld ersetzt GitHub durch den Standardwert); bei einem Tag-Lauf gilt kacheln-1.
           $tag = if ($env:EREIGNIS -eq 'workflow_dispatch') { $env:EINGABE } else { 'kacheln-1' }
           New-Item -ItemType Directory -Force "$out/tiles", "$out/data" | Out-Null
-          if (-not $tag) { Set-Content "$out/LIESMICH.txt" 'Platzhalter: Installer ohne Kachelpakete.'; return }
+          if (-not $tag -or $tag -eq 'keine') { Set-Content "$out/LIESMICH.txt" 'Platzhalter: Installer ohne Kachelpakete.'; return }
           $base = "https://github.com/${{ github.repository }}/releases/download/$tag"
           $sums = Join-Path $env:RUNNER_TEMP 'SHA256SUMS'
           Invoke-WebRequest -UseBasicParsing "$base/SHA256SUMS" -OutFile $sums
