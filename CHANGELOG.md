@@ -5,6 +5,7 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 ## [Unreleased]
 
 ### Geändert (Installer)
+- Die Workflows laufen auf Node 24: `checkout@v5`, `setup-python@v6`, `setup-node@v5`, `upload-artifact@v5` (alle auf der Node-24-Laufzeit von GitHub) und `node-version: 24` für unsere eigenen Schritte.
 - Der Windows-Installer bringt die selbst gebauten Kacheln mit: Basiskarte (Region, Kern, Ring), Relief, Hangneigung und Felswände, zusammen rund 1,8 GB. Der Workflow lädt sie beim Bau vom Release `kacheln-1` und prüft die Prüfsummen; die App muss die Karte beim ersten Start nicht mehr holen. Gebäude (201 MB) bleiben draußen, damit der NSIS-Installer unter 2 GB bleibt. Ohne Tag (`kacheln_tag` leer) entsteht wie bisher ein Installer ohne Kacheln.
 
 ### Behoben (Installer)

@@ -14,11 +14,11 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.12" }
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
+      - uses: actions/setup-node@v5
+        with: { node-version: 24 }
       - uses: dtolnay/rust-toolchain@stable
       - name: Sidecar (Python-Dienst und pmtiles)
         shell: pwsh
@@ -58,7 +58,7 @@ jobs:
       - name: Ergebnis
         shell: pwsh
         run: Get-ChildItem desktop/src-tauri/target/release/bundle/nsis | Format-Table Name, Length
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: landblick-windows-installer
           path: desktop/src-tauri/target/release/bundle/nsis/*.exe
