@@ -39,6 +39,10 @@ jobs:
       - run: pip install -r requirements.txt
       - run: npm install --no-save --prefix "$RUNNER_TEMP/pw" playwright@1.49.1
       - run: npx --prefix "$RUNNER_TEMP/pw" playwright install --with-deps chromium
+      - name: Leerer Export (die Lageseite baut die Karte erst mit data/meta.json)
+        run: |
+          python -c "from app.db import Storage; from app.config import Settings; Storage(Settings.from_env().db_path).close()"
+          python -m app.export
       - name: Layouttest
         run: node --test tests/e2e/layout.e2e.mjs
         env: { PLAYWRIGHT_MODULE: "${{ runner.temp }}/pw/node_modules/playwright" }
