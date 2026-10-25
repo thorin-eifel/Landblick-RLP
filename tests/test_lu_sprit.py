@@ -54,7 +54,7 @@ def test_private_sources_only_load_in_private_mode(tmp_path, monkeypatch):
                 geo_bezug="g", datenschutz_risiko="niedrig", zuletzt_geprüft="2026-10-07", collector="c")
     import yaml
     src.write_text(yaml.safe_dump({"sources": [dict(base, id="a"), dict(base, id="b", nutzung="privat")]}, allow_unicode=True))
-    monkeypatch.delenv("OSINT_MODE", raising=False)
+    monkeypatch.delenv("LANDBLICK_MODE", raising=False)
     assert [e.id for e in Registry.load(src).entries] == ["a"]
-    monkeypatch.setenv("OSINT_MODE", "privat")
+    monkeypatch.setenv("LANDBLICK_MODE", "privat")
     assert [e.id for e in Registry.load(src).entries] == ["a", "b"]

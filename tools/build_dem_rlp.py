@@ -46,7 +46,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 LIST_URL = "https://geobasis-rlp.de/data/dgm1/current/meta4/dgm1_tif_07.meta4"
-UA = "Landblick/1.0 (DGM1 one-off fetch; contact via www.ctw.example)"
+UA = "Landblick/1.0 (DGM1 one-off fetch; +https://github.com/thorin-eifel/landblick-rlp)"
 NODATA = -9999.0
 STEP = 4              # Mittelung 4 x 4 Pixel: 1 m -> 4 m; Zoom 14 hat rund 6 m je Pixel
 CELL = 1000 // STEP   # 250 Pixel je Kilometer

@@ -94,11 +94,11 @@ def test_zugang_status_setzen_loeschen(zserver):
     st = httpx.get(f"{base}/api/zugang").json()["quellen"]
     felder = {f["env"]: f["gesetzt"] for q in st for f in q["felder"]}
     assert felder["TANKERKOENIG_API_KEY"] is False
-    r = httpx.post(f"{base}/api/zugang", json={"env": "TANKERKOENIG_API_KEY", "wert": "geheim-123"}, headers={"X-OSINT": "1"})
+    r = httpx.post(f"{base}/api/zugang", json={"env": "TANKERKOENIG_API_KEY", "wert": "geheim-123"}, headers={"X-Landblick": "1"})
     assert r.status_code == 200 and "geheim-123" not in r.text
     assert "geheim-123" not in httpx.get(f"{base}/api/zugang").text
     assert datei.exists() and (datei.stat().st_mode & 0o777) == 0o600
-    r = httpx.post(f"{base}/api/zugang", json={"env": "TANKERKOENIG_API_KEY", "loeschen": True}, headers={"X-OSINT": "1"})
+    r = httpx.post(f"{base}/api/zugang", json={"env": "TANKERKOENIG_API_KEY", "loeschen": True}, headers={"X-Landblick": "1"})
     assert r.status_code == 200
     assert all(not f["gesetzt"] for q in r.json()["quellen"] for f in q["felder"])
 
@@ -106,9 +106,9 @@ def test_zugang_status_setzen_loeschen(zserver):
 def test_zugang_verweigert_ohne_header_fremder_host_unbekannte_variable(zserver):
     base, _ = zserver
     assert httpx.post(f"{base}/api/zugang", json={"env": "TANKERKOENIG_API_KEY", "wert": "x"}).status_code == 403
-    assert httpx.post(f"{base}/api/zugang", json={"env": "TANKERKOENIG_API_KEY", "wert": "x"}, headers={"X-OSINT": "1", "Origin": "http://evil.example"}).status_code == 403
+    assert httpx.post(f"{base}/api/zugang", json={"env": "TANKERKOENIG_API_KEY", "wert": "x"}, headers={"X-Landblick": "1", "Origin": "http://evil.example"}).status_code == 403
     assert httpx.get(f"{base}/api/zugang", headers={"Host": "evil.example"}).status_code == 403
-    assert httpx.post(f"{base}/api/zugang", json={"env": "PATH", "wert": "x"}, headers={"X-OSINT": "1"}).status_code == 400
+    assert httpx.post(f"{base}/api/zugang", json={"env": "PATH", "wert": "x"}, headers={"X-Landblick": "1"}).status_code == 400
 
 
 def test_zugang_nicht_ausserhalb_von_loopback(tmp_path):
@@ -116,7 +116,7 @@ def test_zugang_nicht_ausserhalb_von_loopback(tmp_path):
     srv = serve.make_server(str(tmp_path), 0, "0.0.0.0", store)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     try:
-        r = httpx.post(f"http://127.0.0.1:{srv.server_address[1]}/api/zugang", json={"env": "TANKERKOENIG_API_KEY", "wert": "x"}, headers={"X-OSINT": "1"})
+        r = httpx.post(f"http://127.0.0.1:{srv.server_address[1]}/api/zugang", json={"env": "TANKERKOENIG_API_KEY", "wert": "x"}, headers={"X-Landblick": "1"})
         assert r.status_code == 404
     finally:
         srv.shutdown()

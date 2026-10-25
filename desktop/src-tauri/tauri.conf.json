@@ -2,7 +2,7 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Landblick - RLP",
   "version": "1.0.0-beta.1",
-  "identifier": "de.ctw.osint",
+  "identifier": "de.thorin.landblick",
   "build": {
     "frontendDist": "../dist"
   },
@@ -26,7 +26,7 @@
       "pakete/": "pakete/"
     },
     "externalBin": [
-      "binaries/osint-core",
+      "binaries/landblick-core",
       "binaries/pmtiles"
     ],
     "category": "Utility",

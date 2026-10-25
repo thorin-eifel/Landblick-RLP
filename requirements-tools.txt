@@ -1,7 +1,7 @@
 # Nur für tools/ (Kartenbau, Regionsbau auf dem Mac oder einem Server), nicht für Betrieb und Tests.
 # Eigene venv: pip kann mapbox-vector-tile nicht neben protobuf==7.x auflösen. Deshalb hier kein `-r requirements.txt`:
 # die Werkzeuge brauchen protobuf, httpx und pydantic des Betriebs nicht.
-pillow==12.3.0
+pillow==13.0.0
 httpx==0.28.1
 numpy==2.4.6
 mapbox-vector-tile==2.2.0

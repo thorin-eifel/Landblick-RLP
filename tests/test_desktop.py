@@ -51,7 +51,7 @@ def test_foreign_host_rejected(srv):
 
 def test_setup_and_geocode_are_gone(srv):
     _, port, _ = srv
-    assert call(port, "/api/setup", "POST", {"lat": 49.8, "lon": 6.4}, {"X-OSINT": "1"})[0] == 404
+    assert call(port, "/api/setup", "POST", {"lat": 49.8, "lon": 6.4}, {"X-Landblick": "1"})[0] == 404
     assert call(port, "/api/geocode?q=Irrel")[0] == 404
     assert not hasattr(desktop, "geocode")
 
@@ -85,9 +85,9 @@ def test_use_certifi_sets_bundle_and_respects_user_value(monkeypatch):
 
 
 def test_user_agent_has_real_contact_by_default(monkeypatch):
-    monkeypatch.delenv("OSINT_CONTACT", raising=False)
+    monkeypatch.delenv("LANDBLICK_CONTACT", raising=False)
     assert ".invalid" not in desktop.ua() and desktop.PROJECT_URL in desktop.ua()    # Nominatim: 403 bei Platzhalteradresse
-    monkeypatch.setenv("OSINT_CONTACT", "mail@beispiel.de")
+    monkeypatch.setenv("LANDBLICK_CONTACT", "mail@beispiel.de")
     assert "mail@beispiel.de" in desktop.ua()
 
 
@@ -159,7 +159,7 @@ def test_pack_more_serves_higher_zoom_from_second_file(srv, tmp_path):
 
 def test_nachladen_aus_ohne_manifest(srv, monkeypatch):
     app, port, _ = srv
-    monkeypatch.delenv("OSINT_PAKETE_MANIFEST", raising=False)
+    monkeypatch.delenv("LANDBLICK_PAKETE_MANIFEST", raising=False)
     monkeypatch.setattr("app.desktop.PAKETE_MANIFEST", "")
     assert app.start_nachladen() is False
     assert json.loads(call(port, "/api/state")[1])["nachladen"]["phase"] == "idle"
@@ -171,7 +171,7 @@ def test_nachladen_holt_paket_und_meldet_zustand(srv, tmp_path, monkeypatch):
     data, man, files = paket(tmp_path)
     s = Srv(files)
     try:
-        monkeypatch.setenv("OSINT_PAKETE_MANIFEST", s.url + "dem-hoch.pmtiles.manifest.json")
+        monkeypatch.setenv("LANDBLICK_PAKETE_MANIFEST", s.url + "dem-hoch.pmtiles.manifest.json")
         assert app.start_nachladen() is True
         app.nachlade_thread.join(10)
         assert (app.data_dir / "tiles" / "dem-hoch.pmtiles").read_bytes() == data
@@ -186,7 +186,7 @@ def test_nachladen_fehler_bleibt_sichtbar(srv, tmp_path, monkeypatch):
     app, _, _ = srv
     s = Srv({})
     try:
-        monkeypatch.setenv("OSINT_PAKETE_MANIFEST", s.url + "fehlt.json")
+        monkeypatch.setenv("LANDBLICK_PAKETE_MANIFEST", s.url + "fehlt.json")
         app.start_nachladen()
         app.nachlade_thread.join(10)
         j = app.nachladen.snapshot()
@@ -231,9 +231,9 @@ def test_traversal_erreicht_zugang_und_datenbank_nicht(srv):
     """Befund H1: /data/../zugang.json lag vorher innerhalb des Datenordners und wurde ausgeliefert."""
     app, port, _ = srv
     (app.data_dir / "zugang.json").write_text('{"TANKERKOENIG_API_KEY": "geheim"}')
-    (app.data_dir / "osint.sqlite").write_bytes(b"SQLite format 3\0")
+    (app.data_dir / "landblick.sqlite").write_bytes(b"SQLite format 3\0")
     (app.data_dir / "data").mkdir(exist_ok=True); (app.data_dir / "data" / "ok.json").write_text("{}")
-    for p in ("/data/../zugang.json", "/data/%2e%2e/zugang.json", "/tiles/../osint.sqlite", "/tiles/..%2fzugang.json", "/data/..%2fosint.sqlite"):
+    for p in ("/data/../zugang.json", "/data/%2e%2e/zugang.json", "/tiles/../landblick.sqlite", "/tiles/..%2fzugang.json", "/data/..%2flandblick.sqlite"):
         st, body = _raw_get(port, p)
         assert st == 404 and b"geheim" not in body and b"SQLite" not in body, p
     assert _raw_get(port, "/data/ok.json")[0] == 200
@@ -311,7 +311,7 @@ def log_sauber():
 def test_logdatei_nimmt_meldungen_auf(tmp_path, log_sauber):
     datei = desktop.log_in_datei(tmp_path)
     assert datei == tmp_path / "logs" / "dienst.log"
-    logging.getLogger("osint.desktop").warning("Prüfzeile mit Umlaut: Höhe")
+    logging.getLogger("landblick.desktop").warning("Prüfzeile mit Umlaut: Höhe")
     assert "Prüfzeile mit Umlaut: Höhe" in datei.read_text(encoding="utf-8")
 
 
@@ -320,7 +320,7 @@ def test_logdatei_rotiert_und_begrenzt_sich(tmp_path, monkeypatch, log_sauber):
     monkeypatch.setattr(desktop, "LOG_KEEP", 2)
     datei = desktop.log_in_datei(tmp_path)
     for i in range(400):
-        logging.getLogger("osint.desktop").warning("Zeile %d %s", i, "x" * 80)
+        logging.getLogger("landblick.desktop").warning("Zeile %d %s", i, "x" * 80)
     stand = sorted(p.name for p in (tmp_path / "logs").iterdir())
     assert stand == ["dienst.log", "dienst.log.1", "dienst.log.2"]     # nicht mehr als LOG_KEEP Sicherungen
     assert all(p.stat().st_size < 10_000 for p in (tmp_path / "logs").iterdir())
@@ -337,7 +337,7 @@ def test_fehlerausgabe_des_kindes_steht_im_log(srv, caplog, monkeypatch):
     fertig = subprocess.CompletedProcess(args=[], returncode=1, stderr="erste Zeile\nZDM-Fehler: Quelle kaputt\n")
     monkeypatch.setattr(desktop.subprocess, "run", lambda *a, **k: fertig)
     schwanz: list[str] = []
-    with caplog.at_level(logging.WARNING, logger="osint.desktop"):
+    with caplog.at_level(logging.WARNING, logger="landblick.desktop"):
         assert app._run(["app.collect"], err_tail=schwanz) == 1
     assert "ZDM-Fehler: Quelle kaputt" in caplog.text and "[app.collect]" in caplog.text
     assert schwanz == ["erste Zeile", "ZDM-Fehler: Quelle kaputt"]
@@ -347,7 +347,7 @@ def test_kindausgabe_auch_ohne_err_tail_im_log(srv, caplog, monkeypatch):
     app, _, _ = srv
     fertig = subprocess.CompletedProcess(args=[], returncode=0, stderr="Export geschrieben\n")
     monkeypatch.setattr(desktop.subprocess, "run", lambda *a, **k: fertig)
-    with caplog.at_level(logging.INFO, logger="osint.desktop"):
+    with caplog.at_level(logging.INFO, logger="landblick.desktop"):
         assert app._run(["app.export"]) == 0
     assert "Export geschrieben" in caplog.text
 

@@ -56,7 +56,7 @@ Einzelheiten, Prüfliste für den ersten Windows-Test und Grenzen stehen in Kapi
 
 Die Desktop-App (Tauri, mit dem System-WebView, WebGL auf der Grafikkarte) bringt alles in einem Fenster mit: einen lokalen Dienst auf `127.0.0.1`, den Sammelzyklus und die Oberfläche. Beim ersten Start zeigt eine Einrichtungsseite den Fortschritt, lädt die Karte für das ganze Gebiet (rund 1,5 GB, einmalig und wiederaufnehmbar) und beginnt zu sammeln.
 
-Der Windows-Installer (`Landblick - RLP_<Version>_x64-setup.exe`) wird mit dem GitHub-Workflow **windows-installer** gebaut (Kapitel 6.10). Er installiert pro Benutzer, ohne Administratorrechte. Er ist nicht signiert: Windows SmartScreen meldet „Der Computer wurde durch Windows geschützt“; unter „Weitere Informationen“ lässt er sich trotzdem ausführen. Daten und Zugangsdaten liegen unter `%APPDATA%\de.ctw.osint`.
+Der Windows-Installer (`Landblick - RLP_<Version>_x64-setup.exe`) wird mit dem GitHub-Workflow **windows-installer** gebaut (Kapitel 6.10). Er installiert pro Benutzer, ohne Administratorrechte. Er ist nicht signiert: Windows SmartScreen meldet „Der Computer wurde durch Windows geschützt“; unter „Weitere Informationen“ lässt er sich trotzdem ausführen. Daten und Zugangsdaten liegen unter `%APPDATA%\de.thorin.landblick`.
 
 In der Desktop-App und auf dem lokalen Webserver (Adresse `127.0.0.1`) erscheinen in der Quellenübersicht Eingabefelder für Zugangsdaten (Tankerkönig-Schlüssel, NASA-FIRMS-Schlüssel). Alternativ trägt man sie in `.env` ein; die `.env` hat Vorrang.
 
@@ -67,7 +67,7 @@ python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements-dev.txt
 python -m pytest -q && node --test tests/js/*.test.mjs     # Tests
 
-cp .env.example .env && chmod 600 .env                     # OSINT_CONTACT auf die eigene Adresse setzen
+cp .env.example .env && chmod 600 .env                     # LANDBLICK_CONTACT auf die eigene Adresse setzen
 python -m app.collect --once                               # alle Quellen einmal abrufen
 python -m app.export                                       # schreibt web/data/*.json
 python tools/serve-local.py --dir web --port 8080         # http://127.0.0.1:8080

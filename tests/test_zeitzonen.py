@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def ohne_systemzonen(code: str) -> subprocess.CompletedProcess:
-    env = {**os.environ, "PYTHONTZPATH": "", "OSINT_NO_DOTENV": "1", "PYTHONPATH": str(ROOT)}
+    env = {**os.environ, "PYTHONTZPATH": "", "LANDBLICK_NO_DOTENV": "1", "PYTHONPATH": str(ROOT)}
     return subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env=env, cwd=ROOT)
 
 

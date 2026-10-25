@@ -2,7 +2,7 @@
 
 Zweck:      Räumlicher Zuschnitt, Pfade und Betriebsparameter an einer Stelle.
 Parameter:  Umgebungsvariablen (siehe .env.example), alle optional.
-Beispiel:   OSINT_DB_PATH=./data/osint.sqlite python -m app.collect --once
+Beispiel:   LANDBLICK_DB_PATH=./data/landblick.sqlite python -m app.collect --once
 """
 from __future__ import annotations
 
@@ -28,7 +28,15 @@ def load_dotenv(path: Path | None = None) -> int:
         if not line or line.startswith("#") or "=" not in line:
             continue
         key, _, value = line.partition("=")
-        key, value = key.strip(), value.strip().strip("'\"")
+        key, value = key.strip(), value.strip()
+        if value[:1] in ("'", '"') and value[0] in value[1:]:
+            value = value[1:value.index(value[0], 1)]   # Anführungszeichen: alles bis zum schließenden, auch "#"
+        else:
+            # Kommentar am Zeilenende (" # ...") gehört nicht zum Wert. Sonst landet er im User-Agent, und ein
+            # Umlaut darin lässt httpx jeden Abruf mit UnicodeEncodeError abbrechen.
+            for sep in (" #", "\t#"):
+                value = value.split(sep, 1)[0]
+            value = value.strip().strip("'\"")
         if key and value and key not in os.environ:
             os.environ[key] = value
             n += 1
@@ -39,19 +47,19 @@ def load_zugang(path: Path | None = None) -> int:
     """Zugangsdaten aus data/zugang.json (Eingabe in der Quellenübersicht) in die Umgebung; .env und Shell gewinnen. Werte werden nie geloggt."""
     from .zugang import env_from_file
     n = 0
-    for key, value in env_from_file(path or Path(os.environ.get("OSINT_ZUGANG", BASE_DIR / "data" / "zugang.json"))).items():
+    for key, value in env_from_file(path or Path(os.environ.get("LANDBLICK_ZUGANG", BASE_DIR / "data" / "zugang.json"))).items():
         if key not in os.environ:
             os.environ[key] = value
             n += 1
     return n
 
 
-if not os.environ.get("OSINT_NO_DOTENV"):
+if not os.environ.get("LANDBLICK_NO_DOTENV"):
     load_dotenv()
     load_zugang()
 
 # Räumlicher Zuschnitt kommt aus region.yaml (app/region.py), nicht mehr aus Konstanten. Erst nach .env laden,
-# damit OSINT_REGION und OSINT_CENTER_* aus der Datei wirken.
+# damit LANDBLICK_REGION und LANDBLICK_CENTER_* aus der Datei wirken.
 # CENTER_* ist der Bezugspunkt für Entfernungsangaben (Irrel), BBOX der Kasten der Region (grober Vorfilter,
 # Reihenfolge lat_min, lon_min, lat_max, lon_max). QUERY_* ist ein Kreis, der die Region umschließt, für Quellen,
 # die nur "Mittelpunkt plus Radius" können. Ob ein Punkt wirklich in der Region liegt, entscheidet geo.in_region().
@@ -62,7 +70,7 @@ CENTER_LON = REGION.ref_lon
 BBOX = REGION.bbox
 QUERY_LAT, QUERY_LON, QUERY_RADIUS_KM = REGION.query_lat, REGION.query_lon, REGION.query_radius_km
 
-CONTACT = os.environ.get("OSINT_CONTACT", "kontakt@example.invalid")
+CONTACT = os.environ.get("LANDBLICK_CONTACT", "kontakt@example.invalid")
 
 
 @dataclass(frozen=True)
@@ -79,15 +87,15 @@ class Settings:
 
     @classmethod
     def from_env(cls) -> "Settings":
-        contact = os.environ.get("OSINT_CONTACT", CONTACT)
+        contact = os.environ.get("LANDBLICK_CONTACT", CONTACT)
         return cls(
-            db_path=Path(os.environ.get("OSINT_DB_PATH", BASE_DIR / "data" / "osint.sqlite")),
-            sources_path=Path(os.environ.get("OSINT_SOURCES", BASE_DIR / "sources.yaml")),
-            web_dir=Path(os.environ.get("OSINT_WEB_DIR", BASE_DIR / "web")),
+            db_path=Path(os.environ.get("LANDBLICK_DB_PATH", BASE_DIR / "data" / "landblick.sqlite")),
+            sources_path=Path(os.environ.get("LANDBLICK_SOURCES", BASE_DIR / "sources.yaml")),
+            web_dir=Path(os.environ.get("LANDBLICK_WEB_DIR", BASE_DIR / "web")),
             user_agent=f"Landblick/1.0 (+{contact})",
-            http_timeout_s=float(os.environ.get("OSINT_HTTP_TIMEOUT", "20")),
-            http_max_attempts=int(os.environ.get("OSINT_HTTP_ATTEMPTS", "3")),
-            breaker_threshold=int(os.environ.get("OSINT_BREAKER_THRESHOLD", "5")),
-            breaker_cooldown_s=int(os.environ.get("OSINT_BREAKER_COOLDOWN", "900")),
-            retention_days=int(os.environ.get("OSINT_RETENTION_DAYS", "30")),
+            http_timeout_s=float(os.environ.get("LANDBLICK_HTTP_TIMEOUT", "20")),
+            http_max_attempts=int(os.environ.get("LANDBLICK_HTTP_ATTEMPTS", "3")),
+            breaker_threshold=int(os.environ.get("LANDBLICK_BREAKER_THRESHOLD", "5")),
+            breaker_cooldown_s=int(os.environ.get("LANDBLICK_BREAKER_COOLDOWN", "900")),
+            retention_days=int(os.environ.get("LANDBLICK_RETENTION_DAYS", "30")),
         )

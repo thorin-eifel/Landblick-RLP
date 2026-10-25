@@ -37,7 +37,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))   # Aufruf als Skript: Projektwurzel auffindbar machen
 from tools import build_klippen_dgm as kd  # noqa: E402
 
-log = logging.getLogger("osint.hang_probe")
+log = logging.getLogger("landblick.hang_probe")
 RLP_KM2 = 19858.0
 EXTENT = 4096
 

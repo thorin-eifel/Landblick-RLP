@@ -1,7 +1,7 @@
 <!-- Umsetzungsprompt für Claude Code, Stand 9. Oktober 2026, freigegeben R0 bis R7. -->
 # Auftrag: Lagebild Rheinland-Pfalz plus 80 km
 
-Du bist Claude Code im Repository thorin-eifel/maps. Du baust das Lagebild "Landblick - RLP" (früher OSINT by CTW; seit dem 9. Oktober 2026 ein privates Projekt von Thorsten Schleicher, kein Firmenprojekt mehr) von einem Kreis mit 120 km um Irrel zu einer Fläche um: Landesgrenze Rheinland-Pfalz plus 80 km nach außen. Du arbeitest weitgehend selbstständig, Phase für Phase, und meldest dich an den unten genannten Haltepunkten.
+Du bist Claude Code im Repository thorin-eifel/maps. Du baust das Lagebild "Landblick - RLP" (seit dem 9. Oktober 2026 ein privates Projekt von Thorsten Schleicher) von einem Kreis mit 120 km um Irrel zu einer Fläche um: Landesgrenze Rheinland-Pfalz plus 80 km nach außen. Du arbeitest weitgehend selbstständig, Phase für Phase, und meldest dich an den unten genannten Haltepunkten.
 
 ## 1. Ton und Arbeitsweise
 
@@ -43,7 +43,7 @@ Region = Landesgrenze Rheinland-Pfalz (BKG VG250, dl-de/by-2.0) plus 80 km Puffe
 - Du mergst nicht selbst. Das Zusammenführen und die Freigabe der nächsten Phase gehören dem Nutzer.
 - Commits enden mit den Attributionszeilen, die die Sitzung vorgibt.
 - Die `README.md` zeigt immer den aktuellen Stand. Vor jedem Push: `docs/rlp/status.yaml` nachführen (Stand, Pull-Request-Nummer), dann `python tools/update_readme.py` ausführen und die README mitcommitten. Die CI prüft das mit `--check`. Handgeschriebene Teile der README änderst du, wenn sich Schnellstart, Aufbau oder Regeln ändern.
-- Seit dem 9. Oktober 2026 ist das Projekt privat: keine CTW-Marke, keine Firmenbezüge in neuen Texten. Betreiberangaben stehen in `web/impressum.html`.
+- Seit dem 9. Oktober 2026 ist das Projekt privat: keine Firmenmarke, keine Firmenbezüge in neuen Texten. Betreiberangaben stehen in `web/impressum.html`.
 
 ## 7. Selbstständigkeit: was du allein entscheidest und wo du anhältst
 
@@ -66,7 +66,7 @@ Die Sitzung läuft in einem Linux-Container ohne Zugriff auf alle Hosts (Overpas
 
 Wo das Gerät des Nutzers über die Desktop-Verbindung erreichbar ist, darfst du dort Skripte laufen lassen und Ergebnisse prüfen. Dateien, die du dorthin überträgst, prüfst du nach der Übertragung gegen die Größe und eine SHA-256-Summe, weil Übertragungen schon unvollständig angekommen sind. Mit dem Repository auf GitHub entfällt das für Code: der Mac holt per `git pull`.
 
-Prüfen im Browser: Die Seite startet mit `#debug` und hat einen Prüfzugang (Ereignis `osint-debug`, Auftrag als JSON in `data-debug-in`, Antwort in `data-debug-out`). Er registriert sich erst, wenn die Karte geladen ist, die Seite lädt bei großer Fläche langsam. Eine Adresse, die sich nur im Hash unterscheidet, lädt die Seite nicht neu, hänge einen Abfrageparameter an. Skripte im Browser-Fenster brechen nach etwa 45 Sekunden ab, teile längere Abläufe.
+Prüfen im Browser: Die Seite startet mit `#debug` und hat einen Prüfzugang (Ereignis `landblick-debug`, Auftrag als JSON in `data-debug-in`, Antwort in `data-debug-out`). Er registriert sich erst, wenn die Karte geladen ist, die Seite lädt bei großer Fläche langsam. Eine Adresse, die sich nur im Hash unterscheidet, lädt die Seite nicht neu, hänge einen Abfrageparameter an. Skripte im Browser-Fenster brechen nach etwa 45 Sekunden ab, teile längere Abläufe.
 
 ## 9. Berichtsvorlage je Phase (Pull-Request-Text)
 

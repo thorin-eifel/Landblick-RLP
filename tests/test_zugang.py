@@ -44,7 +44,7 @@ def test_file_is_private_and_atomic(store, tmp_path):
     assert not list(tmp_path.glob("*.tmp"))
 
 
-@pytest.mark.parametrize("env", ["LD_PRELOAD", "PATH", "OSINT_DB_PATH", "", "tankerkoenig_api_key"])
+@pytest.mark.parametrize("env", ["LD_PRELOAD", "PATH", "LANDBLICK_DB_PATH", "", "tankerkoenig_api_key"])
 def test_only_registered_variables_are_accepted(store, env):
     with pytest.raises(ZugangError):
         store.set(env, "x")
@@ -90,7 +90,7 @@ def call(port, path, method="GET", body=None, headers=None, host=None):
 def test_api_set_read_delete_and_child_env(srv, monkeypatch):
     monkeypatch.delenv("TANKERKOENIG_API_KEY", raising=False)
     app, port = srv
-    x = {"X-OSINT": "1"}
+    x = {"X-Landblick": "1"}
     code, j = call(port, "/api/zugang")
     assert code == 200 and {q["source_id"] for q in j["quellen"]} == {"nasa_firms", "tankerkoenig"}
     code, j = call(port, "/api/zugang", "POST", {"env": "TANKERKOENIG_API_KEY", "wert": "streng-geheim"}, x)
@@ -103,11 +103,11 @@ def test_api_set_read_delete_and_child_env(srv, monkeypatch):
 
 def test_api_rejects_foreign_names_bad_values_and_missing_header(srv):
     app, port = srv
-    x = {"X-OSINT": "1"}
+    x = {"X-Landblick": "1"}
     assert call(port, "/api/zugang", "POST", {"env": "LD_PRELOAD", "wert": "x"}, x)[0] == 400
     assert call(port, "/api/zugang", "POST", {"env": "FIRMS_MAP_KEY", "wert": "a\nb"}, x)[0] == 400
     assert call(port, "/api/zugang", "POST", {"env": ["x"], "wert": "a"}, x)[0] == 400
-    assert call(port, "/api/zugang", "POST", {"env": "FIRMS_MAP_KEY", "wert": "ok"})[0] == 403                  # ohne X-OSINT
+    assert call(port, "/api/zugang", "POST", {"env": "FIRMS_MAP_KEY", "wert": "ok"})[0] == 403                  # ohne X-Landblick
     assert call(port, "/api/zugang", "POST", {"env": "FIRMS_MAP_KEY", "wert": "ok"}, {**x, "Origin": "http://evil.example"})[0] == 403
     assert call(port, "/api/zugang", host="evil.example")[0] == 403                                            # DNS-Rebinding
     assert app.zugang.env() == {}

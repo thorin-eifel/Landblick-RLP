@@ -37,7 +37,7 @@ from typing import Iterator
 
 import numpy as np
 
-log = logging.getLogger("osint.gebaeude")
+log = logging.getLogger("landblick.gebaeude")
 
 EXTENT = 4096
 ZMAX, ZMIN = 15, 14

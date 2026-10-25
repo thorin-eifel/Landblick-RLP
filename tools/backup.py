@@ -3,8 +3,8 @@
 
 Zweck:      Tägliche Kopie nach BACKUP_DIR, ältere Sicherungen werden nach --keep aufgeräumt,
             die Kopie wird auf Integrität geprüft (PRAGMA integrity_check).
-Parameter:  --db PFAD      Quelle (Standard $OSINT_DB_PATH oder data/osint.sqlite)
-            --dir PFAD     Ziel (Standard $OSINT_BACKUP_DIR oder data/backup)
+Parameter:  --db PFAD      Quelle (Standard $LANDBLICK_DB_PATH oder data/landblick.sqlite)
+            --dir PFAD     Ziel (Standard $LANDBLICK_BACKUP_DIR oder data/backup)
             --keep N       Anzahl aufzubewahrender Sicherungen (Standard 14)
             --loop SEK     Dauerbetrieb: alle SEK Sekunden wiederholen (Standard: einmalig)
 Beispiel:   python tools/backup.py --keep 7
@@ -59,7 +59,7 @@ def backup_once(db: Path, out_dir: Path, keep: int) -> Path:
         raise FileNotFoundError(f"Datenbank nicht gefunden: {db}")
     out_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    target = out_dir / f"osint-{stamp}.sqlite"
+    target = out_dir / f"landblick-{stamp}.sqlite"
     tmp = target.with_suffix(".tmp")
     src = sqlite3.connect(ro_uri(db), uri=True)
     try:
@@ -81,7 +81,7 @@ def backup_once(db: Path, out_dir: Path, keep: int) -> Path:
         ro.close()
     tmp.replace(target)
     sidecar(target).write_text(json.dumps({"sha256": sha256_of(target), "bytes": target.stat().st_size, "tables": counts}, indent=1), encoding="utf-8")
-    old = sorted(out_dir.glob("osint-*.sqlite"))[:-keep] if keep > 0 else []
+    old = sorted(out_dir.glob("landblick-*.sqlite"))[:-keep] if keep > 0 else []
     for f in old:
         f.unlink()
         sidecar(f).unlink(missing_ok=True)
@@ -95,7 +95,7 @@ def verify_latest(out_dir: Path) -> dict:
 
     Prüft: Prüfsumme der Datei, PRAGMA integrity_check der Kopie, Zeilenzahlen je Tabelle gegen die Prüfsummendatei und
     Lesbarkeit über die Anwendungsschicht (Storage, schreibgeschützt). Wirft RuntimeError bei jeder Abweichung."""
-    files = sorted(out_dir.glob("osint-*.sqlite"))
+    files = sorted(out_dir.glob("landblick-*.sqlite"))
     if not files:
         raise FileNotFoundError(f"Keine Sicherung in {out_dir}")
     latest = files[-1]
@@ -105,8 +105,8 @@ def verify_latest(out_dir: Path) -> dict:
     meta = json.loads(meta_file.read_text(encoding="utf-8"))
     if sha256_of(latest) != meta["sha256"]:
         raise RuntimeError(f"Prüfsumme stimmt nicht: {latest.name}")
-    with tempfile.TemporaryDirectory(prefix="osint-restore-") as tmp:
-        restored = Path(tmp) / "osint.sqlite"
+    with tempfile.TemporaryDirectory(prefix="landblick-restore-") as tmp:
+        restored = Path(tmp) / "landblick.sqlite"
         shutil.copy2(latest, restored)
         conn = sqlite3.connect(ro_uri(restored), uri=True)
         try:
@@ -134,8 +134,8 @@ def verify_latest(out_dir: Path) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--db", default=os.environ.get("OSINT_DB_PATH", "data/osint.sqlite"))
-    ap.add_argument("--dir", default=os.environ.get("OSINT_BACKUP_DIR", "data/backup"))
+    ap.add_argument("--db", default=os.environ.get("LANDBLICK_DB_PATH", "data/landblick.sqlite"))
+    ap.add_argument("--dir", default=os.environ.get("LANDBLICK_BACKUP_DIR", "data/backup"))
     ap.add_argument("--keep", type=int, default=14)
     ap.add_argument("--loop", type=int, default=0, metavar="SEK")
     ap.add_argument("--verify", action="store_true")

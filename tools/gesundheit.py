@@ -5,7 +5,7 @@ Zweck:      Eine Stelle, die Cron, systemd oder ein Monitoring (Nagios-Stil) abf
             kommen aus app.payloads.source_status, also aus derselben Regel wie Statusseite und web/js/rules.js
             (down / stale / degraded / ok / pending / disabled). Region = region_tag der aktiven Ereignisse einer Quelle;
             Quellen ohne aktive Ereignisse (Messreihen, ruhige Lage) stehen unter "ohne".
-Parameter:  --db PFAD         SQLite (Standard $OSINT_DB_PATH oder data/osint.sqlite)
+Parameter:  --db PFAD         SQLite (Standard $LANDBLICK_DB_PATH oder data/landblick.sqlite)
             --export PFAD     Ordner mit meta.json (Standard <web>/data)
             --json            Ausgabe als JSON statt Text
             --warn-down N     Anzahl ausgefallener Quellen ab Warnung (Standard 1)
@@ -115,9 +115,9 @@ def render_text(r: dict[str, Any]) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--db", default=os.environ.get("OSINT_DB_PATH", str(BASE_DIR / "data" / "osint.sqlite")))
-    ap.add_argument("--export", default=os.environ.get("OSINT_EXPORT_DIR", str(Path(os.environ.get("OSINT_WEB_DIR", BASE_DIR / "web")) / "data")))
-    ap.add_argument("--sources", default=os.environ.get("OSINT_SOURCES", str(BASE_DIR / "sources.yaml")))
+    ap.add_argument("--db", default=os.environ.get("LANDBLICK_DB_PATH", str(BASE_DIR / "data" / "landblick.sqlite")))
+    ap.add_argument("--export", default=os.environ.get("LANDBLICK_EXPORT_DIR", str(Path(os.environ.get("LANDBLICK_WEB_DIR", BASE_DIR / "web")) / "data")))
+    ap.add_argument("--sources", default=os.environ.get("LANDBLICK_SOURCES", str(BASE_DIR / "sources.yaml")))
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--warn-down", type=int, default=1)
     ap.add_argument("--crit-down-pct", type=float, default=50.0)

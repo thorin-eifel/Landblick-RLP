@@ -29,7 +29,7 @@ Die Zeichenerklärung (`fillFlaechenLegenden` in `basiskarte.js`) liest dieselbe
 
 ```js
 document.documentElement.dataset.debugIn = JSON.stringify({ order: '^bm-land-cliff', paint: [['bm-land-cliff', 'line-width']] });
-document.dispatchEvent(new Event('osint-debug'));
+document.dispatchEvent(new Event('landblick-debug'));
 JSON.parse(document.documentElement.dataset.debugOut);
 ```
 
@@ -193,7 +193,7 @@ Ortsnamen: Größe nach Siedlungsrang (`population_rank` der Kacheln, 1 bis 9) v
 
 | Datei | Inhalt |
 |---|---|
-| `web/css/tokens.css` | nur Tokens: Marken-, System-, Status-Farben (OKLCH), semantische Rollen, Typografie, Radien, Abstände, Schatten, Bewegung, „Liquid Glass“-Materialien. Herkunft: Design System v5.1 (`ctw-design-system-v5.1.html` im Projekt). Hell in `:root`, Dunkel in `:root[data-ansicht="dunkel"]`. Kein `prefers-color-scheme`, die Ansicht wählt der Nutzer. |
+| `web/css/tokens.css` | nur Tokens: Marken-, System-, Status-Farben (OKLCH), semantische Rollen, Typografie, Radien, Abstände, Schatten, Bewegung, „Liquid Glass“-Materialien. Herkunft: Design System v5.1 (`thorin-design-system-v5.1.html` im Projekt). Hell in `:root`, Dunkel in `:root[data-ansicht="dunkel"]`. Kein `prefers-color-scheme`, die Ansicht wählt der Nutzer. |
 | `web/css/app.css` | Oberfläche und Kartenhülle, ca. 725 Zeilen, gegliedert durch Kommentare (Kopf, Warnband, Karte, Seitenleiste, Tabellen, Plaketten, Legenden, Glas-Variante ab Zeile 351, Alte-Karte-Blöcke ab Zeile 585) |
 | `web/css/icons.css` | Klassen `.ico-*`: SVG-Datei als Maske (`mask`), Farbe folgt `currentColor` |
 | `web/vendor/maplibre-gl/maplibre-gl.css` | Karten-Steuerelemente (nicht ändern; überschrieben wird in `app.css`) |

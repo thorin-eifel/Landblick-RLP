@@ -2,7 +2,7 @@
 
 Ein Lagebild aus offenen Daten: Warnungen, Wetter, Pegel, Verkehr, Luft und Strahlung auf einer Karte, mit Quelle, Alter und Lizenz an jedem Datum. Es zeigt Orte, Zeiten und Zahlen, keine Personen. Kein Tracking, keine Drittanbieter, keine US-Cloud.
 
-Privates Open-Source-Projekt von Thorsten Schleicher, Ferschweiler. Kontakt: thorin.eifel@icloud.com. Seit dem 9. Oktober 2026 privat (vorher als Schaufenster der CTW Computer-Irrel GmbH). Kein amtliches Warnsystem: im Notfall 112 und die offiziellen Warn-Apps (NINA, KATWARN).
+Privates Open-Source-Projekt von Thorsten Schleicher, Ferschweiler. Kontakt: thorin.eifel@icloud.com. Seit dem 9. Oktober 2026 privat (vorher ein Firmen-Schaufenster). Kein amtliches Warnsystem: im Notfall 112 und die offiziellen Warn-Apps (NINA, KATWARN).
 
 Zielbild: Rheinland-Pfalz plus 80 km jenseits der Landesgrenze. Heute läuft noch der Kreis von 120 km um Irrel. Der Umbau läuft in Phasen R0 bis R7, den Stand zeigt der Block unten.
 
@@ -13,7 +13,7 @@ python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements-dev.txt
 python -m pytest -q && node --test tests/js/*.test.mjs
 
-cp .env.example .env && chmod 600 .env     # OSINT_CONTACT prüfen
+cp .env.example .env && chmod 600 .env     # LANDBLICK_CONTACT prüfen
 python -m app.collect --once               # alle fälligen Quellen einmal abrufen
 python -m app.export                       # schreibt web/data/*.json
 python -m http.server 8000 -d web          # http://localhost:8000
@@ -21,7 +21,7 @@ python -m http.server 8000 -d web          # http://localhost:8000
 
 Die Karte braucht eigene Kacheln (`web/tiles/*.pmtiles`, nicht im Repository). Bau und Größen: `docs/betrieb.md`, Abschnitt Karte.
 
-Das Gebiet steht fest in `region.yaml` (Rheinland-Pfalz plus 80 km, Polygon; ein Kreis ginge auch). `python -m app.region` zeigt es, anderes Gebiet über `OSINT_REGION=<Datei>`. Das Polygon baut `tools/build_region.py` aus BKG VG250.
+Das Gebiet steht fest in `region.yaml` (Rheinland-Pfalz plus 80 km, Polygon; ein Kreis ginge auch). `python -m app.region` zeigt es, anderes Gebiet über `LANDBLICK_REGION=<Datei>`. Das Polygon baut `tools/build_region.py` aus BKG VG250.
 
 ## So hängt es zusammen
 
@@ -40,7 +40,7 @@ Alles läuft auf dem eigenen Rechner: Die Sammler rufen die Quellen ab und schre
 - Keine externen Skripte, Schriften oder Kacheln, keine Cookies außer technisch nötigen.
 - Zugangsdaten nur in `.env`, nie im Repository.
 
-Die ursprüngliche Projektanweisung steht in `docs/projektanweisung.md` (CTW-Bezüge und Radius dort überholt, Grundsätze gelten). Maßgeblich für Fläche und Phasen ist `docs/rlp/plan.md`.
+Die ursprüngliche Projektanweisung steht in `docs/projektanweisung.md` (Firmenbezüge und Radius dort überholt, Grundsätze gelten). Maßgeblich für Fläche und Phasen ist `docs/rlp/plan.md`.
 
 ## Stand
 
@@ -71,7 +71,7 @@ Plan und Begründung: `docs/rlp/plan.md`. Entscheidung: `docs/adr/0001-region-rl
 
 - Quellen im Register: 49, davon aktiv: 45
 - Sammler (Module in `app/collectors/`): 48
-- Tests: 638 Python, 157 JavaScript
+- Tests: 640 Python, 163 JavaScript
 
 ### Quellen und Lizenzen
 

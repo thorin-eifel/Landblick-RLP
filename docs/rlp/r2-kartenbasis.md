@@ -5,7 +5,7 @@ Stand: 9. Oktober 2026. Region: Rheinland-Pfalz plus 80 km (`region.yaml`). Der 
 ## Ablauf (wiederholbar, Reihenfolge einhalten)
 
 ```bash
-export OSINT_REGION=region.yaml
+export LANDBLICK_REGION=region.yaml
 pip install -r requirements-tools.txt            # pmtiles, shapely, pyyaml, mapbox-vector-tile
 # 1. Karten: Stücke holen, vereinen, prüfen. Exit 2 = Zeitbudget erreicht, Befehl wiederholen.
 python tools/build_region_tiles.py --pmtiles ./pmtiles --stage all --work build/tiles --out build/tiles/final --budget-s 150

@@ -1,5 +1,5 @@
 [package]
-name = "osint-desktop"
+name = "landblick-desktop"
 version = "1.0.0-beta.1"
 description = "Landblick - RLP. Lagebild als lokale Desktop-App"
 edition = "2021"

@@ -7,7 +7,8 @@
 // Umgebung: Braucht Playwright und Chromium. Ohne beides werden die Tests übersprungen, nicht rot.
 //           PLAYWRIGHT_MODULE  Pfad zum Playwright-Modul (Standard: `playwright`, sonst globales npm-Verzeichnis)
 //           CHROMIUM_PATH      Pfad zur Chromium-Datei (Standard: /opt/pw-browsers/chromium, sonst Playwright-eigenes)
-// Hinweis:  Kein Kartenarchiv nötig; geprüft wird nur Geometrie, nicht der Karteninhalt.
+// Hinweis:  Kein Kartenarchiv nötig; geprüft wird nur Geometrie, nicht der Karteninhalt. Ein Export muss aber liegen
+//           (web/data/meta.json, sonst baut lage.js keine Karte); ein leerer reicht, siehe Job "layout" in ci.yml.
 //           Nicht Teil von `node --test tests/js/*.test.mjs`, weil es einen Browser braucht.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';

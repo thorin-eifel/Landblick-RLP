@@ -26,7 +26,7 @@ from .db import Storage
 from .export import build_live, write_all
 from .registry import Registry
 
-log = logging.getLogger("osint.live")
+log = logging.getLogger("landblick.live")
 MIN_INTERVAL_S = 10.0
 
 

@@ -134,7 +134,7 @@ async def test_export_contains_no_personal_or_secret_fields(registry, storage, s
     await _seed_all(registry, storage, settings)
     export.write_all(export.build_all(storage, registry), tmp_path)
     blob = " ".join(p.read_text() for p in tmp_path.glob("*.json"))
-    for needle in ("OSINT_CONTACT", "example.invalid", "api_key", "password", "@"):
+    for needle in ("LANDBLICK_CONTACT", "example.invalid", "api_key", "password", "@"):
         assert needle not in blob, needle
 
 

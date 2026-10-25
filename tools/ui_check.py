@@ -36,7 +36,7 @@ class Page:
         self.pg = pg
 
     def dbg(self, cmd: dict, timeout: int = 20000) -> dict:
-        self.pg.evaluate("(c) => { document.documentElement.dataset.debugOut = ''; document.documentElement.dataset.debugIn = JSON.stringify(c); document.dispatchEvent(new Event('osint-debug')); }", cmd)
+        self.pg.evaluate("(c) => { document.documentElement.dataset.debugOut = ''; document.documentElement.dataset.debugIn = JSON.stringify(c); document.dispatchEvent(new Event('landblick-debug')); }", cmd)
         self.pg.wait_for_function("() => document.documentElement.dataset.debugOut", timeout=timeout)
         return json.loads(self.pg.evaluate("() => document.documentElement.dataset.debugOut"))
 

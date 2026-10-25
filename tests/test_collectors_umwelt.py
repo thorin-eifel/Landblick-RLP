@@ -510,6 +510,25 @@ def test_dotenv_loader_sets_only_missing_and_ignores_comments(tmp_path, monkeypa
     assert load_dotenv(tmp_path / "gibtsnicht") == 0
 
 
+def test_dotenv_loader_strips_trailing_comment(tmp_path, monkeypatch):
+    # .env.example trug "LANDBLICK_CONTACT=a@b   # ... gegenüber ...": der Umlaut im User-Agent ließ jeden Abruf scheitern.
+    from app.config import load_dotenv
+    import os
+    f = tmp_path / ".env"
+    f.write_text("K1=a@b.de   # gegenüber den Quellen\nK2=x\t# tab\nK3='mit # drin'  # weg\nK4=farbe#blau\n", encoding="utf-8")
+    monkeypatch.setattr(os, "environ", {})
+    assert load_dotenv(f) == 4
+    assert [os.environ[k] for k in ("K1", "K2", "K3", "K4")] == ["a@b.de", "x", "mit # drin", "farbe#blau"]
+
+
+def test_env_example_contact_is_ascii(monkeypatch):
+    from app.config import BASE_DIR, load_dotenv
+    import os
+    monkeypatch.setattr(os, "environ", {})
+    load_dotenv(BASE_DIR / ".env.example")
+    os.environ["LANDBLICK_CONTACT"].encode("ascii")
+
+
 # ------------------------------------------------------------------ DWD-Wind (ICON-D2)
 def _wind_blob(base: float, lead_h: int = 3) -> bytes:
     """SYNTHETISCH: 6x5-Gitter um 6,0 E / 49,9 N, Schrittweite 0,02°, Wert = base + Spaltenindex."""

@@ -3,7 +3,7 @@
 Zweck:      Die Oberfläche rechnet nicht in der Datenbank, sie liest fertige Dateien. Dieser Export macht aus der
             Datenbank kleine JSON-Dateien im Ordner web/data, die der lokale Server ausliefert.
 Parameter:  --out PFAD   Zielordner (Standard web/data)
-            --db PFAD    Datenbank (Standard $OSINT_DB_PATH oder data/osint.sqlite)
+            --db PFAD    Datenbank (Standard $LANDBLICK_DB_PATH oder data/landblick.sqlite)
 Beispiel:   python -m app.export --out web/data
 Zellen:     standardmäßig zusätzlich manifest.json, start.json und z/<x>_<y>/<art>.json (app/export_cells.py); --no-cells schaltet das ab
 Dateien:    meta.json events.json aircraft.json gewaesser.json wetter.json umwelt.json indizes.json kraftstoff.json themen.json radar.json radar.png blitz.json blitz.png wind.json haltestellen.json landmarks.json infrastruktur.json energie.json routen.json anbau.json sakral.json suche.json status.json sources.json
@@ -25,7 +25,7 @@ from .config import Settings
 from .db import Storage
 from .registry import Registry
 
-log = logging.getLogger("osint.export")
+log = logging.getLogger("landblick.export")
 
 
 def build_all(storage: Storage, registry: Registry) -> dict[str, Any]:

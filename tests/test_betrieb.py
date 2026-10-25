@@ -151,11 +151,11 @@ def test_rotation_raeumt_pruefsummen_mit_auf(settings, storage, tmp_path):
     out = tmp_path / "bk"
     for i in range(3):
         f = backup.backup_once(settings.db_path, out, keep=2)
-        neu = out / f"osint-2026010{i}T000000Z.sqlite"
+        neu = out / f"landblick-2026010{i}T000000Z.sqlite"
         f.rename(neu)
         backup.sidecar(f).rename(backup.sidecar(neu))
     backup.backup_once(settings.db_path, out, keep=2)
-    assert len(list(out.glob("osint-*.sqlite"))) == 2 and len(list(out.glob("osint-*.sqlite.json"))) == 2
+    assert len(list(out.glob("landblick-*.sqlite"))) == 2 and len(list(out.glob("landblick-*.sqlite.json"))) == 2
 
 
 # --- Chaos: Platte voll beim Export -------------------------------------------------------

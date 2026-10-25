@@ -15,9 +15,9 @@ def test_backup_is_consistent_and_rotates(settings, storage, tmp_path):
     for i in range(4):
         (out).mkdir(exist_ok=True)
         files.append(backup.backup_once(settings.db_path, out, keep=2))
-        (out / files[-1].name).rename(out / f"osint-2026010{i}T000000Z.sqlite")  # eindeutige, aufsteigende Namen
-    assert len(list(out.glob("osint-*.sqlite"))) == 2
-    newest = sorted(out.glob("osint-*.sqlite"))[-1]
+        (out / files[-1].name).rename(out / f"landblick-2026010{i}T000000Z.sqlite")  # eindeutige, aufsteigende Namen
+    assert len(list(out.glob("landblick-*.sqlite"))) == 2
+    newest = sorted(out.glob("landblick-*.sqlite"))[-1]
     assert sqlite3.connect(newest).execute("SELECT COUNT(*) FROM events").fetchone()[0] == 1
 
 

@@ -28,7 +28,7 @@ from ..db import Storage
 from ..models import Event, Measurement, Station, iso, utcnow
 from ..registry import SourceEntry
 
-log = logging.getLogger("osint.collector")
+log = logging.getLogger("landblick.collector")
 
 
 class SourceError(RuntimeError):
@@ -60,7 +60,7 @@ class Collector(ABC):
         self.client = client
         self.settings = settings
         self.backoff_base_s = backoff_base_s
-        self.log = logging.getLogger(f"osint.collector.{entry.id}")
+        self.log = logging.getLogger(f"landblick.collector.{entry.id}")
 
     # ------------------------------------------------------------ zu implementieren
     @abstractmethod

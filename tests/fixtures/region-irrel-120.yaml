@@ -1,4 +1,4 @@
-# Testregion: Kreis 120 km um Irrel, die frühere Standardfläche. Die Tests in tests/ laufen darauf (tests/conftest.py setzt OSINT_REGION).
+# Testregion: Kreis 120 km um Irrel, die frühere Standardfläche. Die Tests in tests/ laufen darauf (tests/conftest.py setzt LANDBLICK_REGION).
 name: Südeifel und Umgebung (120 km um Irrel)
 mode: radius
 reference: { name: Irrel, lat: 49.84615562322509, lon: 6.456057281843173 }

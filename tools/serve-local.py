@@ -23,7 +23,7 @@ from pathlib import Path
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
-log = logging.getLogger("osint.serve")
+log = logging.getLogger("landblick.serve")
 _RANGE = re.compile(r"^bytes=(\d*)-(\d*)$")
 
 
@@ -66,7 +66,7 @@ class RangeHandler(SimpleHTTPRequestHandler):
         if self.path != "/api/zugang" or self.zugang is None:
             return self._json({"error": "unbekannt"}, 404)
         port = self.server.server_address[1]
-        if not self._host_ok() or self.headers.get("X-OSINT") != "1":
+        if not self._host_ok() or self.headers.get("X-Landblick") != "1":
             return self._json({"error": "verweigert"}, 403)
         origin = self.headers.get("Origin")
         if origin and origin not in {f"http://127.0.0.1:{port}", f"http://localhost:{port}", f"http://[::1]:{port}"}:

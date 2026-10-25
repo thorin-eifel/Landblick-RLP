@@ -33,8 +33,8 @@ def test_radius_edge_points():
 
 
 def test_center_override_by_env(monkeypatch):
-    monkeypatch.setenv("OSINT_CENTER_LAT", "50.0")
-    monkeypatch.setenv("OSINT_CENTER_LON", "8.0")
+    monkeypatch.setenv("LANDBLICK_CENTER_LAT", "50.0")
+    monkeypatch.setenv("LANDBLICK_CENTER_LON", "8.0")
     r = region.load(BASE / "tests" / "fixtures" / "region-irrel-120.yaml")
     assert (r.ref_lat, r.ref_lon) == (50.0, 8.0) and r.contains(50.0, 8.0) and not r.contains(49.0, 5.5)
 

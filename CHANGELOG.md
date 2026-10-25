@@ -2,6 +2,15 @@
 
 Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt: läuft, ist aber nicht abgenommen (rechtliche Prüfung, Dauerbetrieb, Lizenzvermerke der Landesdienste stehen aus).
 
+## [Unveröffentlicht]
+
+### Geändert (R6)
+- Ein Name durchgehend: Umgebungsvariablen `LANDBLICK_*`, Datenbank `data/landblick.sqlite`, Sidecar `landblick-core`, Kennung `de.thorin.landblick` (launchd, Desktop-App), Logger `landblick.*`, Header `X-Landblick`. Bestehende Installationen ziehen einmal um (Schritte im Pull Request).
+- Abhängigkeiten: `pillow` 12.3.0 → 13.0.0, `certifi` 2026.7.22 → 2026.10.19 (pip-audit: 37 bzw. 1 bekannte Lücke).
+- `tools/update_readme.py` zählt die JavaScript-Tests mit festem TAP-Reporter; unter Node 24 kam sonst die Ersatzzählung (157 statt 163) heraus und `--check` war in der CI rot.
+- CI: Der Job `layout` legt vor dem Browsertest einen leeren Export an. Ohne `data/meta.json` baut die Lageseite keine Karte, alle Layouttests liefen in die Zeitgrenze.
+- `.env`: Kommentar am Zeilenende gehört nicht mehr zum Wert. Vorher landete er aus der Vorlage im User-Agent, und der Umlaut darin ließ jeden Abruf scheitern.
+
 ## [1.0.0-beta.1] - 2026-10-25
 
 ### Behoben (erster Start)
@@ -13,7 +22,7 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 - Die Fehlerausgabe der Kindprozesse (`app.collect`, `app.export`) läuft jetzt immer durch dieses Protokoll statt ins geerbte stderr.
 
 ### Entfernt (reine Desktop-App)
-- Der Web-Zweig ist raus: `deploy/publish.sh` (SFTP-Upload per lftp), `tools/publish_delta.py`, `deploy/run-cycle.sh`, `deploy/crontab.example`, die launchd-Plisten `de.ctw.osint-*` und die systemd-Units unter `deploy/systemd/`. Den Zeitplan legt seit dem Installer ohnehin `install.py` an; die Vorlagen waren doppelt und veraltet.
+- Der Web-Zweig ist raus: `deploy/publish.sh` (SFTP-Upload per lftp), `tools/publish_delta.py`, `deploy/run-cycle.sh`, `deploy/crontab.example`, die launchd-Plisten und die systemd-Units unter `deploy/systemd/`. Den Zeitplan legt seit dem Installer ohnehin `install.py` an; die Vorlagen waren doppelt und veraltet.
 - `web/.htaccess` (Apache-Header für den Webspace) entfällt. Die Content-Security-Policy steht weiter als Meta-Tag in jeder Seite; der Test über die Kartendienste prüft jetzt nur noch `web/index.html`.
 - `PUBLISH_ENABLED` und die `IONOS_SFTP_*`-Werte sind aus `.env.example`, aus dem Installer und aus der Dokumentation verschwunden. `app/live.py` und `tools/zyklus.py` laden nichts mehr hoch.
 - `deploy/serve-local.py` liegt jetzt als `tools/serve-local.py` beim Rest der Werkzeuge; der Ordner `deploy/` ist weg.
@@ -74,7 +83,7 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 - Klick auf einen Kreis oder ein Land in der Übersicht zoomt wie bisher auf die Fläche, setzt jetzt aber auch den Gebietsfilter auf diese Einheit, klappt das Detailfeld auf und zeigt den Reiter „Ereignisse“. Die Liste nennt so genau die Meldungen des gewählten Kreises; „Zurücksetzen“ hebt den Filter auf. Liegen Ereignisse im Ausschnitt nur in ausgeschalteten Ebenen, sagt die Liste das, statt „kein Ereignis“ zu melden. `gebietAusEinheit()` in `web/js/gebiet.js`, `zeigeEinheit()` in `lage/ereignisliste.js`, Test `tests/js/gebiet.test.mjs`.
 
 ### Behoben (Code-Review)
-- Desktop-Server lieferte per `/data/../zugang.json` oder `/tiles/../osint.sqlite` Zugangsdaten und Datenbank aus (Pfadprüfung gegen den ganzen Datenordner). Erlaubt ist jetzt nur `data/` bzw. `tiles/`, Verzeichnisse werden nicht mehr aufgelistet, der Datenordner wird aufgelöst (Symlink, relativer Pfad). `app/desktop.py`, Tests `tests/test_desktop.py`.
+- Desktop-Server lieferte per `/data/../zugang.json` oder `/tiles/../landblick.sqlite` Zugangsdaten und Datenbank aus (Pfadprüfung gegen den ganzen Datenordner). Erlaubt ist jetzt nur `data/` bzw. `tiles/`, Verzeichnisse werden nicht mehr aufgelistet, der Datenordner wird aufgelöst (Symlink, relativer Pfad). `app/desktop.py`, Tests `tests/test_desktop.py`.
 - Sammel-Takt der Desktop-App endete dauerhaft nach einem Timeout oder einem Exportfehler. Jetzt wird der Fehler gemeldet und im nächsten Takt neu versucht; nach dem ersten Export bleibt die Karte offen.
 - Tankerkönig: die Reihenfolge der Abfragepunkte läuft über einen Zeiger statt über die Uhr, damit bei 300-s-Takt (Desktop) keine Punkte ausfallen. Zeiger rückt auch nach Fehlschlag weiter.
 - `fetch_text` lehnt Weiterleitungen (3xx) ab statt deren Rumpf als Antwort zu nehmen.
@@ -105,7 +114,7 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ### Quellenübersicht: Zugangsdaten auch auf dem lokalen Webserver
 - `deploy/serve-local.py` beantwortet wie die Desktop-App `api/zugang` (Status, Setzen, Löschen) und legt API-Schlüssel in `data/zugang.json` ab (Rechte 600). Nur auf Loopback, mit Host-, Herkunfts- und Kopfprüfung; auf anderen Adressen gibt es den Weg nicht. Die Logik teilen sich App und Webserver (`app/zugang.py`, `handle_post`).
-- `app/config.py` liest `data/zugang.json` nach der `.env` in die Umgebung, damit Zeitplan-Läufe die dort eingegebenen Schlüssel nutzen (`OSINT_ZUGANG` ändert den Pfad). `.env` und Shell gehen vor.
+- `app/config.py` liest `data/zugang.json` nach der `.env` in die Umgebung, damit Zeitplan-Läufe die dort eingegebenen Schlüssel nutzen (`LANDBLICK_ZUGANG` ändert den Pfad). `.env` und Shell gehen vor.
 
 ### Darstellung: Alte Karte
 - Neues Menü „Darstellung“ mit „Landblick“ und „Alte Karte“ (bisher „Karte im Stil des 15. Jahrhunderts“, ein Schalter unter Kartengrundlage). Weitere Darstellungen sind vorgesehen.
@@ -132,7 +141,7 @@ Erste Version unter der Nummer 1. Vorher gab es keine gezählten Versionen; der 
 - Neue Ebene „Hangneigung“ aus dem 1-m-DGM1: Flächen ab 15, 25 und 35 Grad als Vektorkacheln Zoom 14 (`tools/build_hang_rlp.py`, Probe `tools/build_hang_probe.py`). Durchscheinend, Klippenfläche ebenfalls heller (20 %), Wandstriche und Oberkante deckend.
 - `tools/pack_tiles.py` packt Kachelordner (Relief, Felswände, Hangneigung) zu PMTiles und zerlegt sie in Teile unter 2 GB mit Manifest und SHA-256. `app/tilepack.py` liest solche Pakete; der Desktop-Server liefert daraus die Ordner-URLs `tiles/dem/…`, `tiles/klippen/…` und `tiles/hang/…` aus (ein vorhandener Ordner hat Vorrang).
 
-- Relief geteilt: `dem.pmtiles` (Zoom 6–12, rund 680 MB) kommt in den Installer, `dem-hoch` (Zoom 13/14, rund 4,3 GB in drei Teilen) lädt die App im Hintergrund nach. `app/pakete.py` holt die Teile mit Range-Wiederaufnahme in eine Datei, prüft Teil- und Gesamtsumme und benennt erst dann um; `/api/state` meldet den Stand unter `nachladen`. Adresse des Manifests: `PAKETE_MANIFEST` in `app/desktop.py` oder `OSINT_PAKETE_MANIFEST` (`aus` schaltet ab). Solange keine Adresse eingetragen ist, passiert nichts.
+- Relief geteilt: `dem.pmtiles` (Zoom 6–12, rund 680 MB) kommt in den Installer, `dem-hoch` (Zoom 13/14, rund 4,3 GB in drei Teilen) lädt die App im Hintergrund nach. `app/pakete.py` holt die Teile mit Range-Wiederaufnahme in eine Datei, prüft Teil- und Gesamtsumme und benennt erst dann um; `/api/state` meldet den Stand unter `nachladen`. Adresse des Manifests: `PAKETE_MANIFEST` in `app/desktop.py` oder `LANDBLICK_PAKETE_MANIFEST` (`aus` schaltet ab). Solange keine Adresse eingetragen ist, passiert nichts.
 
 - Desktop-Installer liefert Relief (bis Zoom 12), Felswände, Hangneigung, Gebäude und den Suchindex als Tauri-Ressource `pakete/` mit (`desktop/stage-pakete.sh`, bricht über 1,9 GB ab). Der Dienst bekommt den Ordner per `--pack-dir` und liest ihn nur; aus ihm kommen `tiles/*.pmtiles` und `data/suche_geo.json`, sonst nichts. Die Basiskarte (rund 1,5 GB) bleibt Download beim ersten Start, weil sie mit dem Rest die 2-GB-Grenze des NSIS-Installers sprengt.
 
@@ -152,7 +161,7 @@ Erste Version unter der Nummer 1. Vorher gab es keine gezählten Versionen; der 
 - Tests: Ausfall einzelner, halber und aller Quellen, Platte voll, Zeitumstellung (Python und JavaScript), Pinning aller Abhängigkeiten.
 - CI: `pip-audit` auch für `requirements-dev.txt`, `npm audit` für `desktop/`. `PyYAML` in `requirements-dev.txt` gepinnt.
 - `tools/dauerlauf.py` und `docs/rlp/r6-dauerlauf.md`: Messung und Protokoll für den 7-Tage-Lauf (der Lauf selbst steht aus).
-- Umgebungsvariable für das Register heißt in `gesundheit.py` und `dauerlauf.py` jetzt wie im Rest (`OSINT_SOURCES`).
+- Umgebungsvariable für das Register heißt in `gesundheit.py` und `dauerlauf.py` jetzt wie im Rest (`LANDBLICK_SOURCES`).
 
 ### Handbuch
 - `docs/handbuch/` (zehn Kapitel), Bau mit `tools/handbuch.py` zu Markdown, HTML und PDF; die Quellentabelle entsteht aus `sources.yaml` und wird getestet.

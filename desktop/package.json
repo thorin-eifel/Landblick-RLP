@@ -1,5 +1,5 @@
 {
-  "name": "osint-desktop",
+  "name": "landblick-desktop",
   "private": true,
   "version": "1.0.0-beta.1",
   "scripts": { "dev": "tauri dev", "build": "tauri build" },
