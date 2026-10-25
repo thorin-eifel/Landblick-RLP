@@ -6,12 +6,12 @@ Description=Landblick RLP: Gesundheitsprüfung
 
 [Service]
 Type=oneshot
-User=osint
-WorkingDirectory=/opt/osint
-ExecStart=/opt/osint/.venv/bin/python tools/gesundheit.py
+User=landblick
+WorkingDirectory=/opt/landblick
+ExecStart=/opt/landblick/.venv/bin/python tools/gesundheit.py
 SuccessExitStatus=1
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
 PrivateTmp=true
-ReadOnlyPaths=/opt/osint
+ReadOnlyPaths=/opt/landblick

@@ -2,10 +2,10 @@ import { applyLight } from './basiskarte.js';
 import { light, map, ripples, state } from './zustand.js';
 import { zellenWarten } from './zellenlauf.js';
 
-// Prüfzugang (nur mit #debug in der Adresse): Ereignis 'osint-debug', Auftrag als JSON in <html data-debug-in>: {jump:[lng,lat,zoom], layer:'id'} setzt die Ansicht und
+// Prüfzugang (nur mit #debug in der Adresse): Ereignis 'landblick-debug', Auftrag als JSON in <html data-debug-in>: {jump:[lng,lat,zoom], layer:'id'} setzt die Ansicht und
 // schreibt Zählwerte der gezeichneten Objekte nach <html data-debug-out>. Kein eval, keine Daten nach außen.
 export function debugHook(m) {
-  document.addEventListener('osint-debug', async (e) => {
+  document.addEventListener('landblick-debug', async (e) => {
     const cmd = JSON.parse(document.documentElement.dataset.debugIn || '{}');
     if (cmd.jump) { m.jumpTo({ center: [cmd.jump[0], cmd.jump[1]], zoom: cmd.jump[2] }); await new Promise((r) => { m.once('idle', r); setTimeout(r, 6000); }); }
     if (cmd.zellen && state.zellen) await zellenWarten();

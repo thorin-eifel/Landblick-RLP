@@ -4,13 +4,13 @@ Description=Landblick RLP: Datenbank sichern und Wiederherstellung prüfen
 
 [Service]
 Type=oneshot
-User=osint
-WorkingDirectory=/opt/osint
-ExecStart=/opt/osint/.venv/bin/python tools/backup.py --keep 14
-ExecStart=/opt/osint/.venv/bin/python tools/backup.py --verify
+User=landblick
+WorkingDirectory=/opt/landblick
+ExecStart=/opt/landblick/.venv/bin/python tools/backup.py --keep 14
+ExecStart=/opt/landblick/.venv/bin/python tools/backup.py --verify
 Nice=15
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
 PrivateTmp=true
-ReadWritePaths=/opt/osint/data
+ReadWritePaths=/opt/landblick/data

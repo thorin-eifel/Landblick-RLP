@@ -13,7 +13,7 @@ export async function ladeZugang() {
 }
 
 async function senden(body) {
-  const r = await fetch('api/zugang', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-OSINT': '1' }, body: JSON.stringify(body) });
+  const r = await fetch('api/zugang', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Landblick': '1' }, body: JSON.stringify(body) });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error || `Fehler ${r.status}`);
   return j;

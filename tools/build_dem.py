@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Höhenmodell-Kacheln für das Relief holen (Terrarium-Kodierung) und lokal ablegen.
 
-Zweck:      Lädt die Terrarium-Höhenkacheln (Mapzen Terrain Tiles auf AWS Open Data) für die Region (region.yaml, bei OSINT_REGION=region.yaml Rheinland-Pfalz plus 80 km)
+Zweck:      Lädt die Terrarium-Höhenkacheln (Mapzen Terrain Tiles auf AWS Open Data) für die Region (region.yaml, bei LANDBLICK_REGION=region.yaml Rheinland-Pfalz plus 80 km)
             einmalig nach web/tiles/dem-base/{z}/{x}/{y}.png (Basis und Rückfall für tools/build_dem_rlp.py, das die Landeshöhen darüberlegt und nach web/tiles/dem/ schreibt). Die Karte zeigt daraus Schummerung, Höhenfärbung
             und Höhenlinien; beim Betrachten wird kein Drittserver angefragt.
 Quelle:     https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png
@@ -25,7 +25,7 @@ from pathlib import Path
 import httpx
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from app import config  # noqa: E402  (Gebiet aus region.yaml bzw. OSINT_REGION)
+from app import config  # noqa: E402  (Gebiet aus region.yaml bzw. LANDBLICK_REGION)
 
 _S, _W, _N, _E = config.BBOX
 # Gebiet der Region plus Rand, deckt maxBounds der Karte ab

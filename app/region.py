@@ -2,7 +2,7 @@
 
 Zweck:      Ersetzt die festen Konstanten RADIUS_KM, CENTER_* und BBOX. Eine Region ist entweder ein Kreis um einen
             Mittelpunkt (mode: radius) oder ein Polygon, z. B. Rheinland-Pfalz plus 80 km (mode: polygon).
-Konfig:     region.yaml im Projektordner, anderer Pfad über OSINT_REGION. OSINT_CENTER_LAT/-LON überschreiben den
+Konfig:     region.yaml im Projektordner, anderer Pfad über LANDBLICK_REGION. LANDBLICK_CENTER_LAT/-LON überschreiben den
             Bezugspunkt (Desktop-App).
 Beispiel:   from app.region import REGION
             REGION.contains(49.85, 6.45)          # True
@@ -132,14 +132,14 @@ def _resolve(path: str | Path) -> Path:
 
 
 def load(path: str | Path | None = None) -> Region:
-    """Lädt die Region aus region.yaml (oder OSINT_REGION). Fehler sind laut: eine falsche Fläche darf nicht still laufen."""
-    cfg_path = _resolve(path or os.environ.get("OSINT_REGION") or "region.yaml")
+    """Lädt die Region aus region.yaml (oder LANDBLICK_REGION). Fehler sind laut: eine falsche Fläche darf nicht still laufen."""
+    cfg_path = _resolve(path or os.environ.get("LANDBLICK_REGION") or "region.yaml")
     cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
     mode = cfg.get("mode")
     ref = cfg.get("reference") or {}
     try:
-        ref_lat = float(os.environ.get("OSINT_CENTER_LAT", ref["lat"]))
-        ref_lon = float(os.environ.get("OSINT_CENTER_LON", ref["lon"]))
+        ref_lat = float(os.environ.get("LANDBLICK_CENTER_LAT", ref["lat"]))
+        ref_lon = float(os.environ.get("LANDBLICK_CENTER_LON", ref["lon"]))
     except (KeyError, TypeError, ValueError) as exc:
         raise ValueError(f"{cfg_path.name}: reference.lat/lon fehlt oder ist keine Zahl") from exc
     name, ref_name = str(cfg.get("name") or "Region"), str(ref.get("name") or "Bezugspunkt")

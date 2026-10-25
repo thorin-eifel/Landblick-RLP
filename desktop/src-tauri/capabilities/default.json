@@ -5,7 +5,7 @@
   "windows": ["main"],
   "permissions": [
     { "identifier": "shell:allow-spawn", "allow": [
-      { "name": "binaries/osint-core", "sidecar": true, "args": true }
+      { "name": "binaries/landblick-core", "sidecar": true, "args": true }
     ] }
   ]
 }

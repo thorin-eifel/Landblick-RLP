@@ -87,7 +87,7 @@ def test_systemd_units():
 def test_launchd_plist():
     py = Path("/opt/lb/.venv/bin/python")
     d = plistlib.loads(install.launchd_plist(next(j for j in JOBS if j.name == "health"), Path("/opt/lb"), py))
-    assert d["Label"] == "de.ctw.landblick-health" and d["StartInterval"] == 600
+    assert d["Label"] == "de.thorin.landblick-health" and d["StartInterval"] == 600
     assert d["ProgramArguments"][:2] == [str(py), "/opt/lb/tools/lauf.py"]
     b = plistlib.loads(install.launchd_plist(next(j for j in JOBS if j.name == "backup"), Path("/opt/lb"), py))
     assert b["StartCalendarInterval"] == {"Hour": 3, "Minute": 15}
@@ -96,14 +96,14 @@ def test_launchd_plist():
 
 
 def test_env_setzen_und_lesen():
-    t = "# Kommentar\nOSINT_CONTACT=fremd@example.org   # alt\n# OSINT_LIVE=1\nPUBLISH_ENABLED=0\n"
-    t2 = install.env_setzen(t, "OSINT_CONTACT", "ich@example.org")
-    t2 = install.env_setzen(t2, "OSINT_LIVE", "0")
+    t = "# Kommentar\nLANDBLICK_CONTACT=fremd@example.org   # alt\n# LANDBLICK_LIVE=1\nPUBLISH_ENABLED=0\n"
+    t2 = install.env_setzen(t, "LANDBLICK_CONTACT", "ich@example.org")
+    t2 = install.env_setzen(t2, "LANDBLICK_LIVE", "0")
     t2 = install.env_setzen(t2, "NEU", "x")
-    assert install.env_lesen(t2, "OSINT_CONTACT") == "ich@example.org"
-    assert install.env_lesen(t2, "OSINT_LIVE") == "0" and install.env_lesen(t2, "NEU") == "x"
+    assert install.env_lesen(t2, "LANDBLICK_CONTACT") == "ich@example.org"
+    assert install.env_lesen(t2, "LANDBLICK_LIVE") == "0" and install.env_lesen(t2, "NEU") == "x"
     assert install.env_lesen(t2, "PUBLISH_ENABLED") == "0" and "# Kommentar" in t2
-    assert t2.count("OSINT_LIVE") == 1
+    assert t2.count("LANDBLICK_LIVE") == 1
 
 
 def test_pmtiles_asset_namen_wie_im_sidecar_bau(monkeypatch):
@@ -120,15 +120,15 @@ def test_pmtiles_asset_namen_wie_im_sidecar_bau(monkeypatch):
 
 def test_kontakt_pflicht_ohne_tty(tmp_path, monkeypatch):
     monkeypatch.setattr(install, "ROOT", tmp_path)
-    (tmp_path / ".env.example").write_text("OSINT_CONTACT=fremd@example.org\nPUBLISH_ENABLED=0\n")
+    (tmp_path / ".env.example").write_text("LANDBLICK_CONTACT=fremd@example.org\nPUBLISH_ENABLED=0\n")
     monkeypatch.setattr(sys.stdin, "isatty", lambda: False)
     with pytest.raises(install.Fehler, match="kontakt"):
         install.schritt_env(None, True, False)
     install.schritt_env("ich@example.org", False, False)
     t = (tmp_path / ".env").read_text()
-    assert install.env_lesen(t, "OSINT_CONTACT") == "ich@example.org" and install.env_lesen(t, "OSINT_LIVE") == "0"
+    assert install.env_lesen(t, "LANDBLICK_CONTACT") == "ich@example.org" and install.env_lesen(t, "LANDBLICK_LIVE") == "0"
     install.schritt_env(None, True, False)   # vorhandene .env behält den Kontakt
-    assert install.env_lesen((tmp_path / ".env").read_text(), "OSINT_CONTACT") == "ich@example.org"
+    assert install.env_lesen((tmp_path / ".env").read_text(), "LANDBLICK_CONTACT") == "ich@example.org"
 
 
 # --- lauf.py ------------------------------------------------------------------------------------
@@ -209,7 +209,7 @@ def test_backup_verify_after(settings, storage, tmp_path):
         assert backup.main() == 0
     finally:
         sys.argv = old
-    assert len(list(out.glob("osint-*.sqlite.json"))) == 1
+    assert len(list(out.glob("landblick-*.sqlite.json"))) == 1
 
 
 # --- Aufräumen der Rohdaten am Ende --------------------------------------------------------------------------------------

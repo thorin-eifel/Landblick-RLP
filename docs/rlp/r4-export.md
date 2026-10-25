@@ -47,7 +47,7 @@ web/data/
 ## Prüfen
 
 ```bash
-export OSINT_REGION=region.yaml
+export LANDBLICK_REGION=region.yaml
 python -m app.export                         # schreibt web/data inklusive manifest.json und z/
 python -c "import json;m=json.load(open('web/data/manifest.json'));print(len(m['cells']),'Zellen',m['warnings'])"
 deploy/publish.sh --delta --dry-run          # zeigt, was hochgeladen würde

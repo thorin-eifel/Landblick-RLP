@@ -25,7 +25,7 @@ Parameter:  --kontakt MAIL      Absender im User-Agent der Abrufe (Pflicht beim 
             --status            Zustand der Jobs und Gesundheitsprüfung anzeigen
             --deinstall         Jobs entfernen (Daten, .env und .venv bleiben)
             --dry-run           nur anzeigen, was getan würde
-Dateien:    data/osint.sqlite (Datenbank), data/backup/, data/logs/*.log (rotierend), web/data/ (Export), web/tiles/ (Karte), .env
+Dateien:    data/landblick.sqlite (Datenbank), data/backup/, data/logs/*.log (rotierend), web/data/ (Export), web/tiles/ (Karte), .env
 Beispiel:   python install.py --kontakt kontakt@example.org --dauerlauf --ruhezustand-aus
 Exit:       0 = fertig, 1 = Fehler (die Meldung nennt den Schritt)
 """
@@ -52,7 +52,7 @@ IS_MAC = sys.platform == "darwin"
 MIN_PY = (3, 11)
 PMTILES_VERSION = "1.31.2"
 TASK_FOLDER = "Landblick"
-LABEL = "de.ctw.landblick"
+LABEL = "de.thorin.landblick"
 
 
 class Fehler(RuntimeError):
@@ -248,12 +248,12 @@ def schritt_env(kontakt: str | None, live: bool, dry: bool) -> None:
     env = ROOT / ".env"
     text = env.read_text(encoding="utf-8") if env.exists() else (ROOT / ".env.example").read_text(encoding="utf-8")
     if kontakt:
-        text = env_setzen(text, "OSINT_CONTACT", kontakt)
+        text = env_setzen(text, "LANDBLICK_CONTACT", kontakt)
     elif not env.exists():   # die Vorlage trägt eine fremde Adresse: nie übernehmen
         if not sys.stdin.isatty():
             raise Fehler("--kontakt MAIL fehlt (steht im User-Agent der Abrufe, Quellen sollen uns erreichen können)")
-        text = env_setzen(text, "OSINT_CONTACT", input("Kontakt-Mail für den User-Agent: ").strip())
-    text = env_setzen(text, "OSINT_LIVE", "1" if live else "0")
+        text = env_setzen(text, "LANDBLICK_CONTACT", input("Kontakt-Mail für den User-Agent: ").strip())
+    text = env_setzen(text, "LANDBLICK_LIVE", "1" if live else "0")
     text = env_setzen(text, "PUBLISH_ENABLED", env_lesen(text, "PUBLISH_ENABLED") or "0")
     ausgabe(f"Konfiguration schreiben: {env.name}")
     if dry:

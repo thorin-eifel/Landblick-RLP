@@ -15,7 +15,7 @@ Beispiele:  python -m app.collect --once
             python -m app.collect --due                # Cron-Betrieb
             python -m app.collect                      # Dauerlauf (Container-Standard)
 
-Fortschritt: Ist OSINT_PROGRESS_FILE gesetzt, schreibt der Lauf dorthin (JSON: total, done, running, failed), damit die Desktop-App
+Fortschritt: Ist LANDBLICK_PROGRESS_FILE gesetzt, schreibt der Lauf dorthin (JSON: total, done, running, failed), damit die Desktop-App
             "n von m, läuft noch: <Name>" anzeigen kann. Die Datei enthält nur Quellennamen, keine Daten.
 
 Least Privilege: Dieser Prozess liest aus dem Netz und schreibt in die Datenbank, sonst nichts.
@@ -41,7 +41,7 @@ from .db import Storage
 from .models import iso, utcnow
 from .registry import Registry
 
-log = logging.getLogger("osint.runner")
+log = logging.getLogger("landblick.runner")
 
 
 def build_collectors(settings: Settings, storage: Storage, client: httpx.AsyncClient, only: list[str] | None):
@@ -216,7 +216,7 @@ def main(argv: list[str] | None = None) -> int:
             if args.skip_live:
                 collectors = [c for c in collectors if not c.entry.params.get("live")]
             collectors = select_collectors(collectors, args.skip_later, args.only_later)
-            progress = os.environ.get("OSINT_PROGRESS_FILE")
+            progress = os.environ.get("LANDBLICK_PROGRESS_FILE")
             if args.due:
                 due = [c for c in collectors if is_due(c.entry, storage.get_state(c.entry.id))]
                 log.info("Fällig: %s", ", ".join(c.entry.id for c in due) or "nichts")

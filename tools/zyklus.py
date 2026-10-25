@@ -6,7 +6,7 @@ Zweck:      Portable Fassung von deploy/run-cycle.sh (die bleibt für Cron/launc
 Parameter:  --erst     Erstlauf: jede Quelle einmal (außer den langsamen, erstlauf: spaeter), danach Export
             --spaet    nur die langsamen Quellen (erstlauf: spaeter, z. B. große OSM-Abfragen), fällig nach Intervall
             --ohne-export   nach dem Abruf nicht exportieren
-Umgebung:   Aus .env (app.config lädt sie). OSINT_LIVE=1 (Standard): Quellen mit params.live holt das Livemodul, nicht dieser Lauf.
+Umgebung:   Aus .env (app.config lädt sie). LANDBLICK_LIVE=1 (Standard): Quellen mit params.live holt das Livemodul, nicht dieser Lauf.
             PUBLISH_ENABLED=1: danach deploy/publish.sh --delta (braucht bash und lftp; unter Windows meist nicht vorhanden).
 Sperre:     Läuft schon ein Durchlauf, endet dieser sofort mit Code 0. Verwaiste Sperren (älter als 30 Minuten) werden verworfen.
 Exit:       0 = Export erzeugt, 1 = Export oder Upload fehlgeschlagen (ein Fehler einer Quelle zählt nicht)
@@ -82,7 +82,7 @@ def main(argv: list[str] | None = None) -> int:
             collect += ["--due", "--only-later"]
         else:
             collect += ["--once" if a.erst else "--due", "--skip-later"]
-            if os.environ.get("OSINT_LIVE", "1") == "1":
+            if os.environ.get("LANDBLICK_LIVE", "1") == "1":
                 collect.append("--skip-live")
         if step(collect, 3 * 3600 if a.spaet else 40 * 60) != 0:
             log.warning("mindestens eine Quelle ist fehlgeschlagen (steht im Status)")

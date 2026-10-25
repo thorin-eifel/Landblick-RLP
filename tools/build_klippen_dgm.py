@@ -15,7 +15,7 @@ Ablauf:     1. Kandidatenkacheln aus dem 4-m-Raster wählen (Neigung >= --cand-s
             3. Blöcke von --chunk km (+ 1 km Rand): glätten, Neigung, Steilmaske mit Hysterese, Löcher füllen, öffnen,
                kleine Flächen verwerfen, Umriss als Polygon, Oberkante, Striche entlang des Gefälles
             4. Kacheln Zoom 13 (MVT) nach <out>/13/<x>/<y>.pbf, dazu meta.json
-Aufruf:     python tools/build_klippen_dgm.py --work ~/Claude/OSINT/dgm1-work --out perf-rlp/tiles/klippen
+Aufruf:     python tools/build_klippen_dgm.py --work ~/Claude/Landblick/dgm1-work --out perf-rlp/tiles/klippen
             python tools/build_klippen_dgm.py --work ... --out ... --bbox 7.70 50.10 7.76 50.14      Ausschnitt (Loreley)
             python tools/build_klippen_dgm.py --work ... --out ... --all-tiles                       ganz Rheinland-Pfalz
             python tools/build_klippen_dgm.py --work ... --out ... --no-fetch                        nur was schon da ist
@@ -40,7 +40,7 @@ from pathlib import Path
 
 import numpy as np
 
-log = logging.getLogger("osint.klippen")
+log = logging.getLogger("landblick.klippen")
 warnings.filterwarnings("ignore", category=FutureWarning)      # scikit-image 0.26 kündigt Parameternamen an, die bis 0.28 gelten
 
 RES = 1.0                     # Rasterweite der Rohkacheln in m

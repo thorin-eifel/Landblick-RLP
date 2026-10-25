@@ -35,7 +35,7 @@ from pmtiles.reader import MmapSource, Reader, all_tiles  # noqa: F401  (all_til
 from pmtiles.tile import Compression, TileType, zxy_to_tileid
 from pmtiles.writer import Writer
 
-log = logging.getLogger("osint.pack_tiles")
+log = logging.getLogger("landblick.pack_tiles")
 CHUNK = 8 * 1024 * 1024
 TYPES = {".png": TileType.PNG, ".pbf": TileType.MVT, ".mvt": TileType.MVT}
 

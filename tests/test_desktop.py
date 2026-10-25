@@ -49,7 +49,7 @@ def test_foreign_host_rejected(srv):
 
 def test_setup_and_geocode_are_gone(srv):
     _, port, _ = srv
-    assert call(port, "/api/setup", "POST", {"lat": 49.8, "lon": 6.4}, {"X-OSINT": "1"})[0] == 404
+    assert call(port, "/api/setup", "POST", {"lat": 49.8, "lon": 6.4}, {"X-Landblick": "1"})[0] == 404
     assert call(port, "/api/geocode?q=Irrel")[0] == 404
     assert not hasattr(desktop, "geocode")
 
@@ -83,9 +83,9 @@ def test_use_certifi_sets_bundle_and_respects_user_value(monkeypatch):
 
 
 def test_user_agent_has_real_contact_by_default(monkeypatch):
-    monkeypatch.delenv("OSINT_CONTACT", raising=False)
+    monkeypatch.delenv("LANDBLICK_CONTACT", raising=False)
     assert ".invalid" not in desktop.ua() and desktop.PROJECT_URL in desktop.ua()    # Nominatim: 403 bei Platzhalteradresse
-    monkeypatch.setenv("OSINT_CONTACT", "mail@beispiel.de")
+    monkeypatch.setenv("LANDBLICK_CONTACT", "mail@beispiel.de")
     assert "mail@beispiel.de" in desktop.ua()
 
 
@@ -157,7 +157,7 @@ def test_pack_more_serves_higher_zoom_from_second_file(srv, tmp_path):
 
 def test_nachladen_aus_ohne_manifest(srv, monkeypatch):
     app, port, _ = srv
-    monkeypatch.delenv("OSINT_PAKETE_MANIFEST", raising=False)
+    monkeypatch.delenv("LANDBLICK_PAKETE_MANIFEST", raising=False)
     assert app.start_nachladen() is False
     assert json.loads(call(port, "/api/state")[1])["nachladen"]["phase"] == "idle"
 
@@ -168,7 +168,7 @@ def test_nachladen_holt_paket_und_meldet_zustand(srv, tmp_path, monkeypatch):
     data, man, files = paket(tmp_path)
     s = Srv(files)
     try:
-        monkeypatch.setenv("OSINT_PAKETE_MANIFEST", s.url + "dem-hoch.pmtiles.manifest.json")
+        monkeypatch.setenv("LANDBLICK_PAKETE_MANIFEST", s.url + "dem-hoch.pmtiles.manifest.json")
         assert app.start_nachladen() is True
         app.nachlade_thread.join(10)
         assert (app.data_dir / "tiles" / "dem-hoch.pmtiles").read_bytes() == data
@@ -183,7 +183,7 @@ def test_nachladen_fehler_bleibt_sichtbar(srv, tmp_path, monkeypatch):
     app, _, _ = srv
     s = Srv({})
     try:
-        monkeypatch.setenv("OSINT_PAKETE_MANIFEST", s.url + "fehlt.json")
+        monkeypatch.setenv("LANDBLICK_PAKETE_MANIFEST", s.url + "fehlt.json")
         app.start_nachladen()
         app.nachlade_thread.join(10)
         j = app.nachladen.snapshot()

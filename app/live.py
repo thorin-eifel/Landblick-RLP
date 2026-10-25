@@ -7,7 +7,7 @@ Aufruf:     python -m app.live                 Dauerlauf (launchd/systemd, siehe
             python -m app.live --once          ein Durchlauf, dann Ende (Test)
 Parameter:  --interval S   Sekunden zwischen zwei Abrufen (Standard: Intervall aus sources.yaml, mindestens 10)
 Umgebung:   PUBLISH_ENABLED=1        nach jedem Schreiben `deploy/publish.sh --live` starten
-            OSINT_LIVE_PUBLISH_S     frühestens alle N Sekunden hochladen (Standard 30); läuft ein
+            LANDBLICK_LIVE_PUBLISH_S     frühestens alle N Sekunden hochladen (Standard 30); läuft ein
                                      Upload noch, wird übersprungen statt gestapelt
 Höflichkeit: Untergrenze 10 s je Quelle. Fehler lassen den Circuit Breaker der Collector-Basis greifen.
 Datenschutz: unverändert wie adsblol.py: keine Kennungen, keine Spuren; Zusatzangaben nur Kurs und Tempo.
@@ -32,7 +32,7 @@ from .db import Storage
 from .export import build_live, write_all
 from .registry import Registry
 
-log = logging.getLogger("osint.live")
+log = logging.getLogger("landblick.live")
 MIN_INTERVAL_S = 10.0
 PUBLISH_TIMEOUT_S = 60
 
@@ -64,7 +64,7 @@ async def run(settings: Settings, interval: float | None, once: bool) -> int:
     out = settings.web_dir / "data"
     root = Path(__file__).resolve().parent.parent
     publish = os.environ.get("PUBLISH_ENABLED") == "1"
-    publish_every = float(os.environ.get("OSINT_LIVE_PUBLISH_S", "30"))
+    publish_every = float(os.environ.get("LANDBLICK_LIVE_PUBLISH_S", "30"))
     stop = asyncio.Event()
     if not once:
         loop = asyncio.get_running_loop()

@@ -5,7 +5,7 @@
 # Zweck:     Von Cron im Fünf-Minuten-Takt gestartet. Holt fällige Quellen (Intervall je Quelle
 #            aus sources.yaml), schreibt die JSON-Dateien und lädt sie auf den Webspace.
 # Aufruf:    deploy/run-cycle.sh            (Konfiguration aus <Projekt>/.env, siehe .env.example)
-# Live:      Quellen mit params.live (Flüge) holt app/live.py in kurzem Takt; OSINT_LIVE=0 legt sie zurück in diesen Zyklus.
+# Live:      Quellen mit params.live (Flüge) holt app/live.py in kurzem Takt; LANDBLICK_LIVE=0 legt sie zurück in diesen Zyklus.
 # Ablauf:    1. python -m app.collect --due     ein Fehler einer Quelle stoppt den Rest nicht
 #            2. python -m app.export            immer, damit der Status („nicht erreichbar seit …“) sichtbar wird
 #            3. deploy/publish.sh --delta       nur geänderte Dateien, nur wenn PUBLISH_ENABLED=1
@@ -15,7 +15,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-LOCK="${TMPDIR:-/tmp}/osint-cycle.lock"
+LOCK="${TMPDIR:-/tmp}/landblick-cycle.lock"
 
 log() { printf '%s [cycle] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"; }
 
@@ -40,7 +40,7 @@ fi
 trap 'rmdir "${LOCK}" 2>/dev/null || true' EXIT
 
 cd "${ROOT}"
-if [[ "${OSINT_LIVE:-1}" == "1" ]]; then LIVE_FLAG="--skip-live"; else LIVE_FLAG=""; fi
+if [[ "${LANDBLICK_LIVE:-1}" == "1" ]]; then LIVE_FLAG="--skip-live"; else LIVE_FLAG=""; fi
 # shellcheck disable=SC2086
 "${PY}" -m app.collect --due ${LIVE_FLAG} || log "WARNUNG: mindestens eine Quelle ist fehlgeschlagen (steht im Status)"
 

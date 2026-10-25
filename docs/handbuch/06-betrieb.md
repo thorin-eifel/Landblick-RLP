@@ -24,7 +24,7 @@ Der Installer (Kapitel 2) legt die Jobs je nach System an:
 
 - **Windows:** Aufgabenplanung, Ordner „Landblick“, versteckt, ohne Konsolenfenster. Dauerprozesse starten bei der Anmeldung (bei `-System` beim Systemstart) und werden bei Absturz neu gestartet.
 - **Linux:** systemd-Einheiten (Benutzerebene mit `loginctl enable-linger`, oder systemweit mit `--system`).
-- **macOS:** launchd-Plisten `de.ctw.landblick-<job>` im Benutzerverzeichnis.
+- **macOS:** launchd-Plisten `de.thorin.landblick-<job>` im Benutzerverzeichnis.
 
 Die Vorlagen für Handarbeit liegen unter `deploy/` (`systemd/`, `*.plist`, `crontab.example`).
 
@@ -54,7 +54,7 @@ Nach fünf Fehlschlägen in Folge pausiert der Sammler für 15 Minuten (Schutzsc
 
 ## 6.5 Backup
 
-`python tools/backup.py --out data/backup --keep 14 --verify-after` sichert die Datenbank im laufenden Betrieb (SQLite-Onlinekopie), schreibt neben die Datei eine Beschreibung mit SHA-256, Größe und Tabellenzahlen und prüft sie. `--verify` prüft nur die letzte Sicherung. Ein Backup, das nie zurückgespielt wurde, ist kein Backup: Wiederherstellen heißt, die Datei an die Stelle von `data/osint.sqlite` zu kopieren, während alle Jobs gestoppt sind.
+`python tools/backup.py --out data/backup --keep 14 --verify-after` sichert die Datenbank im laufenden Betrieb (SQLite-Onlinekopie), schreibt neben die Datei eine Beschreibung mit SHA-256, Größe und Tabellenzahlen und prüft sie. `--verify` prüft nur die letzte Sicherung. Ein Backup, das nie zurückgespielt wurde, ist kein Backup: Wiederherstellen heißt, die Datei an die Stelle von `data/landblick.sqlite` zu kopieren, während alle Jobs gestoppt sind.
 
 ## 6.6 Der Dauerlauf (R6)
 

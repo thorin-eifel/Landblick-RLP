@@ -8,7 +8,7 @@ Manifest:  {"name": "dem-hoch.pmtiles", "bytes": N, "sha256": "…", "parts": [{
 Verfahren: Die Teile werden nacheinander in EINE Datei <name>.part geschrieben (kein Zusammenfügen danach, Spitzenbedarf = Paketgröße).
            Die Dateigröße ist der Fortschritt. Beim Wiederaufnehmen werden fertige Teile erneut geprüft, ein halbes Teil wird mit
            Range-Abruf fortgesetzt. Erst nach bestandener Gesamtprüfsumme wird in <name> umbenannt; vorher sieht der Server nichts.
-Aufruf:    python -m app.pakete --manifest https://…/dem-hoch.pmtiles.manifest.json --dest ~/.local/share/osint/tiles
+Aufruf:    python -m app.pakete --manifest https://…/dem-hoch.pmtiles.manifest.json --dest ~/.local/share/landblick/tiles
 Sicherheit: nur https (http nur für localhost), Dateinamen aus dem Manifest werden gegen ein enges Muster geprüft, es wird nichts
            ausgeführt und nichts außerhalb von --dest geschrieben. Der Abruf trägt keine Nutzerdaten (nur User-Agent mit Projektlink).
 Exit:      0 fertig oder schon vorhanden, 1 Fehler
@@ -32,7 +32,7 @@ import urllib.request
 from pathlib import Path
 from typing import Callable
 
-log = logging.getLogger("osint.pakete")
+log = logging.getLogger("landblick.pakete")
 
 CHUNK = 1024 * 1024
 MAX_MANIFEST = 256 * 1024

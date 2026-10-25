@@ -3,7 +3,7 @@
 
 Zweck:    Der Sammler fragt je Autobahn drei Dienste ab. Diese Liste muss zur Fläche passen, ohne dass 100 Strecken
           bundesweit abgefragt werden. Das Werkzeug holt einmal alle Strecken und alle drei Dienste und zählt Meldungen in der Region.
-Aufruf:   OSINT_REGION=region.yaml python tools/check_autobahn_roads.py [--pause 0.4] [--out liste.json]
+Aufruf:   LANDBLICK_REGION=region.yaml python tools/check_autobahn_roads.py [--pause 0.4] [--out liste.json]
 Ausgabe:  je Strecke Zahl der Meldungen in der Region, danach eine fertige YAML-Zeile. Strecken ohne Meldung zum Zeitpunkt des
           Laufs erscheinen nicht; die Liste in sources.yaml ergänzt sie um bekannte Strecken (siehe docs/rlp/r3-datenpipeline.md).
 Höflich:  ein Abruf alle 0,4 s, ehrlicher User-Agent. Lauf dauert bei rund 120 Strecken etwa zwei Minuten.

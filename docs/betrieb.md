@@ -1,8 +1,8 @@
 # Landblick - RLP
 
-> **Hinweis:** Diese Betriebsanleitung beschreibt den Stand vor dem Umbau auf Rheinland-Pfalz plus 80 km. Die Fläche kommt jetzt aus `region.yaml` (`app/region.py`); Angaben zu "120 km", Kartengrößen und Kacheln werden in R2 bis R5 angepasst. Der aktuelle Stand steht in der `README.md`. Launchd-Labels und Bundle-Kennung heißen noch `de.ctw.osint`: Umbenennen würde das Datenverzeichnis der Desktop-App verschieben und ist deshalb nicht erfolgt.
+> **Hinweis:** Diese Betriebsanleitung beschreibt den Stand vor dem Umbau auf Rheinland-Pfalz plus 80 km. Die Fläche kommt jetzt aus `region.yaml` (`app/region.py`); Angaben zu "120 km", Kartengrößen und Kacheln werden in R2 bis R5 angepasst. Der aktuelle Stand steht in der `README.md`.
 
-Die aktuelle Lage rund um unsere Heimat. Privates Open-Source-Projekt (bis Oktober 2026 ein Schaufenster der CTW Computer-Irrel GmbH).
+Die aktuelle Lage rund um unsere Heimat. Privates Open-Source-Projekt (bis Oktober 2026 ein Firmen-Schaufenster).
 
 Regionales Lagebild aus offenen Daten für die Südeifel und ihre Nachbarregionen (zurzeit 120 km um Irrel; Ziel ist Rheinland-Pfalz plus 80 km, siehe `docs/rlp/plan.md`): Warnungen, Verkehr, Pegel, Wetter. Kein Tracking, keine US-Cloud, kein Überwachungswerkzeug: gespeichert werden Orte, Zeiten und Zahlen, keine Personen.
 
@@ -30,7 +30,7 @@ Die Sammelstelle braucht Python 3.11+, Internet und `lftp`. Sie kann jeder Rechn
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt -r requirements-dev.txt
 python -m pytest -q && node --test tests/js/rules.test.mjs     # 60 + 4 Tests
-cp .env.example .env && chmod 600 .env                         # OSINT_CONTACT eintragen
+cp .env.example .env && chmod 600 .env                         # LANDBLICK_CONTACT eintragen
 
 # Lokal ansehen, ohne Upload
 python -m app.collect --once          # alle Quellen einmal
@@ -90,7 +90,7 @@ Zeitfenster („Jetzt“, 24 Std., 7 Tage): Der Export liefert die Obermenge fü
 ### Runbook: „Collector kaputt“
 
 1. `https://<domain>/status.html` öffnen: Zustand, letzter Erfolg, Fehler in Folge, Fehlertext, letzte Läufe. Steht dort „Export erzeugt vor … Std.“ in Orange, liegt das Problem bei der Sammelstelle oder beim Upload, nicht bei einer Quelle.
-2. Auf der Sammelstelle: `python tools/gesundheit.py` zeigt, welche Quelle in welcher Region betroffen ist. Dann `tail -n 100 /var/log/osint-cycle.log` (systemd: `journalctl -u osint-cycle -n 100`). Details einer Quelle: `.venv/bin/python -m app.collect --once --only <id> --log-level DEBUG`.
+2. Auf der Sammelstelle: `python tools/gesundheit.py` zeigt, welche Quelle in welcher Region betroffen ist. Dann `tail -n 100 /var/log/landblick-cycle.log` (systemd: `journalctl -u landblick-cycle -n 100`). Details einer Quelle: `.venv/bin/python -m app.collect --once --only <id> --log-level DEBUG`.
 3. Häufige Ursachen:
    - **HTTP 4xx**: Endpunkt oder Parameter geändert. Doku des Betreibers lesen, Fixture neu aufnehmen, Collector anpassen.
    - **„Schlüssel … fehlt“ / „ohne 'features'“**: Schema geändert. Der Collector rät nicht, er meldet. Fixture ersetzen, Test rot sehen, dann fixen.
@@ -106,19 +106,19 @@ Bei Ausfall bleibt die Seite stehen: „Quelle nicht erreichbar seit …“, die
 
 ### Zeitplan
 
-Drei Wege, derselbe Inhalt: Cron (`deploy/crontab.example`), launchd auf dem Mac (`deploy/de.ctw.osint-*.plist`), systemd auf Linux (`deploy/systemd/`). Kein Docker.
+Drei Wege, derselbe Inhalt: Cron (`deploy/crontab.example`), launchd auf dem Mac (`deploy/de.thorin.landblick-*.plist`), systemd auf Linux (`deploy/systemd/`). Kein Docker.
 
-systemd, einmalig als root, Pfad `/opt/osint` und Benutzer `osint` in den Units anpassen:
+systemd, einmalig als root, Pfad `/opt/landblick` und Benutzer `landblick` in den Units anpassen:
 
 ```
-cp deploy/systemd/osint-*.{service,timer} /etc/systemd/system/
+cp deploy/systemd/landblick-*.{service,timer} /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable --now osint-cycle.timer osint-backup.timer osint-health.timer
-systemctl list-timers 'osint-*'
-journalctl -u osint-cycle -n 50
+systemctl enable --now landblick-cycle.timer landblick-backup.timer landblick-health.timer
+systemctl list-timers 'landblick-*'
+journalctl -u landblick-cycle -n 50
 ```
 
-Der Zyklus läuft alle fünf Minuten, die Sicherung um 03:15 (mit Rückspielprobe), die Gesundheitsprüfung alle zehn Minuten. Die Units laufen ohne Rechte außer Schreiben in `data/` und `web/data`. Schlägt `osint-health` mit „kritisch“ an, steht die Unit in `systemctl --failed`; eine Benachrichtigung hängt man bei Bedarf per `OnFailure=` an.
+Der Zyklus läuft alle fünf Minuten, die Sicherung um 03:15 (mit Rückspielprobe), die Gesundheitsprüfung alle zehn Minuten. Die Units laufen ohne Rechte außer Schreiben in `data/` und `web/data`. Schlägt `landblick-health` mit „kritisch“ an, steht die Unit in `systemctl --failed`; eine Benachrichtigung hängt man bei Bedarf per `OnFailure=` an.
 
 ### Backup
 
@@ -126,7 +126,7 @@ Der Zyklus läuft alle fünf Minuten, die Sicherung um 03:15 (mit Rückspielprob
 
 Wiederherstellungstest: `python tools/backup.py --verify` spielt die neueste Sicherung in einen Wegwerf-Ordner zurück, prüft Prüfsumme, `PRAGMA integrity_check`, die Zeilenzahlen gegen die Prüfsummendatei und ob die Anwendungsschicht die Kopie lesen kann. Der Test läuft nach jeder Sicherung mit und kippt bei jeder Abweichung. Das ersetzt nicht die Probe von Hand vor dem Livegang: einmal wirklich zurückspielen, `python -m app.export` laufen lassen, Seite ansehen.
 
-Wiederherstellen im Ernstfall: Zyklus pausieren (Timer stoppen oder `launchctl bootout`), neueste Sicherung als `data/osint.sqlite` zurückkopieren (alte `-wal`/`-shm`-Dateien daneben löschen), `python tools/backup.py --verify` zur Kontrolle, Zyklus wieder starten. Der Webspace braucht kein Backup außer dem Projektordner selbst: alles dort lässt sich mit `publish.sh --site` neu aufspielen.
+Wiederherstellen im Ernstfall: Zyklus pausieren (Timer stoppen oder `launchctl bootout`), neueste Sicherung als `data/landblick.sqlite` zurückkopieren (alte `-wal`/`-shm`-Dateien daneben löschen), `python tools/backup.py --verify` zur Kontrolle, Zyklus wieder starten. Der Webspace braucht kein Backup außer dem Projektordner selbst: alles dort lässt sich mit `publish.sh --site` neu aufspielen.
 
 ### Chaos-Tests
 
@@ -140,7 +140,7 @@ Alle Abhängigkeiten sind gepinnt (`requirements.txt`, `requirements-dev.txt`, e
 
 ### Dauerlauf (R6)
 
-Gemessen wird nicht geschätzt: `tools/dauerlauf.py sample` hängt alle zehn Minuten eine Probe (Gesundheitszustand, Problemquellen, Exportalter) an `data/dauerlauf.jsonl` (launchd: `de.ctw.osint-dauerlauf.plist`). Jeder Eingriff von Hand wird mit `tools/dauerlauf.py note "…"` vermerkt, auch ein Neustart. Nach sieben Tagen erzeugt `tools/dauerlauf.py report --out docs/rlp/r6-bericht.md` den Bericht: Laufzeit, Anteile OK/Warnung/kritisch, Pausen, längste Störung je Quelle, Vermerke. Bestanden heißt: mindestens sieben Tage, keine Pause über 30 Minuten, kein Vermerk. Die Vorlage und die Reihenfolge stehen in `docs/rlp/r6-dauerlauf.md`. Schläft der Mac, entsteht eine Pause; für den Dauerlauf Ruhezustand abschalten (`caffeinate -s` oder Energiesparen-Einstellung).
+Gemessen wird nicht geschätzt: `tools/dauerlauf.py sample` hängt alle zehn Minuten eine Probe (Gesundheitszustand, Problemquellen, Exportalter) an `data/dauerlauf.jsonl` (launchd: `de.thorin.landblick-dauerlauf.plist`). Jeder Eingriff von Hand wird mit `tools/dauerlauf.py note "…"` vermerkt, auch ein Neustart. Nach sieben Tagen erzeugt `tools/dauerlauf.py report --out docs/rlp/r6-bericht.md` den Bericht: Laufzeit, Anteile OK/Warnung/kritisch, Pausen, längste Störung je Quelle, Vermerke. Bestanden heißt: mindestens sieben Tage, keine Pause über 30 Minuten, kein Vermerk. Die Vorlage und die Reihenfolge stehen in `docs/rlp/r6-dauerlauf.md`. Schläft der Mac, entsteht eine Pause; für den Dauerlauf Ruhezustand abschalten (`caffeinate -s` oder Energiesparen-Einstellung).
 
 ## Datenschutz und Sicherheit in Kürze
 
@@ -191,7 +191,7 @@ Was passiert, der Reihe nach: `.venv` anlegen und `requirements.txt` installiere
 | live | dauerhaft | Luftverkehr in kurzem Takt (mit `--ohne-live` aus) |
 | dauerlauf | alle 10 Minuten | Probe für das R6-Protokoll (nur mit `--dauerlauf`) |
 
-Jeder Job läuft über `tools/lauf.py`: keine Shell-Umleitung, keine Konsolenfenster unter Windows, Ausgabe nach `data/logs/<job>.log` (rotierend, 5 Dateien zu 2 MB), Umlaute stimmen. Zeitplaner: Windows-Aufgabenplanung (Ordner „Landblick“, versteckte Aufgaben, bei Absturz Neustart nach einer Minute, nie zwei Instanzen), systemd (`landblick-*.timer` und `.service`, Benutzerdienste mit `loginctl enable-linger`, mit `--system` unter `/etc/systemd/system`), launchd (`de.ctw.landblick-*`).
+Jeder Job läuft über `tools/lauf.py`: keine Shell-Umleitung, keine Konsolenfenster unter Windows, Ausgabe nach `data/logs/<job>.log` (rotierend, 5 Dateien zu 2 MB), Umlaute stimmen. Zeitplaner: Windows-Aufgabenplanung (Ordner „Landblick“, versteckte Aufgaben, bei Absturz Neustart nach einer Minute, nie zwei Instanzen), systemd (`landblick-*.timer` und `.service`, Benutzerdienste mit `loginctl enable-linger`, mit `--system` unter `/etc/systemd/system`), launchd (`de.thorin.landblick-*`).
 
 **Läuft es ohne Anmeldung?** Standard sind Aufgaben des angemeldeten Benutzers: Windows führt sie nur aus, solange er angemeldet ist (Sperrbildschirm genügt). Für einen echten Dauerläufer ohne Anmeldung: `-System` in einem Administrator-Fenster, die Aufgaben laufen dann als SYSTEM; unter Linux `sudo ./install.sh --system`. Unter macOS laufen LaunchAgents nur bei angemeldetem Benutzer. **Ruhezustand** stoppt jeden Zyklus: `-RuhezustandAus` stellt unter Windows den Standby im Netzbetrieb ab, anderswo nennt der Installer den Befehl.
 
@@ -216,20 +216,20 @@ Bekannte Grenzen: `lauf.py --timeout` greift nur, solange der Befehl Ausgabe sch
 Stand: läuft auf dem Mac des Betreibers, Python 3.11 in `.venv`, Zyklus alle 5 Minuten.
 
 ```
-launchctl print gui/$(id -u)/de.ctw.osint-cycle | grep -E 'state|last exit'
-tail -f ~/Library/Logs/osint-cycle.log
-launchctl bootout gui/$(id -u)/de.ctw.osint-cycle      # anhalten
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/de.ctw.osint-cycle.plist   # starten
+launchctl print gui/$(id -u)/de.thorin.landblick-cycle | grep -E 'state|last exit'
+tail -f ~/Library/Logs/landblick-cycle.log
+launchctl bootout gui/$(id -u)/de.thorin.landblick-cycle      # anhalten
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/de.thorin.landblick-cycle.plist   # starten
 ```
 
-Lokale Ansicht: http://127.0.0.1:8080 (Job `de.ctw.osint-web`, nur localhost).
+Lokale Ansicht: http://127.0.0.1:8080 (Job `de.thorin.landblick-web`, nur localhost).
 Fallstricke: Schläft der Mac, steht der Zyklus; die Seite zeigt dann nach 20 Minuten
 "Datenstand veraltet". Upload bleibt aus, bis `PUBLISH_ENABLED=1` und die IONOS-Werte in `.env` stehen
-(lftp fehlt noch: `brew install lftp`). `OSINT_CONTACT` in `.env` ist noch der Platzhalter.
+(lftp fehlt noch: `brew install lftp`). `LANDBLICK_CONTACT` in `.env` ist noch der Platzhalter.
 
 ## Luftverkehr (adsb.lol) und warum keine Schiffe
 
-**Flugzeuge:** Quelle adsb.lol (ODbL 1.0 laut Betreiber, Ratenlimit unveröffentlicht, ein Abruf alle 15 Sekunden in der Live-Schleife, siehe „Live, Stau, Icons“). Die Abfrage sitzt auf der Landesmitte: umschließender Kreis der Region (`query_lat`, `query_lon`, `query_radius_km`, derzeit rund 113 NM, Obergrenze der API 250 NM), danach der Feinfilter auf die Region am Rand. OpenSky ist bewusst draußen: dort braucht jede kommerzielle Stelle, auch bei interner Nutzung, eine Lizenz, und CTW ist eine GmbH. Gespeichert wird nur Position, Höhe, Geschwindigkeit, Kurs und grobe Klasse. Hex-Code, Rufzeichen, Kennzeichen und Typ werden nie geschrieben. Die Ereignis-ID ist ein Hash mit täglich wechselndem Salz (Tabelle `kv_cache`, nicht im Export): innerhalb eines Tages überschreibt der Upsert die Position, es entsteht keine Spur, über Tage lässt sich nichts verknüpfen. Transpondercodes 7500/7600/7700 erscheinen als Hinweis mit Konfidenz 0,4, nicht als Warnung. Die Ebene ist auf der Karte standardmäßig aus. Fixture: `tests/fixtures/adsblol_point_ANONYMISIERT_SYNTHETISCH.json` (echte Struktur, Kennungen ersetzt, Positionen teils erfunden).
+**Flugzeuge:** Quelle adsb.lol (ODbL 1.0 laut Betreiber, Ratenlimit unveröffentlicht, ein Abruf alle 15 Sekunden in der Live-Schleife, siehe „Live, Stau, Icons“). Die Abfrage sitzt auf der Landesmitte: umschließender Kreis der Region (`query_lat`, `query_lon`, `query_radius_km`, derzeit rund 113 NM, Obergrenze der API 250 NM), danach der Feinfilter auf die Region am Rand. OpenSky ist bewusst draußen: dort braucht jede kommerzielle Stelle, auch bei interner Nutzung, eine Lizenz, und bei dieser Entscheidung war das Projekt noch ein Firmenprojekt. Gespeichert wird nur Position, Höhe, Geschwindigkeit, Kurs und grobe Klasse. Hex-Code, Rufzeichen, Kennzeichen und Typ werden nie geschrieben. Die Ereignis-ID ist ein Hash mit täglich wechselndem Salz (Tabelle `kv_cache`, nicht im Export): innerhalb eines Tages überschreibt der Upsert die Position, es entsteht keine Spur, über Tage lässt sich nichts verknüpfen. Transpondercodes 7500/7600/7700 erscheinen als Hinweis mit Konfidenz 0,4, nicht als Warnung. Die Ebene ist auf der Karte standardmäßig aus. Fixture: `tests/fixtures/adsblol_point_ANONYMISIERT_SYNTHETISCH.json` (echte Struktur, Kennungen ersetzt, Positionen teils erfunden).
 
 **Schiffe: nicht gebaut.** Für Mosel, Saar und Sauer gibt es keine offen lizenzierten Positionsdaten. Inland-AIS der WSV ist nicht öffentlich. aisstream.io nennt keine Nutzungsbedingungen, keinen Umfang für Binnengewässer und keine Zusage zu gewerblicher Nutzung (die Anfragen dazu im Issue-Tracker sind unbeantwortet); außerdem identifiziert die MMSI Schiffe, bei Sportbooten also Halter. Möglich wären: Anfrage an das WSV Trier, ein eigener AIS-Empfänger an der Mosel (dann eigene Daten, keine Lizenzfrage), oder nur Schleusen- und Pegeldaten, die schon da sind.
 
@@ -287,12 +287,12 @@ Inhalt: 2324 Gemeinden als Flächen (vereinfacht auf rund 5 m, ganzzahlige Delta
 
 ## Live, Stau, Icons
 
-**Flüge live.** Ein Webspace ohne Server kann nicht schieben, und der Browser darf keine Drittserver anfragen (CSP, Datenschutz). „Live“ heißt deshalb: Die Live-Schleife (`python -m app.live`, launchd-Job `deploy/de.ctw.osint-live.plist`) holt adsb.lol alle 15 Sekunden (Untergrenze 10 s), schreibt nur `data/aircraft.json` und `data/status.json` und lädt sie hoch, wenn `PUBLISH_ENABLED=1` (höchstens alle `OSINT_LIVE_PUBLISH_S`, Standard 30 s; läuft ein Upload noch, wird übersprungen). Der Browser holt `aircraft.json` alle 15 s, solange die Ebene an und der Tab sichtbar ist, und lässt die Flugzeuge dazwischen auf Kurs und Tempo weiterrücken (`advance()` in `rules.js`, rein optisch, nichts wird gemerkt; bei „weniger Bewegung“ im System aus). Der Fünf-Minuten-Zyklus überspringt Quellen mit `params.live` (`--skip-live`; `OSINT_LIVE=0` in `.env` legt sie zurück in den Zyklus). Steht die Schleife, laufen die Punkte nach 90 s ab und die Quelle zeigt „veraltet“. Ratenlimit von adsb.lol ist unveröffentlicht: vor öffentlichem Start nachfragen.
+**Flüge live.** Ein Webspace ohne Server kann nicht schieben, und der Browser darf keine Drittserver anfragen (CSP, Datenschutz). „Live“ heißt deshalb: Die Live-Schleife (`python -m app.live`, launchd-Job `deploy/de.thorin.landblick-live.plist`) holt adsb.lol alle 15 Sekunden (Untergrenze 10 s), schreibt nur `data/aircraft.json` und `data/status.json` und lädt sie hoch, wenn `PUBLISH_ENABLED=1` (höchstens alle `LANDBLICK_LIVE_PUBLISH_S`, Standard 30 s; läuft ein Upload noch, wird übersprungen). Der Browser holt `aircraft.json` alle 15 s, solange die Ebene an und der Tab sichtbar ist, und lässt die Flugzeuge dazwischen auf Kurs und Tempo weiterrücken (`advance()` in `rules.js`, rein optisch, nichts wird gemerkt; bei „weniger Bewegung“ im System aus). Der Fünf-Minuten-Zyklus überspringt Quellen mit `params.live` (`--skip-live`; `LANDBLICK_LIVE=0` in `.env` legt sie zurück in den Zyklus). Steht die Schleife, laufen die Punkte nach 90 s ab und die Quelle zeigt „veraltet“. Ratenlimit von adsb.lol ist unveröffentlicht: vor öffentlichem Start nachfragen.
 
 ```
 python -m app.live --once             # ein Durchlauf zum Testen
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/de.ctw.osint-live.plist
-tail -f ~/Library/Logs/osint-live.log
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/de.thorin.landblick-live.plist
+tail -f ~/Library/Logs/landblick-live.log
 ```
 
 **Stau und zähfließender Verkehr.** Kommt aus derselben Autobahn-API (`warning` mit `abnormalTrafficType`): `QUEUING_TRAFFIC` = Stau, `SLOW_TRAFFIC` = zähfließend, `STATIONARY_TRAFFIC` = Stillstand, dazu Verzögerung (Minuten) und Durchschnittstempo. Eigener Ereignistyp `congestion`, gezeichnet als Linie von Anfang bis Ende der Meldung (gerade Verbindung, nur Näherung des Straßenverlaufs). Stau ab 30 Minuten Verzögerung und Stillstand sind `warning`, gewöhnlicher Stau `notice`, zähfließend `info`. Sie erscheinen nicht im Warnband, das bleibt für NINA/DWD/Pegel. Eine eigene Stufe „Stop-and-go“ kennt die API nicht. Der Autobahn-Lauf kommt jetzt alle 3 Minuten (vorher 10). Grenzen: nur Autobahnen (A1, A48, A60, A64), keine Bundes- und Landesstraßen, kein Luxemburg. Die Kennungen tragen den Vermerk INRIX; das gehört in die Lizenzanfrage an die Autobahn GmbH. Fixture: `tests/fixtures/autobahn_A64_warning_STAU_SYNTHETISCH.json` (echte Struktur, Orte verlegt).
@@ -330,7 +330,7 @@ In RLP stammen Felswände nicht aus OSM, sondern aus dem 1-m-DGM1: `tools/build_
 
 Der Lauf braucht die 1-m-Rohkacheln. Standardmäßig lädt er nur Kilometerkacheln mit Steilhängen im 4-m-Raster samt Nachbarn, mit `--all-tiles` das ganze Land. Rohkacheln liegen komprimiert in `<work>/raw/` (rund 22 GB für RLP), ein Abbruch setzt beim nächsten Aufruf fort. Lief vorher `build_dem_rlp.py --keep-raw` mit demselben Arbeitsordner, sind sie schon da und es wird nichts mehr geladen (Kacheln, die ohne `--keep-raw` entstanden, holt der Lauf nach).
 
-    .venv-dem/bin/python tools/build_klippen_dgm.py --work ~/Claude/OSINT/dgm1-work --out web/tiles/klippen --all-tiles   # RLP: ca. 21 000 Wände, 0,9 Mio. Striche, 24 MB; Download 33 GB, Gesamtlauf rund 3 Stunden
+    .venv-dem/bin/python tools/build_klippen_dgm.py --work ~/Claude/Landblick/dgm1-work --out web/tiles/klippen --all-tiles   # RLP: ca. 21 000 Wände, 0,9 Mio. Striche, 24 MB; Download 33 GB, Gesamtlauf rund 3 Stunden
     .venv-dem/bin/python tools/build_klippen_dgm.py --work ... --out ... --bbox 7.70 50.10 7.76 50.14                     # Ausschnitt (Loreley), 20 Sekunden
 
 **Rohdaten aufräumen (zuletzt).** Relief und Felswände hinterlassen im Arbeitsordner (`_scratch/dgm1`) Rohdaten: `raw/` (1-m-Kacheln, rund 22 GB für RLP) und `red/`. Wer lokal installiert, braucht sie danach nicht mehr. `tools/rohdaten_aufraeumen.py` löscht den Ordner erst, wenn alles fertig ist: Relief und Felswände mit Metadaten und Kacheln vorhanden, Basiskarte da, die App antwortet mit 200 und der Export ist lesbar. Ohne `--ja` ist es ein Probelauf, der nur zeigt, was frei würde. Liegt im Arbeitsordner eine Datei `BEHALTEN.txt`, löscht es nichts, bis sie von Hand entfernt wird. Fremde Dateien im Ordner und unsichere Pfade (Home, Projektordner) lehnt es ab. Der Installer (`install.py`) ruft am Ende, wenn der Webserver antwortet und `_scratch/dgm1` existiert, denselben Probelauf auf. Besteht er, fragt der Installer im Terminal, ob gelöscht werden soll; ohne Terminal oder bei Nein bleibt alles liegen. `--ja` löscht nie Rohdaten, dafür gibt es `--rohdaten-loeschen`.
@@ -424,7 +424,7 @@ Was fehlt und warum, steht im Katalog unter `ausgelassen`: Kommunen (bewusst nic
 
 Der Lauf teilt das Land in Blöcke von 4 km (+ 1 km Rand zum Glätten), rechnet sie parallel und ist wiederaufnehmbar (Marken unter `web/tiles/hang_parts/_done`). Masken reichen 1 m über den Blockrand, die Teilstücke einer Kachel werden vereinigt, deshalb gibt es keine Nähte. Messung RLP (Mac, 6 Arbeiter): 1 391 Blöcke, 33 Minuten, 8 845 Kacheln, 144 MB gzip (188 MB ungepackt), davon `ab15` 78 MB, `ab25` 49 MB, `ab35` 19 MB. Speicherbedarf rund 1 GB je Arbeiter.
 
-    python tools/build_hang_rlp.py --raw ~/Claude/OSINT/dgm1-work/raw --out web/tiles/hang --workers 6
+    python tools/build_hang_rlp.py --raw ~/Claude/Landblick/dgm1-work/raw --out web/tiles/hang --workers 6
     python tools/build_hang_rlp.py ... --bbox 6.3 49.7 6.6 49.95       # Ausschnitt
     python tools/build_hang_probe.py --raw ... --center 6.45 49.85 --size-km 3 --out /tmp/hang   # nur messen
 
@@ -433,9 +433,9 @@ Parameter und ihre Wirkung: `--sigma` (Glättung des Geländes, Standard 1 m), `
 ### Relief nachladen (dem-hoch)
 Das Relief liegt in zwei Paketen: `dem.pmtiles` (Zoom 6–12) im Installer, `dem-hoch.pmtiles` (Zoom 13/14, rund 4,3 GB) wird beim ersten Start im Hintergrund geholt. Der Server liefert Kacheln aus `dem` und fällt für fehlende (hohe) Zoomstufen auf `dem-hoch` zurück; bis das Nachladepaket da ist, wird Zoom 12 überzoomt.
 ```
-python -m app.pakete --manifest https://…/dem-hoch.pmtiles.manifest.json --dest ~/.local/share/osint/tiles
+python -m app.pakete --manifest https://…/dem-hoch.pmtiles.manifest.json --dest ~/.local/share/landblick/tiles
 ```
-Abbruch ist unkritisch: `dem-hoch.pmtiles.part` wächst Teil für Teil, jeder Lauf prüft die fertigen Teile neu und setzt das angefangene per Range fort. Umbenannt wird erst nach bestandener Gesamtprüfsumme. Bedarf: Paketgröße plus 200 MB frei. Die Adresse steht in `PAKETE_MANIFEST` (`app/desktop.py`), Überschreiben mit `OSINT_PAKETE_MANIFEST`, Abschalten mit `aus`. Fehler: `/api/state` → `nachladen.error`, Log `osint.pakete`. Namensnennung: die Landesdaten (DGM1, © GeoBasis-DE / LVermGeoRP, dl-de/by-2-0) stehen in den Metadaten der Pakete.
+Abbruch ist unkritisch: `dem-hoch.pmtiles.part` wächst Teil für Teil, jeder Lauf prüft die fertigen Teile neu und setzt das angefangene per Range fort. Umbenannt wird erst nach bestandener Gesamtprüfsumme. Bedarf: Paketgröße plus 200 MB frei. Die Adresse steht in `PAKETE_MANIFEST` (`app/desktop.py`), Überschreiben mit `LANDBLICK_PAKETE_MANIFEST`, Abschalten mit `aus`. Fehler: `/api/state` → `nachladen.error`, Log `landblick.pakete`. Namensnennung: die Landesdaten (DGM1, © GeoBasis-DE / LVermGeoRP, dl-de/by-2-0) stehen in den Metadaten der Pakete.
 
 ### Mitgelieferte Pakete im Installer
 `desktop/stage-pakete.sh` kopiert `dem.pmtiles` (Zoom ≤ 12), `klippen`, `hang`, `gebaeude` und `suche_geo.json` nach `desktop/src-tauri/pakete/` (nicht im Git). `tauri.conf.json` nimmt den Ordner als Ressource auf, `main.rs` übergibt ihn dem Dienst als `--pack-dir`. Reihenfolge der Suche für `/tiles/`: Datenordner, Installer-Ressource, `web/tiles`. Erlaubt ist so nur Lesen; `/data/` kommt weiter nur aus dem Datenordner, außer `suche_geo.json`. Gesamtgröße ohne Basiskarte rund 1,1 GB. Ablauf: `desktop/build-sidecar.sh` → `desktop/stage-pakete.sh` → `cd desktop && npx tauri build`. Ungetestet auf Windows (Installer wurde noch nicht gebaut).
@@ -447,7 +447,7 @@ Abbruch ist unkritisch: `dem-hoch.pmtiles.part` wächst Teil für Teil, jeder La
 - **Straßennamen** ab Zoom 13, **Hausnummern** ab Zoom 16 (Kacheln bis Zoom 15, darüber wird vergrößert). Es sind Kartenbeschriftungen aus OSM, keine Adresssuche und kein Geocoding; die Daten liegen in den Kacheln, nicht in der Datenbank. Wo OSM keine Namen oder Nummern kennt (kleine Weiler), bleibt die Karte leer.
 - **Verkehrsmeldungen** in vier Stufen (`trafficLevel` in `rules.js`): gelb Baustelle, orange Behinderung oder Stau, rot langer Stau (ab 30 Min.) oder eine Richtung gesperrt, schwarz Vollsperrung. Die Stufe folgt aus `type`, `severity` und `attrs.sperr` (`voll`/`richtung`, gesetzt von den Collectoren `lbm_baustellen` und `autobahn`); die Liste rechts zeigt weiter die Stufe der Quelle. Schwarze Linien bekommen einen weißen Saum.
 - **Detailfeld** rechts lässt sich mit dem Knopf „Details ausblenden“ einklappen; Ebenen, Höhenlegende und Detailfeld haben dasselbe Material (Deckkraft, Unschärfe, Rand, Schatten).
-- **Prüfzugang:** mit `#debug` in der Adresse reagiert die Seite auf das Ereignis `osint-debug` (Auftrag als JSON in `data-debug-in`, Zählwerte in `data-debug-out`). Nur zum Testen, nichts geht nach außen.
+- **Prüfzugang:** mit `#debug` in der Adresse reagiert die Seite auf das Ereignis `landblick-debug` (Auftrag als JSON in `data-debug-in`, Zählwerte in `data-debug-out`). Nur zum Testen, nichts geht nach außen.
 
 ## Radius: 120 km, endgültig
 
@@ -482,7 +482,7 @@ Ebene „Lichtquelle am Zeiger“ (aus, unter Kartengrundlage; braucht Höhenrel
 Dieselbe Oberfläche als App für Windows 10+, Linux und macOS. Gezeichnet wird mit dem System-WebView (WebView2, WebKitGTK, WKWebView), WebGL läuft dort auf der GPU. Daten und Karte liegen lokal, es gibt keinen Server und keine US-Cloud.
 
 ```
-Tauri-Hülle (Rust) ──startet──▶ osint-core (Python, Sidecar) ──▶ 127.0.0.1:<Port>
+Tauri-Hülle (Rust) ──startet──▶ landblick-core (Python, Sidecar) ──▶ 127.0.0.1:<Port>
                                   ├─ liefert web/ (mit Teilabrufen für PMTiles)
                                   ├─ erster Start: Karte für das ganze Gebiet laden (tools/build_region_tiles.py, pmtiles-CLI)
                                   └─ Sammelzyklus alle 5 Min: app.collect → app.export → <Datenordner>/data
@@ -496,7 +496,7 @@ Ablauf in der App: Als Hintergrund der Einrichtungsseite dient die mitgelieferte
 
 ```bash
 # Dienst allein ausprobieren (ohne Hülle)
-python -m app.desktop --data-dir /tmp/osint-demo --pmtiles tools/bin/pmtiles     # → "OSINT_READY port=N", dann http://127.0.0.1:N/
+python -m app.desktop --data-dir /tmp/landblick-demo --pmtiles tools/bin/pmtiles     # → "LANDBLICK_READY port=N", dann http://127.0.0.1:N/
 
 # App bauen (je Betriebssystem auf diesem System; CI: .github/workflows/desktop.yml)
 desktop/build-sidecar.sh && cd desktop && npm install --include=dev && npx tauri build
@@ -507,7 +507,7 @@ desktop/build-sidecar.sh && cd desktop && npm install --include=dev && npx tauri
 Der Installer (NSIS, eine `Landblick - RLP_<Version>_x64-setup.exe`, rund 50 MB) wird auf einem Windows-Runner gebaut, nicht lokal: GitHub → Actions → **windows-installer** → *Run workflow*; nach rund 8 Minuten steht er im Lauf unter *Artifacts* (`landblick-windows-installer`, Zip mit der Setup.exe). Ein Tag `windows-v*` startet den Lauf ebenfalls. Lokal auf Windows: `powershell -File desktop\build-sidecar.ps1`, danach `cd desktop; npm install --include=dev; npx tauri build --bundles nsis` (Python 3.11+, Node 22, Rust und die Visual-Studio-Build-Tools nötig).
 
 - **Installation:** pro Benutzer (`currentUser`, ohne Administratorrechte), Deutsch, Eintrag im Startmenü und Deinstallation über „Apps“. Der Installer holt bei Bedarf WebView2 nach (Windows 11 hat es, Windows 10 braucht eine Internetverbindung dafür).
-- **Erster Start:** Die App öffnet die Einrichtungsseite, lädt die Karte für das ganze Gebiet (rund 1,5 GB, einmalig, wiederaufnehmbar) und beginnt zu sammeln. Daten und Zugangsdaten liegen in `%APPDATA%\de.ctw.osint`; Deinstallieren lässt sie stehen (zum Zurücksetzen den Ordner löschen).
+- **Erster Start:** Die App öffnet die Einrichtungsseite, lädt die Karte für das ganze Gebiet (rund 1,5 GB, einmalig, wiederaufnehmbar) und beginnt zu sammeln. Daten und Zugangsdaten liegen in `%APPDATA%\de.thorin.landblick`; Deinstallieren lässt sie stehen (zum Zurücksetzen den Ordner löschen).
 - **Nicht signiert:** Windows SmartScreen meldet „Der Computer wurde durch Windows geschützt“. *Weitere Informationen → Trotzdem ausführen*. Ein Code-Signing-Zertifikat ist offen.
 - **Nicht getestet auf echter Hardware:** Der Bau läuft durch, der Rauchtest des Sidecars (`app.region` im gebündelten Programm) ist Teil des Baus; der Lauf der App unter Windows ist beim ersten Test auf dem PC zu prüfen (Windows-Firewall-Abfrage für den lokalen Dienst, Pfade, Antivirus-Fehlalarme bei PyInstaller-Programmen).
 

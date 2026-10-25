@@ -2,7 +2,7 @@
 
 Zweck:      Räumlicher Zuschnitt, Pfade und Betriebsparameter an einer Stelle.
 Parameter:  Umgebungsvariablen (siehe .env.example), alle optional.
-Beispiel:   OSINT_DB_PATH=./data/osint.sqlite python -m app.collect --once
+Beispiel:   LANDBLICK_DB_PATH=./data/landblick.sqlite python -m app.collect --once
 """
 from __future__ import annotations
 
@@ -43,11 +43,11 @@ def load_dotenv(path: Path | None = None) -> int:
     return n
 
 
-if not os.environ.get("OSINT_NO_DOTENV"):
+if not os.environ.get("LANDBLICK_NO_DOTENV"):
     load_dotenv()
 
 # Räumlicher Zuschnitt kommt aus region.yaml (app/region.py), nicht mehr aus Konstanten. Erst nach .env laden,
-# damit OSINT_REGION und OSINT_CENTER_* aus der Datei wirken.
+# damit LANDBLICK_REGION und LANDBLICK_CENTER_* aus der Datei wirken.
 # CENTER_* ist der Bezugspunkt für Entfernungsangaben (Irrel), BBOX der Kasten der Region (grober Vorfilter,
 # Reihenfolge lat_min, lon_min, lat_max, lon_max). QUERY_* ist ein Kreis, der die Region umschließt, für Quellen,
 # die nur "Mittelpunkt plus Radius" können. Ob ein Punkt wirklich in der Region liegt, entscheidet geo.in_region().
@@ -58,7 +58,7 @@ CENTER_LON = REGION.ref_lon
 BBOX = REGION.bbox
 QUERY_LAT, QUERY_LON, QUERY_RADIUS_KM = REGION.query_lat, REGION.query_lon, REGION.query_radius_km
 
-CONTACT = os.environ.get("OSINT_CONTACT", "kontakt@example.invalid")
+CONTACT = os.environ.get("LANDBLICK_CONTACT", "kontakt@example.invalid")
 
 
 @dataclass(frozen=True)
@@ -75,15 +75,15 @@ class Settings:
 
     @classmethod
     def from_env(cls) -> "Settings":
-        contact = os.environ.get("OSINT_CONTACT", CONTACT)
+        contact = os.environ.get("LANDBLICK_CONTACT", CONTACT)
         return cls(
-            db_path=Path(os.environ.get("OSINT_DB_PATH", BASE_DIR / "data" / "osint.sqlite")),
-            sources_path=Path(os.environ.get("OSINT_SOURCES", BASE_DIR / "sources.yaml")),
-            web_dir=Path(os.environ.get("OSINT_WEB_DIR", BASE_DIR / "web")),
+            db_path=Path(os.environ.get("LANDBLICK_DB_PATH", BASE_DIR / "data" / "landblick.sqlite")),
+            sources_path=Path(os.environ.get("LANDBLICK_SOURCES", BASE_DIR / "sources.yaml")),
+            web_dir=Path(os.environ.get("LANDBLICK_WEB_DIR", BASE_DIR / "web")),
             user_agent=f"Landblick/1.0 (+{contact})",
-            http_timeout_s=float(os.environ.get("OSINT_HTTP_TIMEOUT", "20")),
-            http_max_attempts=int(os.environ.get("OSINT_HTTP_ATTEMPTS", "3")),
-            breaker_threshold=int(os.environ.get("OSINT_BREAKER_THRESHOLD", "5")),
-            breaker_cooldown_s=int(os.environ.get("OSINT_BREAKER_COOLDOWN", "900")),
-            retention_days=int(os.environ.get("OSINT_RETENTION_DAYS", "30")),
+            http_timeout_s=float(os.environ.get("LANDBLICK_HTTP_TIMEOUT", "20")),
+            http_max_attempts=int(os.environ.get("LANDBLICK_HTTP_ATTEMPTS", "3")),
+            breaker_threshold=int(os.environ.get("LANDBLICK_BREAKER_THRESHOLD", "5")),
+            breaker_cooldown_s=int(os.environ.get("LANDBLICK_BREAKER_COOLDOWN", "900")),
+            retention_days=int(os.environ.get("LANDBLICK_RETENTION_DAYS", "30")),
         )

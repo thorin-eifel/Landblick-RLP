@@ -18,7 +18,7 @@ import sys
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
-log = logging.getLogger("osint.serve")
+log = logging.getLogger("landblick.serve")
 _RANGE = re.compile(r"^bytes=(\d*)-(\d*)$")
 
 

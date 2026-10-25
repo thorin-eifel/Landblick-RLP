@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- launchd-Job: Probe für das Dauerlauf-Protokoll alle 10 Minuten (R6: 7 Tage ohne Handeingriff, Auswertung mit tools/dauerlauf.py report).
+     Installation wie de.thorin.landblick-cycle.plist (README, Abschnitt "Sammelstelle auf dem Mac"). Pfade anpassen. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>de.thorin.landblick-dauerlauf</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/thorin/Claude/Landblick/.venv/bin/python</string>
+    <string>tools/dauerlauf.py</string>
+    <string>sample</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/thorin/Claude/Landblick</string>
+  <key>StartInterval</key><integer>600</integer>
+  <key>StandardOutPath</key><string>/Users/thorin/Library/Logs/landblick-dauerlauf.log</string>
+  <key>StandardErrorPath</key><string>/Users/thorin/Library/Logs/landblick-dauerlauf.log</string>
+</dict>
+</plist>

@@ -67,7 +67,7 @@ fi
 PLAN=""
 if [[ "${mode}" == "delta" ]]; then
   PY="${ROOT}/.venv/bin/python"; [[ -x "${PY}" ]] || PY="python3"
-  PLAN="$(mktemp "${TMPDIR:-/tmp}/osint-plan.XXXXXX")"
+  PLAN="$(mktemp "${TMPDIR:-/tmp}/landblick-plan.XXXXXX")"
   trap 'rm -f "${PLAN}"' EXIT
   "${PY}" "${ROOT}/tools/publish_delta.py" plan --data "${ROOT}/web/data" --out "${PLAN}" || die "Plan fehlgeschlagen (manifest.json fehlt? erst python -m app.export)"
   cmd=""

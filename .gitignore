@@ -20,5 +20,5 @@ _incoming/
 _scratch/
 _sync*/
 _to_delete/
-osint_sync_*.tgz
+landblick_sync_*.tgz
 desktop/src-tauri/pakete/

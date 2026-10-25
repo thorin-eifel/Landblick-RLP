@@ -44,4 +44,4 @@ Zeit bis zur sichtbaren Karte: 30 bis 45 Sekunden. Das ist eine Beobachtung aus 
 - `.gitignore` hatte `data/` überall ausgeschlossen und damit `app/data/` verschluckt. Jetzt nur `/data/` und `/web/data/`.
 - Mac-Anwendung ist nicht signiert, CI-Builds für Windows und Linux sind nie gelaufen.
 - `test_hochwasser_rlp_config_cached_and_second_run_no_duplicates` ist unstabil (2 von 25 Läufen rot, passt sonst). Im Fehlfall liegen je Station zwei Messwerte im Abstand von einer Sekunde am Reihenende (…:36 und …:37) statt einem; die Testdaten hängen an der Systemuhr. Ursache nicht abschließend geklärt, offen in `docs/rlp/offen.md`.
-- Offen: Kontaktadresse für den User-Agent (`OSINT_CONTACT`) steht seit R1 auf thorin.eifel@icloud.com.
+- Offen: Kontaktadresse für den User-Agent (`LANDBLICK_CONTACT`) steht seit R1 auf thorin.eifel@icloud.com.

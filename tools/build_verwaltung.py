@@ -30,7 +30,7 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-log = logging.getLogger("osint.verwaltung")
+log = logging.getLogger("landblick.verwaltung")
 
 A = "{http://inspire.ec.europa.eu/schemas/au/5.0}"
 G = "{http://www.opengis.net/gml/3.2}"

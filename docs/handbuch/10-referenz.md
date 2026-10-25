@@ -2,22 +2,22 @@
 
 ## 10.1 Umgebungsvariablen
 
-Sie stehen in `.env` im Projektordner (nicht im Repository, Vorlage `.env.example`). Eine bereits gesetzte Umgebungsvariable hat Vorrang vor `.env`. `OSINT_NO_DOTENV=1` schaltet das Laden der Datei ab.
+Sie stehen in `.env` im Projektordner (nicht im Repository, Vorlage `.env.example`). Eine bereits gesetzte Umgebungsvariable hat Vorrang vor `.env`. `LANDBLICK_NO_DOTENV=1` schaltet das Laden der Datei ab.
 
 | Variable | Standard | Bedeutung |
 |---|---|---|
-| `OSINT_CONTACT` | – | Kontaktadresse im User-Agent gegenüber den Quellen (Pflicht, der Installer setzt sie) |
-| `OSINT_DB_PATH` | `data/osint.sqlite` | Datenbankdatei |
-| `OSINT_SOURCES` | `sources.yaml` | Quellenregister |
-| `OSINT_WEB_DIR` | `web` | Ordner des Frontends (Export nach `<web>/data`) |
-| `OSINT_REGION` | `region.yaml` | anderes Gebiet |
-| `OSINT_EXPORT_DIR` | `<web>/data` | Exportordner für die Gesundheitsprüfung |
-| `OSINT_HTTP_TIMEOUT` | 20 | Zeitlimit je Abruf in Sekunden |
-| `OSINT_HTTP_ATTEMPTS` | 3 | Versuche je Abruf |
-| `OSINT_BREAKER_THRESHOLD` | 5 | Fehlschläge bis Pause |
-| `OSINT_BREAKER_COOLDOWN` | 900 | Pause in Sekunden |
-| `OSINT_RETENTION_DAYS` | 30 | Aufbewahrung |
-| `OSINT_LIVE` | – | `1`: der Live-Dienst übernimmt schnelle Quellen, der Zyklus lässt sie aus |
+| `LANDBLICK_CONTACT` | – | Kontaktadresse im User-Agent gegenüber den Quellen (Pflicht, der Installer setzt sie) |
+| `LANDBLICK_DB_PATH` | `data/landblick.sqlite` | Datenbankdatei |
+| `LANDBLICK_SOURCES` | `sources.yaml` | Quellenregister |
+| `LANDBLICK_WEB_DIR` | `web` | Ordner des Frontends (Export nach `<web>/data`) |
+| `LANDBLICK_REGION` | `region.yaml` | anderes Gebiet |
+| `LANDBLICK_EXPORT_DIR` | `<web>/data` | Exportordner für die Gesundheitsprüfung |
+| `LANDBLICK_HTTP_TIMEOUT` | 20 | Zeitlimit je Abruf in Sekunden |
+| `LANDBLICK_HTTP_ATTEMPTS` | 3 | Versuche je Abruf |
+| `LANDBLICK_BREAKER_THRESHOLD` | 5 | Fehlschläge bis Pause |
+| `LANDBLICK_BREAKER_COOLDOWN` | 900 | Pause in Sekunden |
+| `LANDBLICK_RETENTION_DAYS` | 30 | Aufbewahrung |
+| `LANDBLICK_LIVE` | – | `1`: der Live-Dienst übernimmt schnelle Quellen, der Zyklus lässt sie aus |
 | `TANKERKOENIG_API_KEY` | – | Schlüssel für Spritpreise Deutschland |
 | `FIRMS_MAP_KEY` | – | Schlüssel für NASA FIRMS |
 | `PUBLISH_ENABLED` | – | `1`: der Zyklus lädt Änderungen hoch (nur wenn Upload eingerichtet ist) |
@@ -64,7 +64,7 @@ Sie stehen in `.env` im Projektordner (nicht im Repository, Vorlage `.env.exampl
 
 | Pfad | Inhalt |
 |---|---|
-| `data/osint.sqlite` | die Datenbank |
+| `data/landblick.sqlite` | die Datenbank |
 | `data/logs/` | Logs der Jobs (rotierend) |
 | `data/backup/` | Sicherungen mit Beschreibungsdatei |
 | `data/dauerlauf.jsonl` | Messpunkte des 7-Tage-Laufs |
@@ -80,7 +80,7 @@ Sie stehen in `.env` im Projektordner (nicht im Repository, Vorlage `.env.exampl
 
 ## 10.6 Glossar
 
-**ARS** – amtlicher Regionalschlüssel. **Collector / Sammler** – Modul, das eine Quelle abruft. **Delta-Upload** – nur geänderte Dateien hochladen. **Export** – fertige JSON-Dateien für das Frontend. **Lagebild** – Überblick über die Lage einer Region. **OSINT** – Open Source Intelligence, hier im Sinne von Lagebild aus offenen Quellen, nicht von Ausforschung. **PMTiles** – ein Kartenarchiv in einer Datei, das der Browser stückweise liest. **Quellenregister** – `sources.yaml`. **Region** – das Gebiet in `region.yaml`. **WAL** – Write-Ahead-Log, SQLite-Modus, in dem Lesen und Schreiben sich nicht blockieren. **WMS** – Dienst für Kartenbilder.
+**ARS** – amtlicher Regionalschlüssel. **Collector / Sammler** – Modul, das eine Quelle abruft. **Delta-Upload** – nur geänderte Dateien hochladen. **Export** – fertige JSON-Dateien für das Frontend. **Lagebild** – Überblick über die Lage einer Region. **PMTiles** – ein Kartenarchiv in einer Datei, das der Browser stückweise liest. **Quellenregister** – `sources.yaml`. **Region** – das Gebiet in `region.yaml`. **WAL** – Write-Ahead-Log, SQLite-Modus, in dem Lesen und Schreiben sich nicht blockieren. **WMS** – Dienst für Kartenbilder.
 
 ## 10.7 Versionen und Lizenz
 

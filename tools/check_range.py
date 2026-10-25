@@ -17,7 +17,7 @@ import sys
 
 import httpx
 
-log = logging.getLogger("osint.check_range")
+log = logging.getLogger("landblick.check_range")
 UA = "Landblick/1.0 (range-check)"
 
 

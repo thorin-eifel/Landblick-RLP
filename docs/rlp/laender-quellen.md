@@ -17,7 +17,7 @@ Stolpersteine: Die LHP-API liefert je nach `Accept` eine andere Struktur (`appli
 ## Noch offen
 | Land | Befund | Nächster Schritt |
 |---|---|---|
-| Bayern | Bayerninfo bietet Verkehrs- und Baustellenmeldungen (DATEX II, alle 3 Minuten) über die Mobilithek (Angebote 110000000002506000 und 110000000002507001). Lizenz auf der Bayerninfo-Seite nicht genannt. | Mobilithek-Konto durch CTW, Angebotsseite lesen (Lizenz, Abruf ohne Zertifikat?) |
+| Bayern | Bayerninfo bietet Verkehrs- und Baustellenmeldungen (DATEX II, alle 3 Minuten) über die Mobilithek (Angebote 110000000002506000 und 110000000002507001). Lizenz auf der Bayerninfo-Seite nicht genannt. | Mobilithek-Konto durch den Betreiber, Angebotsseite lesen (Lizenz, Abruf ohne Zertifikat?) |
 | Hessen | Hessen Mobil liefert Baustellen laut eigener Broschüre im Datex-Format an die Mobilithek; Verkehrsservice Hessen nutzt eine interne, nicht dokumentierte Schnittstelle (nicht anfassen). | Mobilithek: gibt es ein freies Hessen-Angebot? |
 | NRW | Auf open.NRW steht ein Datensatz der VIZ.NRW (Landesverkehrszentrale), Zugang und Lizenz ließen sich aus der Sandbox nicht prüfen. Das Portal verkehr.nrw bietet Meldungen und Baustellen. | Datensatzseite lesen, Mobilithek-Angebot prüfen |
 | alle | Wasserstände der Länderpegel (LANUV, HLNUG, LUBW, HND) | einzeln anfragen, LHP liefert nur Klassen |

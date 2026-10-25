@@ -4,19 +4,19 @@
      Installation: siehe README, Abschnitt "Live-Daten". -->
 <plist version="1.0">
 <dict>
-  <key>Label</key><string>de.ctw.osint-live</string>
+  <key>Label</key><string>de.thorin.landblick-live</string>
   <key>ProgramArguments</key>
   <array>
     <string>/bin/bash</string>
     <string>-c</string>
     <string>set -a; [ -f .env ] &amp;&amp; . ./.env; set +a; exec .venv/bin/python -m app.live</string>
   </array>
-  <key>WorkingDirectory</key><string>/Users/thorin/Claude/OSINT</string>
+  <key>WorkingDirectory</key><string>/Users/thorin/Claude/Landblick</string>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><true/>
   <key>ThrottleInterval</key><integer>30</integer>
-  <key>StandardOutPath</key><string>/Users/thorin/Library/Logs/osint-live.log</string>
-  <key>StandardErrorPath</key><string>/Users/thorin/Library/Logs/osint-live.log</string>
+  <key>StandardOutPath</key><string>/Users/thorin/Library/Logs/landblick-live.log</string>
+  <key>StandardErrorPath</key><string>/Users/thorin/Library/Logs/landblick-live.log</string>
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>

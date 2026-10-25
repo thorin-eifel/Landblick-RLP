@@ -21,12 +21,12 @@ python3 -m venv "${WORK}/venv"; PY="${WORK}/venv/bin/python"; [[ -x "${PY}" ]] |
 mkdir -p "${WORK}/web"
 rsync -a --exclude 'data/' --exclude 'tiles/' "${ROOT}/web/" "${WORK}/web/"
 SEP=":"; [[ "${TRIPLE}" == *windows* ]] && SEP=";"
-( cd "${ROOT}" && "${PY}" -m PyInstaller --onefile --name osint-core --distpath "${WORK}/dist" --workpath "${WORK}/build" --specpath "${WORK}" \
+( cd "${ROOT}" && "${PY}" -m PyInstaller --onefile --name landblick-core --distpath "${WORK}/dist" --workpath "${WORK}/build" --specpath "${WORK}" \
     --paths "${ROOT}" --collect-submodules app --collect-data app --collect-data certifi \
     --add-data "${WORK}/web${SEP}web" --add-data "${ROOT}/sources.yaml${SEP}." --add-data "${ROOT}/region.yaml${SEP}." app/desktop.py )
 # Rauchtest: das Paket muss Region und Quellenregister finden (fehlende Datendateien fielen sonst erst im Betrieb auf)
-( cd "${WORK}" && OSINT_NO_DOTENV=1 "${WORK}/dist/osint-core${EXT}" --run app.region >/dev/null ) || die "Rauchtest fehlgeschlagen: app.region lässt sich im Paket nicht laden"
-cp "${WORK}/dist/osint-core${EXT}" "${BIN}/osint-core-${TRIPLE}${EXT}"
+( cd "${WORK}" && LANDBLICK_NO_DOTENV=1 "${WORK}/dist/landblick-core${EXT}" --run app.region >/dev/null ) || die "Rauchtest fehlgeschlagen: app.region lässt sich im Paket nicht laden"
+cp "${WORK}/dist/landblick-core${EXT}" "${BIN}/landblick-core-${TRIPLE}${EXT}"
 
 # pmtiles-CLI (go-pmtiles)
 # Dateinamen der Releases sind uneinheitlich: macOS "go-pmtiles-VERSION_Darwin_*.zip", Linux "go-pmtiles_VERSION_Linux_*.tar.gz", Windows "go-pmtiles_VERSION_Windows_*.zip"

@@ -38,7 +38,7 @@ class SourceEntry(BaseModel):
     datenschutz_risiko: Literal["niedrig", "mittel", "hoch"]
     aktiv: bool = True
     nutzung: Literal["offen", "privat"] = Field(
-        default="offen", description="privat: Lizenz oder Bedingungen erlauben nur private, nicht-kommerzielle Nutzung; läuft nur mit OSINT_MODE=privat")
+        default="offen", description="privat: Lizenz oder Bedingungen erlauben nur private, nicht-kommerzielle Nutzung; läuft nur mit LANDBLICK_MODE=privat")
     zuletzt_geprüft: str
     erstlauf: Literal["sofort", "spaeter"] = Field(
         default="sofort", description="spaeter: braucht lange (große Abfragen). Die Desktop-App holt sie erst nach dem ersten Export im Hintergrund")
@@ -79,7 +79,7 @@ class Registry:
         dupes = {x for x in envs if envs.count(x) > 1}
         if dupes:
             raise ValueError(f"Zugangsvariable bei mehreren Quellen: {sorted(dupes)}")
-        if os.environ.get("OSINT_MODE", "oeffentlich").strip().lower() != "privat":
+        if os.environ.get("LANDBLICK_MODE", "oeffentlich").strip().lower() != "privat":
             entries = [e for e in entries if e.nutzung != "privat"]   # im öffentlichen Betrieb gibt es diese Quellen weder als Collector noch auf der Quellenseite
         return cls(entries)
 

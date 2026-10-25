@@ -1,5 +1,5 @@
 # Ein Sammeldurchlauf: abrufen, exportieren, hochladen (deploy/run-cycle.sh). Nur Linux mit systemd.
-# Installation: siehe docs/betrieb.md, Abschnitt "Zeitplan mit systemd". Pfad /opt/osint und Benutzer osint anpassen.
+# Installation: siehe docs/betrieb.md, Abschnitt "Zeitplan mit systemd". Pfad /opt/landblick und Benutzer landblick anpassen.
 [Unit]
 Description=Landblick RLP: Sammeldurchlauf
 After=network-online.target
@@ -7,9 +7,9 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-User=osint
-WorkingDirectory=/opt/osint
-ExecStart=/opt/osint/deploy/run-cycle.sh
+User=landblick
+WorkingDirectory=/opt/landblick
+ExecStart=/opt/landblick/deploy/run-cycle.sh
 TimeoutStartSec=20min
 Nice=10
 # Härtung: der Sammler liest aus dem Netz und schreibt in data/ und web/data, sonst nirgends
@@ -17,4 +17,4 @@ NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
 PrivateTmp=true
-ReadWritePaths=/opt/osint/data /opt/osint/web/data
+ReadWritePaths=/opt/landblick/data /opt/landblick/web/data

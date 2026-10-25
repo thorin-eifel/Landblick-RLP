@@ -18,7 +18,7 @@ import threading
 from pathlib import Path
 from typing import Any
 
-log = logging.getLogger("osint.zugang")
+log = logging.getLogger("landblick.zugang")
 MAX_LEN = 256
 
 

@@ -45,18 +45,18 @@ try {
     Push-Location $Root
     try {
         Invoke-Checked 'PyInstaller' {
-            & $vpy -m PyInstaller --onefile --name osint-core --distpath (Join-Path $Work 'dist') --workpath (Join-Path $Work 'build') --specpath $Work `
+            & $vpy -m PyInstaller --onefile --name landblick-core --distpath (Join-Path $Work 'dist') --workpath (Join-Path $Work 'build') --specpath $Work `
                 --paths $Root --collect-submodules app --collect-data app --collect-data certifi `
                 --add-data "$web;web" --add-data "$(Join-Path $Root 'sources.yaml');." --add-data "$(Join-Path $Root 'region.yaml');." app\desktop.py
         }
     } finally { Pop-Location }
 
     # Rauchtest: das Paket muss Region und Quellenregister finden (fehlende Datendateien fielen sonst erst im Betrieb auf)
-    $exe = Join-Path $Work 'dist\osint-core.exe'
-    $env:OSINT_NO_DOTENV = '1'
+    $exe = Join-Path $Work 'dist\landblick-core.exe'
+    $env:LANDBLICK_NO_DOTENV = '1'
     Push-Location $Work
-    try { Invoke-Checked 'Rauchtest app.region' { & $exe --run app.region | Out-Null } } finally { Pop-Location; Remove-Item Env:\OSINT_NO_DOTENV -ErrorAction SilentlyContinue }
-    Copy-Item $exe (Join-Path $Bin "osint-core-$Triple.exe") -Force
+    try { Invoke-Checked 'Rauchtest app.region' { & $exe --run app.region | Out-Null } } finally { Pop-Location; Remove-Item Env:\LANDBLICK_NO_DOTENV -ErrorAction SilentlyContinue }
+    Copy-Item $exe (Join-Path $Bin "landblick-core-$Triple.exe") -Force
 
     # pmtiles-CLI (go-pmtiles)
     $asset = "go-pmtiles_${PmtilesVersion}_Windows_x86_64.zip"

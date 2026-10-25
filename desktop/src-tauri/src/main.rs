@@ -1,8 +1,8 @@
 // Landblick - RLP – Desktop-Hülle.
-// Zweck:  Startet den lokalen Dienst (Sidecar "osint-core", Python), wartet auf "OSINT_READY port=N" und öffnet dann ein Fenster
+// Zweck:  Startet den lokalen Dienst (Sidecar "landblick-core", Python), wartet auf "LANDBLICK_READY port=N" und öffnet dann ein Fenster
 //         auf http://127.0.0.1:N/. Die Oberfläche ist dieselbe wie im Web; gezeichnet wird mit der GPU des System-WebViews
 //         (WebView2, WKWebView, WebKitGTK). Beim Beenden wird der Dienst mit beendet.
-// Daten:  app_data_dir (z. B. ~/Library/Application Support/de.ctw.osint, %APPDATA%\de.ctw.osint, ~/.local/share/de.ctw.osint).
+// Daten:  app_data_dir (z. B. ~/Library/Application Support/de.thorin.landblick, %APPDATA%\de.thorin.landblick, ~/.local/share/de.thorin.landblick).
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::sync::Mutex;
@@ -25,7 +25,7 @@ fn main() {
             let pakete = app.path().resource_dir()?.join("pakete");
             let (mut rx, child) = app
                 .shell()
-                .sidecar("osint-core")?
+                .sidecar("landblick-core")?
                 .args(["--data-dir", &data_dir.to_string_lossy(), "--pmtiles", &pm.to_string_lossy(), "--pack-dir", &pakete.to_string_lossy()])
                 .spawn()?;
             *app.state::<Core>().0.lock().unwrap() = Some(child);
@@ -36,7 +36,7 @@ fn main() {
                     match ev {
                         CommandEvent::Stdout(line) => {
                             let s = String::from_utf8_lossy(&line);
-                            if let Some(p) = s.trim().strip_prefix("OSINT_READY port=") {
+                            if let Some(p) = s.trim().strip_prefix("LANDBLICK_READY port=") {
                                 if let Ok(port) = p.trim().parse::<u16>() {
                                     let url = format!("http://127.0.0.1:{port}/");
                                     let _ = WebviewWindowBuilder::new(&handle, "main", WebviewUrl::External(url.parse().unwrap()))

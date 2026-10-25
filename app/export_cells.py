@@ -31,7 +31,7 @@ from .db import Storage
 from .models import iso, utcnow
 from .registry import Registry
 
-log = logging.getLogger("osint.export.cells")
+log = logging.getLogger("landblick.export.cells")
 
 CELL_BUDGET_BYTES = 500 * 1024
 START_BUDGET_BYTES = 2 * 1024 * 1024

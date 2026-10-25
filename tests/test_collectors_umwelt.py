@@ -511,7 +511,7 @@ def test_dotenv_loader_sets_only_missing_and_ignores_comments(tmp_path, monkeypa
 
 
 def test_dotenv_loader_strips_trailing_comment(tmp_path, monkeypatch):
-    # .env.example trug "OSINT_CONTACT=a@b   # ... gegenüber ...": der Umlaut im User-Agent ließ jeden Abruf scheitern.
+    # .env.example trug "LANDBLICK_CONTACT=a@b   # ... gegenüber ...": der Umlaut im User-Agent ließ jeden Abruf scheitern.
     from app.config import load_dotenv
     import os
     f = tmp_path / ".env"
@@ -526,7 +526,7 @@ def test_env_example_contact_is_ascii(monkeypatch):
     import os
     monkeypatch.setattr(os, "environ", {})
     load_dotenv(BASE_DIR / ".env.example")
-    os.environ["OSINT_CONTACT"].encode("ascii")
+    os.environ["LANDBLICK_CONTACT"].encode("ascii")
 
 
 # ------------------------------------------------------------------ DWD-Wind (ICON-D2)

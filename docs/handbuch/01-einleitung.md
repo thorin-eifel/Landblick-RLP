@@ -16,7 +16,7 @@ Dieses Handbuch beschreibt Version **1.0.0-alpha.1**. Es richtet sich an drei Le
 
 Es ist **kein amtliches Warnsystem** und ersetzt weder NINA noch KATWARN noch die Leitstelle. Im Notfall gilt die 112. Dieser Satz steht auf jeder Seite im Fuß, weil er der wichtigste ist.
 
-Es ist auch **kein Überwachungswerkzeug**. Es gibt keine Personensuche, keine Profile, keine Adressrecherche. Das Wort „OSINT“ (Open Source Intelligence) stand im Arbeitstitel; gemeint war immer das Lagebild, nicht das Ausforschen. Anfragen, die auf eine bestimmte Person, Adresse oder einen Account zielen, gehören nicht in dieses Projekt.
+Es ist auch **kein Überwachungswerkzeug**. Es gibt keine Personensuche, keine Profile, keine Adressrecherche. Anfragen, die auf eine bestimmte Person, Adresse oder einen Account zielen, gehören nicht in dieses Projekt.
 
 ## 1.3 Leitplanken
 
@@ -40,7 +40,7 @@ Quellen kommen auf Deutsch, Französisch und Englisch, die Luxemburger zum Teil 
 
 ## 1.5 Wie es dazu kam
 
-Das Projekt begann als Schaufenster der CTW Computer-Irrel GmbH für Datenpipelines, Betrieb und Oberfläche rund um Irrel, mit einem Kreis von 120 Kilometern. Seit dem 9. Oktober 2026 ist es ein privates Open-Source-Projekt von Thorsten Schleicher und wächst in den Phasen R0 bis R7 auf die Landesfläche (Architekturentscheidung 0001, `docs/adr/0001-region-rlp.md`). R0 bis R5 sind abgeschlossen, R6 (Betrieb und Härtung) läuft, R7 (Abnahme) steht aus. Der aktuelle Stand steht im README.
+Das Projekt begann als Firmen-Schaufenster für Datenpipelines, Betrieb und Oberfläche rund um Irrel, mit einem Kreis von 120 Kilometern. Seit dem 9. Oktober 2026 ist es ein privates Open-Source-Projekt von Thorsten Schleicher und wächst in den Phasen R0 bis R7 auf die Landesfläche (Architekturentscheidung 0001, `docs/adr/0001-region-rlp.md`). R0 bis R5 sind abgeschlossen, R6 (Betrieb und Härtung) läuft, R7 (Abnahme) steht aus. Der aktuelle Stand steht im README.
 
 ## 1.6 Was „alpha“ heißt
 

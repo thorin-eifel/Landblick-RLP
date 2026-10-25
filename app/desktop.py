@@ -3,10 +3,10 @@
 Zweck:     Die Tauri-Hülle startet diesen Dienst als Begleitprozess (Sidecar). Er liefert web/ auf 127.0.0.1 aus (mit Teilabrufen
            für PMTiles), lädt beim ersten Start die Karte für das ganze Gebiet (region.yaml: Rheinland-Pfalz plus 80 km) und läuft
            als Sammelzyklus weiter. Es gibt keine Auswahl eines Mittelpunkts: das Gebiet steht fest.
-Aufruf:    python -m app.desktop --data-dir ~/.local/share/osint [--port 0] [--pmtiles /pfad/pmtiles]
-Beispiel:  python -m app.desktop --data-dir /tmp/osint-demo --port 8765   → http://127.0.0.1:8765/
-Ablauf:    Start → Zeile "OSINT_READY port=N" auf stdout → Seite einrichtung.html (nur Fortschritt), solange Karte und Daten fehlen.
-Sicherheit: nur 127.0.0.1, Host-Prüfung gegen DNS-Rebinding, schreibende Aufrufe nur mit Header X-OSINT und gleicher Herkunft.
+Aufruf:    python -m app.desktop --data-dir ~/.local/share/landblick [--port 0] [--pmtiles /pfad/pmtiles]
+Beispiel:  python -m app.desktop --data-dir /tmp/landblick-demo --port 8765   → http://127.0.0.1:8765/
+Ablauf:    Start → Zeile "LANDBLICK_READY port=N" auf stdout → Seite einrichtung.html (nur Fortschritt), solange Karte und Daten fehlen.
+Sicherheit: nur 127.0.0.1, Host-Prüfung gegen DNS-Rebinding, schreibende Aufrufe nur mit Header X-Landblick und gleicher Herkunft.
            Nach außen geht: Kartenabruf bei Protomaps, die Quellen laut sources.yaml.
 """
 from __future__ import annotations
@@ -25,7 +25,7 @@ from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-log = logging.getLogger("osint.desktop")
+log = logging.getLogger("landblick.desktop")
 
 
 def use_certifi() -> str | None:
@@ -48,7 +48,7 @@ def use_certifi() -> str | None:
 use_certifi()
 _RANGE = re.compile(r"^bytes=(\d*)-(\d*)$")
 CYCLE_S = 300
-# Manifest des Nachladepakets (Relief Zoom 13/14). Leer, bis die Veröffentlichung steht; OSINT_PAKETE_MANIFEST überschreibt, "aus" schaltet ab.
+# Manifest des Nachladepakets (Relief Zoom 13/14). Leer, bis die Veröffentlichung steht; LANDBLICK_PAKETE_MANIFEST überschreibt, "aus" schaltet ab.
 PAKETE_MANIFEST = ""
 
 
@@ -125,10 +125,10 @@ class App:
 
     def env(self, progress: Path | None = None) -> dict:
         e = dict(os.environ)
-        e.update(OSINT_DB_PATH=str(self.data_dir / "osint.sqlite"), OSINT_WEB_DIR=str(self.web_dir), OSINT_NO_DOTENV="1")
+        e.update(LANDBLICK_DB_PATH=str(self.data_dir / "landblick.sqlite"), LANDBLICK_WEB_DIR=str(self.web_dir), LANDBLICK_NO_DOTENV="1")
         e.update(self.zugang.env())   # Zugangsdaten aus der Quellenübersicht, nur freigegebene Namen
         if progress:
-            e["OSINT_PROGRESS_FILE"] = str(progress)
+            e["LANDBLICK_PROGRESS_FILE"] = str(progress)
         return e
 
     def _run(self, args: list[str], progress: Path | None = None, timeout: int = 1800) -> int:
@@ -153,7 +153,7 @@ class App:
     def start(self) -> bool:
         if self.worker and self.worker.is_alive():
             return False
-        self.worker = threading.Thread(target=self.work, daemon=True, name="osint-worker")
+        self.worker = threading.Thread(target=self.work, daemon=True, name="landblick-worker")
         self.worker.start()
         return True
 
@@ -177,7 +177,7 @@ class App:
         raise RuntimeError("Karte nach 60 Läufen noch nicht vollständig")
 
     def pakete_url(self) -> str:
-        url = os.environ.get("OSINT_PAKETE_MANIFEST", PAKETE_MANIFEST).strip()
+        url = os.environ.get("LANDBLICK_PAKETE_MANIFEST", PAKETE_MANIFEST).strip()
         return "" if url.lower() in ("", "aus", "off") else url
 
     def start_nachladen(self) -> bool:
@@ -205,7 +205,7 @@ class App:
                 log.exception("Nachladepaket abgebrochen")
                 self.nachladen.set("error", "Relief Zoom 13/14 nicht geladen", error=str(err)[:300])
 
-        self.nachlade_thread = threading.Thread(target=run, daemon=True, name="osint-nachladen")
+        self.nachlade_thread = threading.Thread(target=run, daemon=True, name="landblick-nachladen")
         self.nachlade_thread.start()
         return True
 
@@ -244,7 +244,7 @@ class App:
             except (subprocess.SubprocessError, OSError) as err:
                 log.warning("Nachlauf der langsamen Quellen abgebrochen: %s", err)
 
-        self.later = threading.Thread(target=run, daemon=True, name="osint-later")
+        self.later = threading.Thread(target=run, daemon=True, name="landblick-later")
         self.later.start()
 
 
@@ -252,8 +252,8 @@ PROJECT_URL = "https://github.com/thorin-eifel/maps"
 
 
 def ua() -> str:
-    """User-Agent mit Kontakt. Ohne OSINT_CONTACT der Projektlink: Nominatim weist Platzhalteradressen (example.invalid) mit 403 ab."""
-    return f"Landblick/1.0 (+{os.environ.get('OSINT_CONTACT') or PROJECT_URL})"
+    """User-Agent mit Kontakt. Ohne LANDBLICK_CONTACT der Projektlink: Nominatim weist Platzhalteradressen (example.invalid) mit 403 ab."""
+    return f"Landblick/1.0 (+{os.environ.get('LANDBLICK_CONTACT') or PROJECT_URL})"
 
 
 _PACK_URL = re.compile(r"^/tiles/(dem|klippen|hang)/(README\.txt|meta\.json|(\d{1,2})/(\d{1,8})/(\d{1,8})\.(png|pbf))$")
@@ -360,7 +360,7 @@ def make_handler(app: App, port_box: list[int]):
             return True
 
         def do_POST(self) -> None:
-            if not self.host_ok() or self.headers.get("X-OSINT") != "1":
+            if not self.host_ok() or self.headers.get("X-Landblick") != "1":
                 return self.json({"error": "verweigert"}, 403)
             origin = self.headers.get("Origin")
             if origin and origin not in {f"http://127.0.0.1:{port_box[0]}", f"http://localhost:{port_box[0]}"}:
@@ -454,7 +454,7 @@ def main(argv: list[str] | None = None) -> int:
     srv = ThreadingHTTPServer(("127.0.0.1", a.port), make_handler(app, box))
     box[0] = srv.server_address[1]
     app.start()
-    print(f"OSINT_READY port={box[0]}", flush=True)
+    print(f"LANDBLICK_READY port={box[0]}", flush=True)
     try:
         srv.serve_forever()
     except KeyboardInterrupt:

@@ -40,7 +40,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))   # Aufruf als Skri
 from tools import build_hang_probe as hp  # noqa: E402
 from tools import build_klippen_dgm as kd  # noqa: E402
 
-log = logging.getLogger("osint.hang_rlp")
+log = logging.getLogger("landblick.hang_rlp")
 EXTENT = 4096
 PAD = 64 / EXTENT
 ATTRIBUTION = "© GeoBasis-DE / LVermGeoRP, dl-de/by-2-0 (Daten bearbeitet)"
