@@ -56,7 +56,8 @@ for ext in pdf html md; do
 done
 rmdir "${OUT}/handbuch"
 
-( cd "${OUT}" && { command -v sha256sum >/dev/null && sha256sum * || shasum -a 256 *; } > SHA256SUMS )
+# Erst neben den Ordner schreiben, dann hinein: sonst zählt sha256sum die halb geschriebene Datei mit (Prüfsumme einer leeren Datei).
+( cd "${OUT}" && rm -f SHA256SUMS && { command -v sha256sum >/dev/null && sha256sum * || shasum -a 256 *; } > ../SHA256SUMS.neu && mv ../SHA256SUMS.neu SHA256SUMS )
 log "Dateien in ${OUT}:"; ls -l "${OUT}" >&2
 
 if [ "${MODE}" = "--github" ]; then
