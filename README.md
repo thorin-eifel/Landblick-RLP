@@ -138,6 +138,7 @@ Vollständig mit Namensnennung: `sources.yaml` und die Seite „Quellen und Lize
 - `docs/projektanweisung.md`
 - `docs/release-1.0.0-alpha.1.md`
 - `docs/release-1.0.0-alpha.2.md`
+- `docs/release-1.0.0-beta.1.md`
 - `docs/rlp/` (Plan, Prompt, Status, offene Punkte)
 - `docs/adr/` (Entscheidungen)
 
