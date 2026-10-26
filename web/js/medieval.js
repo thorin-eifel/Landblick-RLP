@@ -202,6 +202,15 @@ export function waterPatternLayer() {
     paint: { 'fill-pattern': 'pat-water', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 9, 0, 11, 0.8], 'fill-antialias': false } };
 }
 
+// Jahreszahl in römischen Ziffern (1 bis 3999), für den Untertitel des Titelschilds
+export function roemisch(n) {
+  const stufen = [[1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'], [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
+  let rest = Math.trunc(n), aus = '';
+  if (!(rest >= 1 && rest <= 3999)) return String(n);
+  for (const [wert, zeichen] of stufen) while (rest >= wert) { aus += zeichen; rest -= wert; }
+  return aus;
+}
+
 // Zierde über der Karte: Titelschild (DOM, nur Darstellung)
 export function decor(on) {
   const mapEl = document.getElementById('map');
@@ -209,8 +218,8 @@ export function decor(on) {
   let c = document.getElementById('med-cartouche');
   if (!c) {
     c = document.createElement('div'); c.id = 'med-cartouche'; c.className = 'med-cartouche'; c.setAttribute('aria-hidden', 'true');
-    const t = document.createElement('div'); t.className = 'med-cartouche-t'; t.textContent = 'Die Südeifel';
-    const u = document.createElement('div'); u.className = 'med-cartouche-u'; u.textContent = 'anno Domini MMXXVI';
+    const t = document.createElement('div'); t.className = 'med-cartouche-t'; t.textContent = 'Rheinland-Pfalz';
+    const u = document.createElement('div'); u.className = 'med-cartouche-u'; u.textContent = `anno Domini ${roemisch(new Date().getFullYear())}`;
     c.append(t, u); mapEl.append(c);
   }
   c.hidden = !on;
