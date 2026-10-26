@@ -32,6 +32,9 @@
     "category": "Utility",
     "shortDescription": "Landblick - RLP: Lagebild aus offenen Daten",
     "longDescription": "Lagebild für Rheinland-Pfalz plus 80 km aus offenen Daten. Läuft lokal, ohne Konto und ohne Tracking.",
+    "macOS": {
+      "signingIdentity": "-"
+    },
     "windows": {
       "nsis": {
         "languages": [
