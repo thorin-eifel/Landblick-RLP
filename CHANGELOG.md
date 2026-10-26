@@ -4,6 +4,8 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unveröffentlicht]
 
+## [1.0.0-beta.2] - 2026-10-26
+
 ### Behoben (Symbole)
 - In den Installern fehlten fast alle Symbole: Die 23 Zeichen von uxwing durften nicht weitergegeben werden und lagen nicht im Repository, die 10 gemeinfreien Kartenzeichen ebenfalls nicht. Jetzt kommen alle aus Maki, Temaki und OpenStreetMap Carto (CC0) oder sind eigene Zeichnungen (Wetter und Messwerte) und liegen im Repository. `tools/fetch_icons.sh` entfällt. Herkunft je Datei: `web/icons/README.txt`.
 - Neuer Test `tests/js/icons-vorhanden.test.mjs`: jedes Zeichen, das Karte oder Oberfläche anfordern, muss als Datei vorhanden sein.
@@ -15,14 +17,14 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 ### Geändert (macOS)
 - Das macOS-DMG bringt die Kachelpakete mit wie der Windows-Installer (Release `kacheln-1`, Prüfsummen geprüft; Eingabe `kacheln_tag`, `keine` baut ohne). Hochgeladen wird für macOS nur noch das DMG, nicht zusätzlich die .app.
 
+## [1.0.0-beta.1] - 2026-10-25
+
 ### Geändert (R6)
 - Ein Name durchgehend: Umgebungsvariablen `LANDBLICK_*`, Datenbank `data/landblick.sqlite`, Sidecar `landblick-core`, Kennung `de.thorin.landblick` (launchd, Desktop-App), Logger `landblick.*`, Header `X-Landblick`. Bestehende Installationen ziehen einmal um (Schritte im Pull Request).
 - Abhängigkeiten: `pillow` 12.3.0 → 13.0.0, `certifi` 2026.7.22 → 2026.10.19 (pip-audit: 37 bzw. 1 bekannte Lücke).
 - `tools/update_readme.py` zählt die JavaScript-Tests mit festem TAP-Reporter; unter Node 24 kam sonst die Ersatzzählung (157 statt 163) heraus und `--check` war in der CI rot.
 - CI: Der Job `layout` legt vor dem Browsertest einen leeren Export an. Ohne `data/meta.json` baut die Lageseite keine Karte, alle Layouttests liefen in die Zeitgrenze.
 - `.env`: Kommentar am Zeilenende gehört nicht mehr zum Wert. Vorher landete er aus der Vorlage im User-Agent, und der Umlaut darin ließ jeden Abruf scheitern.
-
-## [1.0.0-beta.1] - 2026-10-25
 
 ### Behoben (erster Start)
 - Beim ersten Start stand die Karte offen, während die Quellen noch abgerufen wurden — zu sehen war dort nur „Die Datendateien konnten nicht geladen werden“, ohne Hinweis, dass etwas läuft. Die Aufbauseite griff bisher nur in den Phasen `idle`, `tiles` und `error`, nicht während `collect` und `export`. `api/state` meldet jetzt zusätzlich `daten` (gibt es schon einen Export, also `data/meta.json`?); solange nicht, führt die Aufbauseite mit Fortschrittsbalken und „Quellen: n von m abgerufen“. Im laufenden Betrieb bleibt die Karte stehen, auch wenn der Takt alle fünf Minuten neu sammelt.
