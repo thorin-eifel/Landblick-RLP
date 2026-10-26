@@ -133,6 +133,7 @@ Vollständig mit Namensnennung: `sources.yaml` und die Seite „Quellen und Lize
 
 - `docs/baseline.md`
 - `docs/betrieb.md`
+- `docs/code-signing.md`
 - `docs/dsfa-entwurf.md`
 - `docs/perf.md`
 - `docs/projektanweisung.md`
@@ -148,6 +149,12 @@ Vollständig mit Namensnennung: `sources.yaml` und die Seite „Quellen und Lize
 ## Mitarbeiten
 
 Je Phase ein Branch `rlp/r<N>-<kurzname>` und ein Pull Request. Vor jedem Push: Tests grün, `docs/rlp/status.yaml` nachführen und `python tools/update_readme.py` ausführen. Die CI prüft mit `--check`, ob der Stand-Block zur Wirklichkeit passt.
+
+## Code signing policy
+
+Der Windows-Installer wird über SignPath signiert, sobald die Foundation das Projekt aufgenommen hat; bis dahin ist er unsigniert. Was signiert wird, wer freigibt und was das Programm überträgt: [`docs/code-signing.md`](docs/code-signing.md).
+
+Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
 
 ## Lizenz und Nachweise
 
