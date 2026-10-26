@@ -209,7 +209,7 @@ export function decor(on) {
   let c = document.getElementById('med-cartouche');
   if (!c) {
     c = document.createElement('div'); c.id = 'med-cartouche'; c.className = 'med-cartouche'; c.setAttribute('aria-hidden', 'true');
-    const t = document.createElement('div'); t.className = 'med-cartouche-t'; t.textContent = 'Die Südeifel';
+    const t = document.createElement('div'); t.className = 'med-cartouche-t'; t.textContent = 'Rheinland-Pfalz';
     const u = document.createElement('div'); u.className = 'med-cartouche-u'; u.textContent = 'anno Domini MMXXVI';
     c.append(t, u); mapEl.append(c);
   }
