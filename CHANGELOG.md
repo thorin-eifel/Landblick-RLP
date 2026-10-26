@@ -6,6 +6,7 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ### Behoben (Darstellung)
 - Das Titelschild der Alten Karte hieß noch „Die Südeifel“, jetzt „Rheinland-Pfalz“. Die Seitenbeschreibungen (Meta-Tag) sprachen noch von der Südeifel und 120 km Umkreis.
+- Der Untertitel „anno Domini …“ nennt das laufende Jahr in römischen Ziffern statt fest MMXXVI.
 
 ### Geändert (macOS)
 - Das macOS-DMG bringt die Kachelpakete mit wie der Windows-Installer (Release `kacheln-1`, Prüfsummen geprüft; Eingabe `kacheln_tag`, `keine` baut ohne). Hochgeladen wird für macOS nur noch das DMG, nicht zusätzlich die .app.
