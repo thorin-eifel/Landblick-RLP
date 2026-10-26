@@ -1,4 +1,4 @@
-/* Icons (uxwing.com, siehe web/icons/README.txt): als Maske, damit sie die Textfarbe (currentColor) übernehmen.
+/* Icons (Maki, Temaki, OSM Carto, eigene; Herkunft in web/icons/README.txt): als Maske, damit sie die Textfarbe (currentColor) übernehmen.
    Die Karte zeichnet dieselben Dateien selbst (js/icons.js). Fehlt eine Datei, bleibt die Fläche leer und der Text daneben trägt die Bedeutung. */
 .ico { display: inline-block; width: 1.15em; height: 1.15em; flex: none; vertical-align: -.2em; margin-right: .35em; background: currentColor;
   -webkit-mask: var(--ico) center / contain no-repeat; mask: var(--ico) center / contain no-repeat; }

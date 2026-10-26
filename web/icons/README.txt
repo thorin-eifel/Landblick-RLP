@@ -1,13 +1,18 @@
-Icons: uxwing.com (https://uxwing.com/license/)
-Freie Nutzung in Websites, auch gewerblich, ohne Namensnennung; Änderung erlaubt.
-Weiterverkauf, Weiterverbreitung und Unterlizenzierung sind verboten.
-Deshalb sind die SVG-Dateien nicht im Repository. Holen: tools/fetch_icons.sh
-Rollen (Dateiname → uxwing-Icon) stehen im Skript.
+Symbole der Oberfläche und der Karte. Alle Dateien sind frei weitergebbar und liegen im Repository; die Installer bringen sie mit.
 
-Ausnahme: hoehle, wasserfall, fernglas (Aussicht) stammen aus OpenStreetMap Carto (CC0 1.0), quelle, gebirge und vulkan aus Maki (CC0 1.0).
-Keine Namensnennung nötig; Adressen stehen im Skript.
+Maki (Mapbox, CC0 1.0, https://github.com/mapbox/maki, npm @mapbox/maki 8.2.0):
+  flug (airport), stau (car), baustelle (construction), sperrung (barrier), warnung (caution), hubschrauber (heliport),
+  feuer (fire-station), bahn (rail), quelle (water), gebirge (mountain), vulkan (volcano), burg (castle),
+  denkmal (monument), kloster (religious-christian), gebaeude (landmark)
+Temaki (OpenStreetMap-Editor iD, CC0 1.0, https://github.com/ideditor/temaki, npm @rapideditor/temaki 5.13.0):
+  wind (windsock), relief (mountain_range), strahlung (radiation), ton (speaker), natur (pedestrian), feuchte (water)
+OpenStreetMap Carto (CC0 1.0, https://github.com/gravitystorm/openstreetmap-carto/tree/master/symbols):
+  hoehle (natural/cave), wasserfall (natural/waterfall), fernglas (tourism/viewpoint)
+Eigene Zeichnungen des Projekts (15er-Raster wie Maki, GPL-3.0 wie der Code):
+  tanken, wolken, regen, blitz, temperatur, druck, beben, hochwasser, pegel, luft
 
-tanken.svg ist eine eigene Zeichnung des Projekts, nicht von uxwing; sie liegt im Repository.
+Keine Namensnennung nötig. Bis Oktober 2026 kamen die meisten Symbole von uxwing.com; deren Lizenz verbietet die Weitergabe,
+deshalb fehlten sie in den Installern. Sie sind vollständig ersetzt.
 
 Menüzeichen (web/icons/menu/, im Repository, weil frei weitergebbar):
 Maki (Mapbox, CC0 1.0, https://github.com/mapbox/maki), Temaki (OpenStreetMap-Editor iD, CC0 1.0, https://github.com/ideditor/temaki)

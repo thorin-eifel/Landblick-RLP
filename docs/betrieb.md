@@ -274,7 +274,7 @@ tail -f data/logs/live.log
 
 **Stau und zähfließender Verkehr.** Kommt aus derselben Autobahn-API (`warning` mit `abnormalTrafficType`): `QUEUING_TRAFFIC` = Stau, `SLOW_TRAFFIC` = zähfließend, `STATIONARY_TRAFFIC` = Stillstand, dazu Verzögerung (Minuten) und Durchschnittstempo. Eigener Ereignistyp `congestion`, gezeichnet als Linie von Anfang bis Ende der Meldung (gerade Verbindung, nur Näherung des Straßenverlaufs). Stau ab 30 Minuten Verzögerung und Stillstand sind `warning`, gewöhnlicher Stau `notice`, zähfließend `info`. Sie erscheinen nicht im Warnband, das bleibt für NINA/DWD/Pegel. Eine eigene Stufe „Stop-and-go“ kennt die API nicht. Der Autobahn-Lauf kommt jetzt alle 3 Minuten (vorher 10). Grenzen: nur Autobahnen (A1, A48, A60, A64), keine Bundes- und Landesstraßen, kein Luxemburg. Die Kennungen tragen den Vermerk INRIX; das gehört in die Lizenzanfrage an die Autobahn GmbH. Fixture: `tests/fixtures/autobahn_A64_warning_STAU_SYNTHETISCH.json` (echte Struktur, Orte verlegt).
 
-**Icons.** Einzige Quelle: uxwing.com. Die Lizenz erlaubt Nutzung in Websites, auch gewerblich, ohne Namensnennung, mit Änderung; verboten sind Weiterverkauf, Weiterverbreitung und Unterlizenzierung. Darum liegen die SVGs nicht im Repository (`.gitignore`), `tools/fetch_icons.sh` holt sie (Rollenname → uxwing-Name steht im Skript). Die fertige Webseite liefert sie aus, das ist Nutzung in einer Website. Nicht in ein öffentliches Repository oder Paket legen. Im HTML als CSS-Maske (`css/icons.css`, Farbe folgt dem Text), auf der Karte als Bitmap (`js/icons.js`: Plakette in Stufenfarbe, Flugzeug mit Umriss). Fehlen die Dateien, fällt die Karte auf Kreise zurück, der Text trägt die Bedeutung.
+**Icons.** Maki, Temaki und OpenStreetMap Carto (alle CC0) plus eigene Zeichnungen für Wetter und Messwerte; Herkunft je Datei in `web/icons/README.txt`. Alle liegen im Repository und kommen mit den Installern. Die früheren uxwing-Symbole (Weitergabe verboten) sind seit Oktober 2026 ersetzt. Im HTML als CSS-Maske (`css/icons.css`, Farbe folgt dem Text), auf der Karte als Bitmap (`js/icons.js`: Plakette in Stufenfarbe, Flugzeug mit Umriss). Fehlen die Dateien, fällt die Karte auf Kreise zurück, der Text trägt die Bedeutung.
 
 ## Höhenrelief
 
@@ -363,7 +363,7 @@ Der Radius von 120 km reicht nach Süden bis Metz und Thionville, nach Westen bi
 
 ## Kultur und Geschichte
 
-Der Landmarken-Collector `osm_natur` (Overpass, wöchentlich) liefert neben der Natur jetzt Burgen und Schlösser (`historic=castle|fort|manor`), Ruinen, archäologische Stätten, Klöster sowie historische Gebäude, Stadttore und Türme. Nur benannte Objekte; Gedenkorte (`memorial`, Stolpersteine) fehlen absichtlich, weil sie oft Personen nennen. Auf der Karte gibt es eine eigene Ebene „Kultur und Geschichte" (Zeichen aus Maki, CC0, geholt mit `tools/fetch_icons.sh`). Nach dem Update einmal `tools/fetch_icons.sh` und `python -m app.collect --once --only osm_natur` ausführen.
+Der Landmarken-Collector `osm_natur` (Overpass, wöchentlich) liefert neben der Natur jetzt Burgen und Schlösser (`historic=castle|fort|manor`), Ruinen, archäologische Stätten, Klöster sowie historische Gebäude, Stadttore und Türme. Nur benannte Objekte; Gedenkorte (`memorial`, Stolpersteine) fehlen absichtlich, weil sie oft Personen nennen. Auf der Karte gibt es eine eigene Ebene „Kultur und Geschichte" (Zeichen aus Maki, CC0, im Repository). Nach dem Update einmal `python -m app.collect --once --only osm_natur` ausführen.
 
 ## Große Bildschirme
 
@@ -393,7 +393,7 @@ Was fehlt und warum, steht im Katalog unter `ausgelassen`: Kommunen (bewusst nic
 
 **Schweife.** Jedes Flugzeug zieht 200 px Schweif entlang der beobachteten Bahn, nach hinten schwächer. Die Bahn besteht nur aus Positionen, die der Browser in dieser Sitzung gesehen hat (Arbeitsspeicher, höchstens 30 Minuten); sie wird nie gespeichert oder hochgeladen. Neu geladene Seite = Schweife beginnen von vorn.
 
-**Flugzeugklassen.** Der Collector speichert `klass`: `civil`, `mil` (Militär-Kennzeichen der adsb.lol-Datenbank, `dbFlags` Bit 0), `heli` (Kategorie A7) oder `milheli`. Kennzeichen, Hex-Code und Typ bleiben draußen, gespeichert wird nur die Klasse. Darstellung: zivil = dunkles Flugzeug, militärisch = violett im Ring, Hubschrauber = eigenes Symbol (uxwing „helicopter“, Seitenansicht, dreht sich nicht). Die Klasse ist so gut wie die Datenbank von adsb.lol: nicht gemeldete oder nicht erfasste Militärflugzeuge erscheinen als zivil.
+**Flugzeugklassen.** Der Collector speichert `klass`: `civil`, `mil` (Militär-Kennzeichen der adsb.lol-Datenbank, `dbFlags` Bit 0), `heli` (Kategorie A7) oder `milheli`. Kennzeichen, Hex-Code und Typ bleiben draußen, gespeichert wird nur die Klasse. Darstellung: zivil = dunkles Flugzeug, militärisch = violett im Ring, Hubschrauber = eigenes Symbol (Maki „heliport“, Seitenansicht, dreht sich nicht). Die Klasse ist so gut wie die Datenbank von adsb.lol: nicht gemeldete oder nicht erfasste Militärflugzeuge erscheinen als zivil.
 
 ### Hangneigung aus dem DGM1
 

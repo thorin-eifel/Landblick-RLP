@@ -72,7 +72,7 @@ Abhängigkeiten sind gepinnt (`requirements.txt`, `requirements-dev.txt`, `packa
 
 ## 6.9 Symbole und Lizenz der Bilddateien
 
-Die Karte nutzt Symbole aus dem Ordner `web/icons/`. Die dort verwendeten SVG-Dateien stammen von uxwing.com. Deren Lizenz erlaubt die Nutzung in einer Website auch gewerblich, verbietet aber Weiterverkauf und Weiterverbreitung der Dateien. Deshalb sind sie nicht im Repository (`.gitignore`) und nicht in Veröffentlichungen enthalten. `tools/fetch_icons.sh` holt sie auf dem eigenen Rechner (mit Netzzugang zu uxwing.com). Wer Landblick aus einer Veröffentlichung installiert, muss diesen Schritt selbst ausführen; ohne die Dateien fehlen die Symbole an den Markern. Die Kartenzeichen der natürlichen Landmarken stammen dagegen aus OpenStreetMap Carto und Maki (beide CC0).
+Die Karte nutzt Symbole aus dem Ordner `web/icons/`. Sie stammen aus Maki, Temaki und OpenStreetMap Carto (alle gemeinfrei, CC0); Wetter- und Messzeichen sind eigene Zeichnungen. Alle liegen im Repository und in den Installern, ein eigener Schritt ist nicht nötig. Herkunft je Datei: `web/icons/README.txt`.
 
 ## 6.10 Windows: Ablauf und Prüfliste
 
