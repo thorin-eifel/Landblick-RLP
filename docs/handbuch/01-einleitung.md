@@ -48,6 +48,6 @@ Die Version 1.0.0-beta.1 läuft, ist aber nicht abgenommen. Offen sind die recht
 
 ## 1.7 Lizenz und Kontakt
 
-Der Code steht unter der **GNU General Public License Version 3** (Datei `LICENSE`). Die Daten gehören ihren Betreibern und stehen unter den Lizenzen, die das Quellenregister und die Seite „Quellen und Lizenzen“ nennen. Die Karte beruht auf OpenStreetMap-Daten (© OpenStreetMap-Mitwirkende, ODbL). Die Piktogramme der Oberfläche stammen von uxwing.com; ihre Lizenz erlaubt den Einsatz in einer Webseite, nicht die Weitergabe, deshalb liegen die Dateien nicht im Repository und nicht in diesem Release (Kapitel 6.9).
+Der Code steht unter der **GNU General Public License Version 3** (Datei `LICENSE`). Die Daten gehören ihren Betreibern und stehen unter den Lizenzen, die das Quellenregister und die Seite „Quellen und Lizenzen“ nennen. Die Karte beruht auf OpenStreetMap-Daten (© OpenStreetMap-Mitwirkende, ODbL). Die Piktogramme stammen aus Maki, Temaki und OpenStreetMap Carto (alle CC0) oder sind eigene Zeichnungen (Kapitel 6.9).
 
 Kontakt: Thorsten Schleicher, thorin.eifel@icloud.com. Projektseite: https://github.com/thorin-eifel/maps

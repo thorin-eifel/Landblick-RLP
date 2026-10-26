@@ -209,7 +209,7 @@ Das Handbuch (`docs/handbuch/handbuch.css`) ist ein eigenes Blatt und gehört ni
 
 ### 11.6.3 SVG
 
-* `web/icons/*.svg`: Symbole der Oberfläche und Karte (uxwing, freie Nutzung ohne Namensnennung, aber nicht weiterverbreiten; Lizenz und Ausnahmen in `web/icons/README.txt`; `tanken.svg` ist eine eigene Zeichnung). Diese Dateien liegen nicht im Repository, sie holt `tools/fetch_icons.sh`.
+* `web/icons/*.svg`: Symbole der Oberfläche und Karte (Maki, Temaki, OpenStreetMap Carto, alle CC0, dazu eigene Zeichnungen; Herkunft je Datei in `web/icons/README.txt`). Alle liegen im Repository.
 * Dieselben Dateien dienen zweimal: in der Oberfläche als CSS-Maske (`icons.css`), in der Karte als Quelle für die Canvas-Bilder (`registerIcons`). Eine Änderung an einem SVG wirkt in beiden.
 * Per DOM-Code gebaute SVG: nur die Windrose der Alten Karte (`lage/mittelalter.js`).
 * Das Logo (`web/brand/`) kommt als PNG in hell und dunkel; die Umschaltung läuft über `.logo-hell` / `.logo-dunkel` in `app.css`.
@@ -244,7 +244,7 @@ Vorschlag in einem Satz: eine Skin-Beschreibung als Objekt (`id`, `name`, `flavo
 
 **Neuen Layer in die Basiskarte.** In der passenden Funktion in `stil.js` mit `id` ohne Präfix anlegen. Reihenfolge entscheidet der `splice` in `applyBasemap()`. Muster in `applyBaseToggles()` ergänzen. Für die Alte Karte entscheiden: weglassen (`MED_DROP`), umfärben (in `medievalize`) oder unverändert lassen.
 
-**Neues Zeichen.** SVG nach `web/icons/` (und in `tools/fetch_icons.sh`/README eintragen), in `icons.js` registrieren, in `icons.css` die Klasse `.ico-<name>` ergänzen, wenn die Oberfläche es braucht.
+**Neues Zeichen.** SVG nach `web/icons/` (frei weitergebbar, Herkunft im README dort eintragen), in `icons.js` registrieren, in `icons.css` die Klasse `.ico-<name>` ergänzen, wenn die Oberfläche es braucht.
 
 **Farbe für Hell und Dunkel prüfen.** Immer beide Werte setzen. Prüfen im Browser mit `#debug` und der Karte in beiden Ansichten, danach `node --test tests/js/*.test.mjs` und `python -m pytest -q`.
 

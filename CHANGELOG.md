@@ -4,6 +4,10 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unveröffentlicht]
 
+### Behoben (Symbole)
+- In den Installern fehlten fast alle Symbole: Die 23 Zeichen von uxwing durften nicht weitergegeben werden und lagen nicht im Repository, die 10 gemeinfreien Kartenzeichen ebenfalls nicht. Jetzt kommen alle aus Maki, Temaki und OpenStreetMap Carto (CC0) oder sind eigene Zeichnungen (Wetter und Messwerte) und liegen im Repository. `tools/fetch_icons.sh` entfällt. Herkunft je Datei: `web/icons/README.txt`.
+- Neuer Test `tests/js/icons-vorhanden.test.mjs`: jedes Zeichen, das Karte oder Oberfläche anfordern, muss als Datei vorhanden sein.
+
 ### Behoben (Darstellung)
 - Das Titelschild der Alten Karte hieß noch „Die Südeifel“, jetzt „Rheinland-Pfalz“. Die Seitenbeschreibungen (Meta-Tag) sprachen noch von der Südeifel und 120 km Umkreis.
 - Der Untertitel „anno Domini …“ nennt das laufende Jahr in römischen Ziffern statt fest MMXXVI.

@@ -1,5 +1,5 @@
 import { PIG } from './pigmente.js';
-// Karten-Symbole aus den uxwing-SVGs (web/icons, siehe README dort). MapLibre bekommt sie als Bitmaps:
+// Karten-Symbole aus den SVGs in web/icons (Herkunft im README dort). MapLibre bekommt sie als Bitmaps:
 // Meldungen als runde Plakette in der Stufenfarbe mit hellem oder dunklem Zeichen, Flugzeuge als Zeichen
 // mit Umriss, das sich nach dem Kurs dreht. Pro Stufe ein Bild; beim Wechsel Hell/Dunkel neu gezeichnet.
 export const iconStatus = { missing: [], errors: [] }; // für den Kartenhinweis, wenn Icons fehlen
@@ -11,7 +11,7 @@ const CHIP_PX = 67;   // Verkehrsplaketten: pixelRatio 2, also 33,5 px (3,5 px g
 const BARE_PX = 56;   // Zeichen ohne Plakette: 28 px
 const PLANE_PX = 56;
 
-// SVG ohne width/height (uxwing liefert nur viewBox) bekommt Maße aus der viewBox, sonst rechnet der Browser mit 300×150.
+// SVG ohne width/height (manche liefern nur viewBox) bekommt Maße aus der viewBox, sonst rechnet der Browser mit 300×150.
 async function loadGlyph(name) {
   const res = await fetch(`icons/${name}.svg`);
   if (!res.ok) throw new Error(`${name}: ${res.status}`);
@@ -41,7 +41,7 @@ function tinted(glyph, colour, box) {
   const [c, x] = canvas(box);
   const k = Math.min(box / glyph.w, box / glyph.h);
   const w = glyph.w * k, h = glyph.h * k;
-  // zweimal zeichnen: die Kantenpixel der dünnen uxwing-Linien werden dichter und behalten auf kleinen Plaketten Kontrast
+  // zweimal zeichnen: die Kantenpixel dünner Linien werden dichter und behalten auf kleinen Plaketten Kontrast
   x.drawImage(glyph.img, (box - w) / 2, (box - h) / 2, w, h);
   x.drawImage(glyph.img, (box - w) / 2, (box - h) / 2, w, h);
   x.globalCompositeOperation = 'source-in';
@@ -144,7 +144,7 @@ export const TEMP_COLOURS = ['#2d0330', '#5b0e60', '#891a91', '#b726c1', '#e532f
 export const TEMP_MIN = -45, TEMP_STEP = 3;
 export const tempClass = (t) => Math.max(0, Math.min(TEMP_COLOURS.length - 1, Math.round((t - TEMP_MIN) / TEMP_STEP)));
 export const MIL_COLOUR = '#8e44ad';
-// Natürliche Landmarken: Plakette in Artfarbe mit weißem Zeichen (Bild nat-<Art>); Zeichen: OpenStreetMap Carto und Maki (CC0), siehe tools/fetch_icons.sh
+// Natürliche Landmarken: Plakette in Artfarbe mit weißem Zeichen (Bild nat-<Art>); Zeichen: OpenStreetMap Carto und Maki (CC0), siehe web/icons/README.txt
 export const NATURE_CHIP = { cave: ['hoehle', '#5b4636'], waterfall: ['wasserfall', '#1f6fb5'], viewpoint: ['fernglas', '#8a3fb0'],
   spring: ['quelle', '#12857f'], rock: ['gebirge', '#8c6b32'], volcano: ['vulkan', '#c0401f'],
   castle: ['burg', '#9f1239'], ruins: ['burg', '#4d7c0f'], archaeological: ['denkmal', '#a0672a'], monastery: ['kloster', '#3f5f8a'], building: ['gebaeude', '#6b4f7a'] };
@@ -274,7 +274,7 @@ export async function registerIcons(map, colors) {
   for (const [kind, [glyph, col]] of Object.entries(NATURE_CHIP)) if (loaded[glyph]) put(map, `nat-${kind}`, bare(loaded[glyph], col, colors.bg));
   iconStatus.missing = missing;
   iconStatus.errors = results.flatMap((r) => (r.status === 'rejected' ? [String(r.reason?.message ?? r.reason)] : []));
-  if (missing.length) console.warn('Icons fehlen (tools/fetch_icons.sh ausführen):', missing.join(', '), iconStatus.errors.join('; '));
+  if (missing.length) console.warn('Icons fehlen (web/icons/*.svg):', missing.join(', '), iconStatus.errors.join('; '));
   for (const lv of LEVELS) {
     const ink = lv === 'notice' || lv === 'yellow' ? '#1b2b30' : '#fff'; // helles Gelb braucht dunkles Zeichen
     try {

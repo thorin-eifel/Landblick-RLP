@@ -8,7 +8,7 @@
 #            tools/release.sh 1.0.0-alpha.2 --github   bauen, Tag v<Version> auf HEAD setzen und Release anlegen
 #            REF=main tools/release.sh 1.0.0-alpha.2   anderen Git-Stand nehmen
 # Braucht:   git, python3 mit PyYAML, pandoc, wkhtmltopdf oder Chrome/Chromium/Edge (Handbuch-PDF); für --github die GitHub-CLI `gh`, angemeldet.
-# Regeln:    Nur versionierte Dateien kommen ins Archiv; die uxwing-Symbole (nicht versioniert) sind damit nie dabei.
+# Regeln:    Nur versionierte Dateien kommen ins Archiv.
 #            Notizen aus docs/release-<Version>.md; Versionen mit "-" gelten als Vorabversion.
 # Exit:      0 = gut, 1 = Fehler
 # =============================================================================
