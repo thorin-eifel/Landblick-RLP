@@ -359,3 +359,20 @@ def test_state_sagt_ob_der_erste_export_schon_da_ist(srv):
     assert j["daten"] is False
     (app.data_dir / "data" / "meta.json").write_text("{}", encoding="utf-8")
     assert json.loads(call(port, "/api/state")[1])["daten"] is True
+
+
+def test_messung_wird_als_jsonzeile_gespeichert(srv):
+    app, port, _ = srv
+    e = {"nachladen_ms": 840.5, "frame_p95_ms": 18.2, "quellen": [{"id": "basemap", "max_ms": 610}], "zoom": 13.2}
+    assert call(port, "/api/messung", "POST", e, {"X-Landblick": "1"})[0] == 200
+    assert call(port, "/api/messung", "POST", {"quellen": ["kaputt"]}, {"X-Landblick": "1"})[0] == 200
+    zeilen = (app.data_dir / "logs" / "messung.jsonl").read_text(encoding="utf-8").splitlines()
+    assert json.loads(zeilen[0]) == e and len(zeilen) == 2
+
+
+def test_messung_verweigert_ohne_kopf_zu_gross_und_kein_objekt(srv):
+    app, port, _ = srv
+    assert call(port, "/api/messung", "POST", {"a": 1})[0] == 403
+    assert call(port, "/api/messung", "POST", {"a": "x" * 20000}, {"X-Landblick": "1"})[0] == 413
+    assert call(port, "/api/messung", "POST", [1, 2], {"X-Landblick": "1"})[0] == 400
+    assert not (app.data_dir / "logs" / "messung.jsonl").exists()

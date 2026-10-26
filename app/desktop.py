@@ -70,6 +70,8 @@ def log_in_datei(data_dir: Path) -> Path | None:
 
 
 _RANGE = re.compile(r"^bytes=(\d*)-(\d*)$")
+MESSUNG_MAX_BYTES = 16 * 1024
+MESSUNG_ROLL_BYTES = 5 * 1024 * 1024
 CYCLE_S = 300
 # Manifest des Nachladepakets (Relief Zoom 13/14), hängt am GitHub-Release. LANDBLICK_PAKETE_MANIFEST überschreibt, "aus" schaltet ab.
 PAKETE_MANIFEST = "https://github.com/thorin-eifel/Landblick-RLP/releases/download/v1.0.0-alpha.2/dem-hoch.pmtiles.manifest.json"
@@ -120,6 +122,7 @@ class App:
         (data_dir / "tiles").mkdir(exist_ok=True)
         self._packs: dict[str, tuple[tuple[str, float], object]] = {}
         self._packs_lock = threading.Lock()
+        self.messung_lock = threading.Lock()
 
     def pack(self, name: str):
         """Kachelpaket tiles/<name>.pmtiles (erst Datenordner, dann App) als PackArchive oder None. Öffnet neu, wenn die Datei sich ändert."""
@@ -420,6 +423,8 @@ def make_handler(app: App, port_box: list[int]):
                 return self.json({"error": "herkunft"}, 403)
             if self.path == "/api/zugang":
                 return self.post_zugang()
+            if self.path == "/api/messung":
+                return self.post_messung()
             return self.json({"error": "unbekannt"}, 404)
 
         def post_zugang(self) -> None:
@@ -428,6 +433,35 @@ def make_handler(app: App, port_box: list[int]):
             n = int(self.headers.get("Content-Length") or 0)
             code, obj = handle_post(app.zugang, self.rfile.read(min(n, 4096)))
             self.json(obj, code)
+
+        def post_messung(self) -> None:
+            """Ergebnis des Messmodus (js/lage/leistung.js) als eine JSON-Zeile nach logs/messung.jsonl. Höchstens 16 KB je Eintrag;
+            die Datei wird bei 5 MB einmal nach messung.jsonl.1 weggerollt. Enthält nur Zeiten, Zoom und Kartenmitte."""
+            n = int(self.headers.get("Content-Length") or 0)
+            if n <= 0 or n > MESSUNG_MAX_BYTES:
+                return self.json({"error": "groesse"}, 413)
+            try:
+                obj = json.loads(self.rfile.read(n))
+            except ValueError:
+                return self.json({"error": "json"}, 400)
+            if not isinstance(obj, dict):
+                return self.json({"error": "json"}, 400)
+            ordner = app.data_dir / "logs"
+            datei = ordner / "messung.jsonl"
+            try:
+                ordner.mkdir(parents=True, exist_ok=True)
+                with app.messung_lock:
+                    if datei.exists() and datei.stat().st_size > MESSUNG_ROLL_BYTES:
+                        datei.replace(ordner / "messung.jsonl.1")
+                    with datei.open("a", encoding="utf-8") as f:
+                        f.write(json.dumps(obj, ensure_ascii=False) + "\n")
+            except OSError as err:
+                log.warning("Messung nicht gespeichert: %s", err)
+                return self.json({"error": "speichern"}, 500)
+            q = obj.get("quellen")
+            langsam = q[0].get("id") if isinstance(q, list) and q and isinstance(q[0], dict) else None
+            log.info("Messung: Nachladen %s ms, Frame p95 %s ms, langsamste Quelle %s", obj.get("nachladen_ms"), obj.get("frame_p95_ms"), langsam)
+            return self.json({"ok": True})
 
         def serve_range(self) -> None:
             header, path = self.headers.get("Range"), self.translate_path(self.path)
