@@ -1,6 +1,6 @@
 # 11 Darstellung und Skins: wie Landblick zeichnet
 
-Grundlage für Themen und Skins (Landblick, Alte Karte, weitere folgen). Beschreibt, wo Farben, Formen, Schriften und Zeichen herkommen, in welcher Reihenfolge die Karte aufgebaut wird und an welchen Stellen die „Alte Karte“ heute eingreift. Stand: Version 1.0.0-beta.1 plus Änderungen auf `feat/kartenpakete`.
+Grundlage für Themen und Skins (Landblick, Alte Karte, weitere folgen). Beschreibt, wo Farben, Formen, Schriften und Zeichen herkommen, in welcher Reihenfolge die Karte aufgebaut wird und an welchen Stellen die „Alte Karte“ heute eingreift. Stand: Version 1.0.0-beta.2.
 
 Vorweg: Es gibt keine Stildatei, weder `style.json` noch XML. Der MapLibre-Stil wird zur Laufzeit in JavaScript zusammengesetzt. XML im weiteren Sinn sind nur die SVG-Glyphen unter `web/icons/` (Abschnitt 11.6). Alles, was sonst „Darstellung“ ist, steht in JS-Konstanten und in drei CSS-Dateien.
 

@@ -4,7 +4,7 @@ Wer an einem Dienstagmorgen von Irrel nach Echternach fährt, schaut vorher auf 
 
 **Landblick - RLP** legt sie auf eine Karte. Es ruft offene Datenquellen ab (Warnungen, Wetter, Pegel, Verkehr, Luft, Strahlung, Erdbeben, regionale Meldungen), schneidet sie auf Rheinland-Pfalz plus 80 Kilometer Umland zu und zeigt sie so, dass an jedem Wert dransteht, woher er kommt, wie alt er ist und unter welcher Lizenz er steht. Wenn eine Quelle ausfällt, sagt die Kachel das, statt eine leere Fläche zu zeigen.
 
-Dieses Handbuch beschreibt Version **1.0.0-beta.1**. Es richtet sich an drei Leserinnen und Leser: wer die Karte benutzt (Kapitel 3), wer sie betreibt (Kapitel 2 und 6) und wer sie später weiterentwickeln oder warten muss (Kapitel 5, 8 und 10). Kapitel 9 sagt ehrlich, was noch nicht geht.
+Dieses Handbuch beschreibt Version **1.0.0-beta.2**. Es richtet sich an drei Leserinnen und Leser: wer die Karte benutzt (Kapitel 3), wer sie betreibt (Kapitel 2 und 6) und wer sie später weiterentwickeln oder warten muss (Kapitel 5, 8 und 10). Kapitel 9 sagt ehrlich, was noch nicht geht.
 
 ## 1.1 Was es ist
 
@@ -44,7 +44,7 @@ Das Projekt begann als Firmen-Schaufenster für Datenpipelines, Betrieb und Ober
 
 ## 1.6 Was „alpha“ heißt
 
-Die Version 1.0.0-beta.1 läuft, ist aber nicht abgenommen. Offen sind die rechtliche Prüfung vor einem öffentlichen Start, der Dauerbetrieb über sieben Tage ohne Eingriff (R6), die Bestätigung einiger Lizenztexte an der Primärquelle und Erfahrungen auf Windows. Wer die Seite öffentlich ins Netz stellt, tut das auf eigene Verantwortung, und das Impressum und die Datenschutzerklärung müssen vorher zur eigenen Lage passen.
+Die Version 1.0.0-beta.2 läuft, ist aber nicht abgenommen. Offen sind die rechtliche Prüfung vor einem öffentlichen Start, der Dauerbetrieb über sieben Tage ohne Eingriff (R6), die Bestätigung einiger Lizenztexte an der Primärquelle und Erfahrungen auf Windows. Wer die Seite öffentlich ins Netz stellt, tut das auf eigene Verantwortung, und das Impressum und die Datenschutzerklärung müssen vorher zur eigenen Lage passen.
 
 ## 1.7 Lizenz und Kontakt
 
