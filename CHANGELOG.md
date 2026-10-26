@@ -4,6 +4,9 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unveröffentlicht]
 
+### Geändert (macOS)
+- Die macOS-App wird ad-hoc signiert (`bundle.macOS.signingIdentity: "-"`). Statt „beschädigt“ ohne Ausweg meldet macOS jetzt „Entwickler nicht verifiziert“ mit „Trotzdem öffnen“ in Datenschutz & Sicherheit. Beglaubigt (notarisiert) ist sie weiterhin nicht.
+
 ## [1.0.0-beta.2] - 2026-10-26
 
 ### Behoben (Symbole)

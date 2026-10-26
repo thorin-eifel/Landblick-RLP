@@ -5,7 +5,7 @@ Zweite Beta von Landblick - RLP. Sie behebt, was an der ersten am meisten gestö
 ## Was dranhängt
 
 - `Landblick - RLP_1.0.0-beta.2_x64-setup.exe`: Windows-Installer (NSIS) mit den Kacheln für Rheinland-Pfalz plus 80 km (rund 1,8 GB). Nicht signiert: SmartScreen warnt beim ersten Start („Weitere Informationen“ → „Trotzdem ausführen“).
-- `Landblick - RLP_1.0.0-beta.2_aarch64.dmg`: macOS-App für Apple Silicon (M1 bis M4), ebenfalls mit Kacheln (rund 1,8 GB). Nicht signiert: beim ersten Start unter Systemeinstellungen → Datenschutz & Sicherheit → „Trotzdem öffnen“. Meldet macOS, die App sei beschädigt: `xattr -dr com.apple.quarantine "/Applications/Landblick - RLP.app"`.
+- `Landblick - RLP_1.0.0-beta.2_aarch64.dmg`: macOS-App für Apple Silicon (M1 bis M4), ebenfalls mit Kacheln (rund 1,8 GB). Nicht signiert, deshalb meldet macOS beim ersten Start „„Landblick - RLP“ ist beschädigt“. Die Datei ist in Ordnung: App in den Programme-Ordner ziehen, dann einmal im Terminal `xattr -dr com.apple.quarantine "/Applications/Landblick - RLP.app"`. Danach startet sie normal.
 - `landblick-1.0.0-beta.2-quelltext.zip` / `.tar.gz`: der vollständige Quelltext samt Installern.
 - `install.ps1`, `install.sh`, `install.py`: die Installer für einen Dauerläufer, einzeln zum Nachlesen und Prüfen.
 - `landblick-1.0.0-beta.2-handbuch.pdf` / `.html` / `.md`: das Handbuch.
