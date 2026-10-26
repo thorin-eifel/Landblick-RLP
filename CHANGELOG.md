@@ -4,6 +4,9 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unveröffentlicht]
 
+### Neu (Signatur Windows)
+- Vorbereitung für kostenlose Code-Signatur über die SignPath Foundation: `docs/code-signing.md` (Code signing policy, Rollen, Datenschutz), `.signpath/artifact-configuration.xml`, und in `windows-installer.yml` die Schritte „Unsigniertes Setup für SignPath“ und „Signieren (SignPath)“. Abgeschaltet, bis die Repository-Variable `SIGNPATH_ENABLED` auf `true` steht; ohne sie baut der Workflow wie bisher.
+
 ## [1.0.0-beta.2] - 2026-10-26
 
 ### Behoben (Symbole)
