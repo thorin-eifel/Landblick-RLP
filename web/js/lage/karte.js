@@ -22,6 +22,7 @@ import { $, getJSON, h, link } from '../util.js';
 import { createWind, fillWindLegend } from '../wind.js';
 import { applyBasemap, wireElevation } from './basiskarte.js';
 import { debugHook } from './debug.js';
+import { initLeistung } from './leistung.js';
 import { applyLayerFilters } from './ebenen.js';
 import { palette, sevColor } from './farben.js';
 import { VIG_FADE_KM, VIG_ID, circle, vignette } from './geometrie.js';
@@ -220,6 +221,7 @@ export async function initMap() {
   initSearch();
   initKontext();
   if (location.hash === '#debug') debugHook(map); // nur für Prüfungen im Browser
+  initLeistung(map); // Messmodus: Strg/Cmd+Umschalt+M
   setRipples(createRipples(map, { center: state.meta.center, radiusKm: state.meta.radius_km, fadeKm: VIG_FADE_KM, vig: vig?.faktor, onSizzle: sizzleSound }));
   // Untere Schicht zuerst anlegen, damit die obere (reiner Modellwind) darüber liegt
   setWindLow(createWind(map, { center: state.meta.center, radiusKm: state.meta.radius_km, fadeKm: VIG_FADE_KM, vig: vig?.faktor, adjusted: true }));

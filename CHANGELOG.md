@@ -4,6 +4,9 @@ Format angelehnt an „Keep a Changelog“, Versionen nach SemVer. Alpha heißt:
 
 ## [Unveröffentlicht]
 
+### Neu (Messmodus)
+- Messmodus der Lagekarte: Strg+Umschalt+M (Mac: Cmd+Umschalt+M) oder `#messen`. Misst je Kartenbewegung die Bildzeiten (p50, p95, Maximum, Anzahl über 30 ms) und die Kachel-Ladezeiten je Quelle, zeigt das Ergebnis unten links (grün bei Nachladen unter 1 s und Frame-p95 unter 30 ms) und schreibt es in der Desktop-App nach `<Datenordner>/logs/messung.jsonl` (POST `api/messung`, lokal, höchstens 16 KB je Eintrag, rollt bei 5 MB).
+
 ### Geändert (macOS)
 - Die macOS-App wird ad-hoc signiert (`bundle.macOS.signingIdentity: "-"`). Statt „beschädigt“ ohne Ausweg meldet macOS jetzt „Entwickler nicht verifiziert“ mit „Trotzdem öffnen“ in Datenschutz & Sicherheit. Beglaubigt (notarisiert) ist sie weiterhin nicht.
 

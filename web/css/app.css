@@ -786,3 +786,10 @@ body.einrichtung .klein { font-size: .8rem; }
   .ev-icon, .ev-sortbox .ev-icon, .ev-more .ev-sortbox .ev-icon, .map-dock button { width: var(--hit); height: var(--hit); }
   .layer-list label { min-height: 2.25rem; }
 }
+
+/* Messmodus (js/lage/leistung.js): Ergebnis der letzten Kartenbewegung, unten links über der Höhenlegende */
+.leistung-anzeige { position: absolute; z-index: 6; left: 12px; bottom: 132px; max-width: min(640px, calc(100% - 24px)); padding: 6px 10px; border-radius: 8px;
+  font: 12px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #fff; background: rgba(20, 20, 20, .82); pointer-events: none; }
+.leistung-anzeige[data-ok="0"] { background: rgba(150, 30, 20, .9); }
+.leistung-anzeige[data-ok="1"] { background: rgba(20, 110, 50, .9); }
+.leistung-anzeige[hidden] { display: none; }
